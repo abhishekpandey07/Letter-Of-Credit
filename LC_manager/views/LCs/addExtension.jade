@@ -1,0 +1,14 @@
+extends ../layout
+
+block content
+    h1.
+        Add Extension for LC : #{LC.LC_no}
+    form#formAddInstallment(name="addPayment",method="post",action="/LCs/#{LC._id}/addExtension",enctype='application/x-www-form-urlencoded')
+        p Extension Start Date:
+            input#inputOpenDate(type="date", name="openDT")
+        p Extension End Date :
+            input#inputExpiryDate(type="date", name="expDT")
+        p
+            input(type="hidden", value="PUT", name="_method")
+        p
+            button#btnSubmit(type="submit") submit

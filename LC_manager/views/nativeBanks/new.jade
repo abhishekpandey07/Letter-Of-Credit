@@ -1,0 +1,18 @@
+extends ../layout
+
+block content
+    h1.
+        #{title}
+    form#formAddBank(name="addbank",method="post",action="/nativeBanks")
+        p Name: 
+            input#inputName(type="text", placeholder="ex. State Bank of India", name="name")
+        p Branch:
+            input#inputBranch(type="text", placeholder="ex. Ramdevnagar", name="branch")
+        p IFSC:
+            input#inputIFSC(type="text", name="IFSC")
+        p LC_limit: 
+            input#inputLC_limit(type="number", name="LC_limit")
+        p LC_used:
+            input#inputLC_used(type="number", name="LC_used")
+        p
+            button#btnSubmit(type="submit") submit

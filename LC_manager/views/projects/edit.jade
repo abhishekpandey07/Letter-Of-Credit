@@ -1,0 +1,21 @@
+extends ../layout
+
+block content
+    h1.
+        Project ID #{project._id}
+    form(action='/projects/#{project._id}/edit',method='post',name='updateproject',enctype='application/x-www-form-urlencoded')
+        p Name: 
+            input#inputName(type="text", value='#{project.name}', name="name")
+        p Location:
+            input#inputLocation(type="text", value='#{project.location}', name="location")
+        p Value:
+            input#inputValue(type="number", name="value", value='#{project.value}')
+        p Manager: 
+            input#inputManager(type="text", name="manager", value='#{project.manager}')
+        p
+            button#btnSubmit(type="submit") submit
+        p 
+            input(type='hidden',value='PUT',name='_method')
+        p 
+            button#btnSubmit(type='submit').
+                Update

@@ -1,0 +1,23 @@
+extends ../layout
+
+block content
+    h1.
+        Bank ID #{bank._id}
+    form(action='/nativeBanks/#{bank._id}/edit',method='post',name='updatebank',enctype='application/x-www-form-urlencoded')
+        p Name: 
+            input#inputName(type="text", value='#{bank.name}', name="name")
+        p Branch:
+            input#inputBranch(type="text", value='#{bank.branch}', name="branch")
+        p IFSC:
+            input#inputIFSC(type="text", name="IFSC", value='#{bank.IFSC}')
+        p LC_limit: 
+            input#inputLC_limit(type="number", name="LC_limit", value='#{bank.LC_limit}')
+        p LC_used:
+            input#inputLC_used(type="number", name="LC_used", value='#{bank.LC_used}')
+        p
+            button#btnSubmit(type="submit") submit
+        p
+            input(type='hidden',value='PUT',name='_method')
+        p
+            button#btnSubmit(type='submit').
+                Update

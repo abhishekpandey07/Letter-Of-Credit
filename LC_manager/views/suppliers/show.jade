@@ -1,0 +1,11 @@
+extends ../layout
+
+block content
+    h1.
+    p Name: #{supplier.name}
+    p City: #{supplier.city}
+    p Banks:
+      - each bank,i in supplier.banks 
+          p Bank: #{bank.name}
+          p Branch: #{bank.branch}
+          p IFSC: #{bank.IFSC}

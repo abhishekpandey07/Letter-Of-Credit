@@ -1,0 +1,23 @@
+extends ../layout
+
+block content
+    h1.
+         #{title}
+    ul
+        - each bank, i in banks
+            li
+                = bank.name
+                = bank.branch
+                = bank.IFSC
+                = bank.LC_limit
+                = bank.LC_used
+                = bank.LCs
+                = bank._id
+                form(action='/nativeBanks/#{bank._id}/edit',method='post',enctype='application/x-www-form-urlencoded')
+                    input(type='hidden',value='DELETE',name='_method')
+                    button(type='submit').
+                        Delete
+                p 
+                    a(href='/nativeBanks/#{bank._id}/edit') Edit
+                p
+                    a(href='/nativeBanks/#{bank._id}') Show

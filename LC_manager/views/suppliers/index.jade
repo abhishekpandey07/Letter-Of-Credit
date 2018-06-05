@@ -1,0 +1,22 @@
+extends ../layout
+
+block content
+    h1.
+         #{title}
+    ul
+        - each sup, i in suppliers
+            li
+                = sup.name
+                = sup.city
+                = sup.projects
+                = sup.banks
+                = sup.projects
+                = sup._id
+                form(action='/suppliers/#{sup._id}/edit',method='post',enctype='application/x-www-form-urlencoded')
+                    input(type='hidden',value='DELETE',name='_method')
+                    button(type='submit').
+                        Delete
+                p 
+                    a(href='/suppliers/#{sup._id}/edit') Edit
+                p
+                    a(href='/suppliers/#{sup._id}') Show

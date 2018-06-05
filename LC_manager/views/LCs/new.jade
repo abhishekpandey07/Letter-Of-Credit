@@ -1,0 +1,32 @@
+extends ../layout
+
+block content
+    h1.
+        #{title}
+    form#formAddSup(name="addLC",method="post",action="/LCs")
+        p supplier: 
+            input#inputName(type="text", name="supplier")
+        p issuer:
+            input#inputCity(type="text", name="issuer")
+        p openDt:
+            input#inputBank(type="date", name="openDT")
+        p closeDt:
+            input#inputBranch(type="date", name="expDT")
+        p LC_no:
+            input#inputIFSC(type="text", name="LC_no")
+        p FDR_no:
+            input#inputIFSC(type="text", name="FDR_no")
+        p FDR_DT:
+            input#inputIFSC(type="date", name="FDR_DT")
+        p m_amt:
+            input#inputIFSC(type="number", name="m_amt")
+        p amount:
+            input#inputIFSC(type="number", name="amount")
+        p due_DT:
+            input#inputIFSC(type="date", name="due_DT")
+        p due_amt:
+            input#inputIFSC(type="number", name="due_amt")
+        p payed_amt:
+            input#inputIFSC(type="number", name="payed_amt")
+        p
+            button#btnSubmit(type="submit") submit

@@ -1,0 +1,16 @@
+extends ../layout
+
+block content
+    h1.
+        #{title}
+    form#formAddProject(name="addproject",method="post",action="/projects")
+        p Name: 
+            input#inputName(type="text", placeholder='official', name="name")
+        p Location:
+            input#inputLocation(type="text", placeholder='(city)', name="location")
+        p Value:
+            input#inputValue(type="number", name="value", placeholder='Crs.')
+        p Manager: 
+            input#inputManager(type="text", name="manager", value='#{project.manager}')
+        p
+            button#btnSubmit(type="submit") submit

@@ -1,0 +1,16 @@
+extends ../layout
+
+block content
+    h1.
+        Add Installment for LC : #{LC.LC_no}
+    form#formAddInstallment(name="addPayment",method="post",action="/LCs/#{LC._id}/addDueDetails",enctype='application/x-www-form-urlencoded')
+        p Due Date:
+            input#inputDueDate(type="date", name="due_DT")
+        p Due Amount:
+            input#inputDueAmount(type="number", name="due_amt")
+        p Payed Amount:
+            input#inputPayedAmount(type="number", name="payed_amt")
+        p
+            input(type="hidden", value="PUT", name="_method")
+        p
+            button#btnSubmit(type="submit") submit

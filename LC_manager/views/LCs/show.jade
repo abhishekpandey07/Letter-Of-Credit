@@ -1,0 +1,16 @@
+extends ../layout
+
+block content
+    h1.
+    p supplier: #{LC.supplier.name}
+    p issuer: #{LC.issuer.name}
+    p amount: #{LC.amount}
+    p Payments:
+        -each date in LC.payment.DT_amt
+            p Due_DT: #{date.due_DT}
+            p Due_amt: #{date.due_amt}
+            p Payed_amt: #{date.payed_amt}
+
+    p Total Due: #{LC.payment.total_due}
+    p Total Payed: #{LC.payment.total_payed}
+                

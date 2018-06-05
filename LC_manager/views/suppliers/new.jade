@@ -1,0 +1,18 @@
+extends ../layout
+
+block content
+    h1.
+        #{title}
+    form#formAddSup(name="addsup",method="post",action="/suppliers")
+        p Name: 
+            input#inputName(type="text", name="name")
+        p City:
+            input#inputCity(type="text", name="city")
+        p Bank:
+            input#inputBank(type="text", name="bank")
+        p Branch:
+            input#inputBranch(type="text", name="branch")
+        p IFSC:
+            input#inputIFSC(type="text", name="IFSC")
+        p
+            button#btnSubmit(type="submit") submit

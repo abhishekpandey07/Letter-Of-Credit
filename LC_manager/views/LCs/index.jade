@@ -1,0 +1,22 @@
+extends ../layout
+
+block content
+    h1.
+         #{title}
+    ul
+        - each LC, i in LCs
+            li
+                = LC.supplier.name
+                = LC.issuer.name
+                = LC.LC_no
+                = LC.FDR_no
+                = LC.amount
+                
+                form(action='/LCs/#{LC._id}/edit',method='post',enctype='application/x-www-form-urlencoded')
+                    input(type='hidden',value='DELETE',name='_method')
+                    button(type='submit').
+                        Delete
+                p 
+                    a(href='/LCs/#{LC._id}/edit') Edit
+                p
+                    a(href='/LCs/#{LC._id}') Show
