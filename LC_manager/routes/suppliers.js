@@ -36,15 +36,15 @@ router.route('/')
 
 	    }else{
 		res.format({
-		    html: function(){
+		    /*html: function(){
 			res.render('suppliers/index',{
 			    title: 'List of All suppliers',
 			    "suppliers" : suppliers
 			});
-		    },
+		    },*/
 
 		    json: function(){
-			res.json(suppliers);
+			res.json(JSON.stringify(suppliers));
 		    }
 		});
 	    }

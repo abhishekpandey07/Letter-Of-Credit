@@ -40,15 +40,15 @@ router.route('/')
 
 	    }else{
 		res.format({
-		    html: function(){
+		    /*html: function(){
 			res.render('LCs/index',{
 			    title: 'List of All Letters of Credit',
 			    "LCs" : LCs
 			});
-		    },
+		    },*/
 
 		    json: function(){
-			res.json(LCs);
+			res.json(JSON.stringify(LCs));
 		    }
 		});
 	    }

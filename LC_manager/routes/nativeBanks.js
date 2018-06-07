@@ -37,18 +37,26 @@ router.route('/')
                   return console.error(err);
 		  
               } else {
+		  console.log('generating response!')
                   //respond to both HTML and JSON. JSON responses require 'Accept: application/json;' in the Request Header
+                  //console.log(banks[0].LC_limit)
+                  banksdata = banks.reduce((banks,bank)=>{
+                    banks.push([bank.name,bank.branch,bank.IFSC,
+                                  parseFloat(bank.LC_limit),
+                                  parseFloat(bank.LC_used)])
+                    return banks
+                  });
                   res.format({
                       //HTML response will render the index.jade file in the views/banks folder. We are also setting "banks" to be an accessible variable in our jade view
-                    html: function(){
+                    /*html: function(){
                         res.render('nativeBanks/index', {
                               title: 'All my Banks',
                               "banks" : banks
                           });
-                    },
+                    },*/
                     //JSON response will show all banks in JSON format
                     json: function(){
-                        res.json(banks);
+                        res.json(JSON.stringify(banks));
                     }
                 });
               }     

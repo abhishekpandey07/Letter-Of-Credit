@@ -28,14 +28,14 @@ router.route('/')
 		return console.error(err);
 	    } else{
 		res.format({
-		    html: function(){
+		    /*html: function(){
 			res.render('projects/index',{
 			    title: 'All Projects',
 			    'projects': projects
 			});
-		    },
+		    },*/
 		    json: function(){
-			res.json(projects);
+			res.json(JSON.stringify(projects));
 		    }
 		});
 	    }
