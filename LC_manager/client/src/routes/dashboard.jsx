@@ -87,12 +87,12 @@ const dashboardRoutes = [
     icon: ContentPaste,
     component: LCs
   },
-  {
-    path: "/AddNewLC",
+  /*{
+    path: "LCs/AddNewLC",
     sidebarName: "New LC",
     icon: ContentPaste,
     component: NewLCForm
-  },
+  },*/
   { redirect: true, path: "/", to: "/dashboard", navbarName: "Redirect" }
 ];
 

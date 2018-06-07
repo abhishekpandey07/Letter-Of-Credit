@@ -9,6 +9,7 @@ import { withStyles } from "material-ui";
 import { Header, Footer, Sidebar } from "components";
 
 import dashboardRoutes from "routes/dashboard.jsx";
+import LCRoutes from "routes/lcs.jsx"
 
 import appStyle from "assets/jss/material-dashboard-react/appStyle.jsx";
 
@@ -18,6 +19,11 @@ import logo from "assets/img/reactlogo.png";
 const switchRoutes = (
   <Switch>
     {dashboardRoutes.map((prop, key) => {
+      if (prop.redirect)
+        return <Redirect from={prop.path} to={prop.to} key={key} />;
+      return <Route path={prop.path} component={prop.component} key={key} />;
+    })}
+    {LCRoutes.map((prop, key) => {
       if (prop.redirect)
         return <Redirect from={prop.path} to={prop.to} key={key} />;
       return <Route path={prop.path} component={prop.component} key={key} />;

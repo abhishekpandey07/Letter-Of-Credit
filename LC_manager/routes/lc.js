@@ -89,6 +89,8 @@ router.route('/').post(function(req,res){
 	GST: req.body.GST,
 	disbursement: req.body.disbursement
     }
+
+    console.log('AAAAAAAA '+JSON.stringify(req.body))
     // creating the entry
     LCDB.create({
 	issuer: issuer,

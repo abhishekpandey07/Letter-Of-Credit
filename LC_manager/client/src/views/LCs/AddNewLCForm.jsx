@@ -9,6 +9,7 @@ import EJSON from 'mongodb-extended-json';
 import TextField from '@material-ui/core/TextField';
 import cx from "classnames";
 import InputAdornment from '@material-ui/core/InputAdornment';
+import axios from 'axios'
 
 import {
   //ProfileCard,
@@ -42,7 +43,7 @@ class NewLCForm extends React.Component{
       m_amt: '',
       m_cl_DT: '',
       amount: '',
-      dueDT: '',
+      due_DT: '',
       due_amt: '',
       payed_amt: '',
       opening: '',
@@ -54,6 +55,8 @@ class NewLCForm extends React.Component{
       suppliersList: [],
       issuerList: []
     }
+
+      
   }
 
   callSupplierApi = async () => {
@@ -111,9 +114,22 @@ class NewLCForm extends React.Component{
 
     }
 
+  handleSubmit = event => {
+
+    axios.post('/LCs', this.state)
+     .then(function(response){
+       console.log(response);
+       //Perform action based on response
+   })
+     .catch(function(error){
+       console.log(error);
+       //Perform action based on error
+     });
+  }
+
   render () {
-    //console.log(this.state.suppliersList)
-    //console.log(this.state.issuerList)
+    //console.log(this.suppliersList)
+    //console.log(this.issuerList)
 
     var suppliersList = this.state.suppliersList.map(prop => {
       return(
@@ -133,6 +149,7 @@ class NewLCForm extends React.Component{
     const {classes} = this.props
     return (
       <div>
+      <form onSubmit={this.handleSubmit}>
         <Grid container>
           <ItemGrid xs={12} sm={12} md={12}>
             <RegularCard
@@ -147,11 +164,11 @@ class NewLCForm extends React.Component{
                         <InputLabel htmlFor="Supplier">Supplier</InputLabel>
                         <Select
                           native
-                          value={this.state.supplier}
+                          value={this.state.supplier.name}
                           onChange={this.handleChange('supplier')}
                           inputProps={{
                             name: 'supplier',
-                            id: 'supllier-field'
+                            id: 'supplier-field'
                           }}
                         >
                           <option value=""/>
@@ -167,7 +184,7 @@ class NewLCForm extends React.Component{
                         <Select
                           required
                           native
-                          value={this.state.issuer}
+                          value={this.state.issuer.name}
                           onChange={this.handleChange('issuer')}
                           inputProps={{
                             name: 'issuer',
@@ -191,9 +208,7 @@ class NewLCForm extends React.Component{
                           inputProps ={{
                             required: true,
                             onChange: this.handleChange('LC_no')
-
                           }}
-
                         />
                     </ItemGrid>
                     <ItemGrid xs={6} sm={3} md={3}>
@@ -359,13 +374,13 @@ class NewLCForm extends React.Component{
                           />
                         </FormControl>
                     </ItemGrid>
-                  </Grid>
-                </div>
-              }
-              footer={<Button color="primary">Update Profile</Button>}
-            />
+                  </Grid>  
+                </div>  
+                }      
+                  footer={<Button color="primary" type="submit">Submit</Button>}/>            
           </ItemGrid>
         </Grid>
+      </form>
       </div>
     );
   }
