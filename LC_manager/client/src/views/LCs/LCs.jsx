@@ -1,11 +1,5 @@
 import React from "react";
-import { Grid, Icon, withStyles,  Button, Typography } from "@material-ui/core";
-import AddIcon from '@material-ui/icons/Add'
-import Modal from '@material-ui/core/Modal';
-import EJSON from 'mongodb-extended-json'
-//import getComponent from 'hadron-react-bson'
 import {Switch, Route, Redirect, NavLink } from "react-router-dom";
-import { RegularCard, Table, ItemGrid, AddModal } from "components";
 import LCRoutes from 'routes/lcs.jsx'
 
 const switchRoutes = (

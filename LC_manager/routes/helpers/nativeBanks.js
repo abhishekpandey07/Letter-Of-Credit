@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 // add a new LC to a bank
 
-function addLC(bank,LC,callback){
+function addBankLC(bank,LC,callback){
     console.log('Attempting to upgrade the LC details');
     // Adding LC to the bank;
     var LC_used = parseFloat(bank.LC_used);
@@ -38,7 +38,7 @@ function addLC(bank,LC,callback){
 
 // remove an LC from a bank
 
-function removeLC(bank,LC,callback){
+function removeBankLC(bank,LC,callback){
 
     var LC_used = parseFloat(bank.LC_used);
     var amount = parseFloat(LC.amount);
@@ -82,8 +82,8 @@ function closeLC(bank,LC,callback){
 }
 
 module.exports = {
-    addLC,
-    removeLC,
+    addBankLC,
+    removeBankLC,
     closeLC
     
 }

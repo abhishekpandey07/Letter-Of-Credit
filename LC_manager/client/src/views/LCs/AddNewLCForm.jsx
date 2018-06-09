@@ -1,5 +1,6 @@
 import React from "react";
-import { Grid, InputLabel, withStyles, Divider, Paper} from "material-ui";
+import {NavLink} from 'react-router-dom'
+import { Grid, InputLabel, withStyles, Divider, Paper} from "@material-ui/core";
 import Input from '@material-ui/core/Input';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
@@ -7,7 +8,6 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import EJSON from 'mongodb-extended-json';
 import TextField from '@material-ui/core/TextField';
-import cx from "classnames";
 import InputAdornment from '@material-ui/core/InputAdornment';
 import axios from 'axios'
 
@@ -40,18 +40,19 @@ class NewLCForm extends React.Component{
       LC_no: '',
       FDR_no: '',
       FDR_DT: '',
-      m_amt: '',
+      m_amt: 0,
       m_cl_DT: '',
-      amount: '',
+      amount: 0,
       due_DT: '',
-      due_amt: '',
-      payed_amt: '',
-      opening: '',
-      amendment: '',
-      boea: '',
-      postal: '',
-      GST: '',
-      disbursement:'',
+      due_amt: 0,
+      payed_amt: 0,
+      pay_ref: '',
+      opening: 0,
+      amendment: 0,
+      boea: 0,
+      postal: 0,
+      GST: 0,
+      disbursement:0,
       suppliersList: [],
       issuerList: []
     }
@@ -374,10 +375,35 @@ class NewLCForm extends React.Component{
                           />
                         </FormControl>
                     </ItemGrid>
+                    <ItemGrid xs={6} sm={3} md={3}>
+                      <FormControl fullWidth={true} margin='normal'>
+                        <TextField
+                          required
+                          id="pay_ref"
+                          label="Payment Ref."
+                          type="text"
+                          value = {this.state.pay_ref}
+                          onChange = {this.handleChange('pay_ref')}
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
+                          margin = 'inherit'
+                      />
+                     </FormControl> 
+                    </ItemGrid>
                   </Grid>  
                 </div>  
-                }      
-                  footer={<Button color="primary" type="submit">Submit</Button>}/>            
+                }
+                footer={
+                  <div>
+                    <NavLink
+                      to="/LCs"
+                      activeClassName="active"
+                      >
+                      <Button color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
+                  </NavLink>
+                  </div>
+                  }/>            
           </ItemGrid>
         </Grid>
       </form>

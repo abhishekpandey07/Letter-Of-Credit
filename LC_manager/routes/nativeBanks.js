@@ -45,7 +45,7 @@ router.route('/')
                                   parseFloat(bank.LC_limit),
                                   parseFloat(bank.LC_used)])
                     return banks
-                  });
+                  },[]);
                   res.format({
                       //HTML response will render the index.jade file in the views/banks folder. We are also setting "banks" to be an accessible variable in our jade view
                     /*html: function(){

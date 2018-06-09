@@ -12,7 +12,8 @@ var projectSchema = new mongoose.Schema({
     value : { type : mongoose.Schema.Types.Decimal128,
 	      required : true },
 
-    suppliers : [{ material : String, supplier : mongoose.Schema.Types.ObjectId }]
+    suppliers : [{ type : mongoose.Schema.Types.ObjectId,
+    			   ref: 'Supplier' }]
 });
 
 mongoose.model('projects',projectSchema);

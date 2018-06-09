@@ -22,7 +22,12 @@ router.use(methodOverride(function(req,res){
 router.route('/')
     .get(function(req,res){
 	// finding all projects.
-	projectsDB.find({}, function(err,projects){
+	projectsDB.find({})
+	.populate({
+		path:'suppliers'
+	}).
+	exec(function(err,projects){
+		console.log(projects)
 	    if(err) {
 		console.log('error retreiveing projects.');
 		return console.error(err);
@@ -46,17 +51,18 @@ router.route('/').post(function(req,res){
 	var name = req.body.name;
 	var location = req.body.location;
 	var value = req.body.value;
-
+	var manager = req.body.manager;
 	// create database entry
 	projectsDB.create({
 	    name : name,
 	    location : location,
-	    value : value
+	    value : value,
+	    manager: manager
 	}, function(error,project){
 
 	    if (error) {
 		console.log('Error creating new project entry');
-		return console.error(err);
+		return console.error(error);
 	    } else{
 		
 		res.format({

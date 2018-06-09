@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css?family=Overpass:400,700');
+
+body {
+  background-image: linear-gradient(135deg, #A0D468 0%, #6EAF26 100%);
+  border-radius: 15px 15px 0 15px 15px 0;
+  height: 100vh;
+  font: 14px/20px 'Overpass', sans-serif;
+  position: relative;
+}
+
+.table-wrapper {
+  background: #fff;
+  box-shadow: 0 0 50px rgba(62,105,9,0.75);
+  left: 50%;
+  position: absolute;  
+  top: 50%;
+  transform: translate(-50%,-50%);
+}
+
+.table-wrapper > table {
+  border-spacing: 0;
+  overflow: hidden;
+  width: 700px;
+  th {
+    border-bottom: 1px solid #A6DC67;
+    font-weight: 700;
+    padding: 13px 20px;
+    text-align: left;
+  }
+  tr {
+    &.default {
+      cursor: pointer;
+      transition: all .2s ease;
+      td {
+        border-bottom: 1px solid #eef9e2;
+        padding: 10px 20px;
+      }
+    }
+    &.toggle-row td {
+      padding: 0;
+    }
+    &.default:hover {
+      background: lighten(#6EAF26,52%);
+    }
+    &.active {
+      background: lighten(#6EAF26,51%);
+    }
+  }
+}
+
+.serial-num {
+  color: rgba(51, 51, 51, 0.4);
+  font-size: 16px;
+}
+
+.arrow {
+  border-bottom: 2px solid #333;
+  border-right: 2px solid #333;
+  cursor: pointer;
+  float: right;
+  height: 8px;
+  margin: 0 auto;
+  text-indent: -9999px;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  width: 8px;
+}
+
+.active .arrow {
+  transform: rotate(225deg);
+}
+
+.sub-table-wrap {
+  display: none;
+  background: #fff;
+}
+
+.full-sub-table {
+  background: #f9fdf5;
+  padding: 24px 14px;
+  .info-wrapper {
+    display: inline-block;
+    margin: 0;
+    width: 24%;
+    dt {
+      color: rgba(51, 51, 51, 0.7);
+    }
+    dd {
+      margin: 0;
+    }
+  }
+}
+

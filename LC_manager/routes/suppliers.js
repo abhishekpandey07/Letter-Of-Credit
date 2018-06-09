@@ -3,8 +3,8 @@ const express = require('express'),
       mongoose = require('mongoose'),
       bodyParser = require('body-parser'),
       methodOverride = require('method-override');
-
-
+      projectMethods = require('./helpers/projects')
+projectDB = mongoose.model('projects')
 supplierDB = mongoose.model('Supplier')
 //  router.use makes sure that all the requests go through the defined packages first
 
@@ -29,12 +29,15 @@ router.use(methodOverride(function(req, res){
 // the root directory will show all suppliers
 router.route('/')
     .get(function(req,res){
-	supplierDB.find({}, function(err,suppliers){
+	supplierDB.find({}).
+    populate('projects','name').
+    exec(function(err,suppliers){
 	    if(err){
 		console.log(err);
 		throw err;
 
 	    }else{
+            console.log(JSON.stringify(suppliers))
 		res.format({
 		    /*html: function(){
 			res.render('suppliers/index',{
@@ -59,6 +62,7 @@ router.route('/').post(function(req,res){
     var bank = req.body.bank;
     var branch = req.body.branch;
     var IFSC = req.body.IFSC;
+    var project = req.body.project;
     //        var project = req.body.project;
     var banks = [{
 	name : bank,
@@ -70,7 +74,7 @@ router.route('/').post(function(req,res){
     supplierDB.create({
 	name : name,
 	city : city,
-	//	    projects : [project],
+	projects : [project],
 	banks : banks
 	
     }, function(error,supplier){
@@ -78,6 +82,27 @@ router.route('/').post(function(req,res){
 	    console.error(error)
 	    res.send('An error occured. Could not create the new supplier.')
 	}else{
+
+        projectDB.findById(project, function(error, project){
+            if(error){
+                console.log('error retreiving supplier data.');
+                console.error('error')
+                res.send('An error occured while retreiving issuing supplier data.')
+            } else {
+                projectMethods.addSupplier(project, supplier, function(error,project){
+                    if (error) {
+                    res.status = error.status;
+                    res.send(error);
+                    }
+                    else {
+                    console.log('supplier successfully added to : '+ project.name);
+                    }
+                });
+                }
+            }
+        );
+
+
 	    // supplier created
 	    console.log('POST creating new supplier : '+ supplier);
 	    res.format({
@@ -120,6 +145,8 @@ router.param('id', function(req,res,next,id){
 		    }
 		});
 	    }else{
+
+
 
 		console.log(supplier);
 		res.locals.id = id;

@@ -8,6 +8,7 @@ import RegularCard from "./Cards/RegularCard.jsx";
 import StatsCard from "./Cards/StatsCard.jsx";
 import TasksCard from "./Cards/TasksCard.jsx";
 
+import BanksTable from './BanksTable/BanksTable'
 // ##############################
 // // // CustomButtons
 // #############################
@@ -80,11 +81,13 @@ import Small from "./Typography/Small.jsx";
 import A from "./Typography/A.jsx";
 
 // ##############################
-// // // Modals
+// // // LCPanels
 // #############################
-import AddModal from './AddModals/AddModals'
+import LCPanel from './LCs/LCExpansionPanel'
 
 export {
+  LCPanel,
+  BanksTable,
   // Cards
   ChartCard,
   ProfileCard,
@@ -123,6 +126,4 @@ export {
   Danger,
   Small,
   A,
-
-  AddModal,
 };

@@ -3,10 +3,16 @@ const express = require('express'),
       mongoose = require('mongoose'),
       bodyParser = require('body-parser'),
       methodOverride = require('method-override'),
-      bankMethods = require('./helpers/nativeBanks');
+      bankMethods = require('./helpers/nativeBanks'),
+      supplierMethods = require('./helpers/Suppliers'),
+      formidable = require('formidable'),
+      fs = require('fs'),
+      mv = require('mv'),
+      util = require('util');
 
 LCDB = mongoose.model('LC')
 natBankDB = mongoose.model('nativeBanks')
+supplierDB = mongoose.model('Supplier')
 //  router.use makes sure that all the requests go through the defined packages first
 
 // adds req.body property to manipulate post requests
@@ -78,7 +84,8 @@ router.route('/').post(function(req,res){
 	    payed_amt: req.body.payed_amt // assuming 0 payed when creating LC.
 	}],
 	total_due : req.body.due_amt, // assuming total due is equal to current due
-	total_payed: req.body.payed_amt
+	total_payed: req.body.payed_amt,
+    pay_ref: req.body.pay_ref
     }
 
     var charges = {
@@ -113,41 +120,63 @@ router.route('/').post(function(req,res){
 	    // LC created
 	    // need to deduct LC_used from nativeBank
 	    natBankDB.findById(issuer, function(error, bank){
-		if(error){
-		    console.log('error retreiving issuing bank data.');
-		    console.error('error')
-		    res.send('An error occured while retreiving issuing bank data.')
-		} else {
-		    var LC_used = bank.LC_used;
-		    LC_used += LC.amount;
-		    if(LC_used < 0){
-			res.status = 409;
-			neg_error = new Error('LC_limit crossed!. Removing generated LC.');
-			neg_error.status = 409;
-			LC.remove(function(rm_error,LC){
-			    if(error){
-				console.log('LC '+LC._id+' could not me removed. Marking it as InValid')
-				LC.update({
-				    status: 'InValid'
-				})
-			    }
-			});
-			return res.send(neg_error);
-		    }else {
-			// add LC to bank 
-			
-			bankMethods.addLC(bank, LC, function(error,bank){
-			    if (error) {
-				res.status = error.status;
-				res.send(error);
-			    }
-			    else {
-				console.log('LC successfully added to : '+ bank.name);
-			    }
-			});
-		    }
-		}
+    		if(error){
+    		    console.log('error retreiving issuing bank data.');
+    		    console.error('error')
+    		    res.send('An error occured while retreiving issuing bank data.')
+    		} else {
+    		    var LC_used = bank.LC_used;
+    		    LC_used += LC.amount;
+    		    if(LC_used < 0){
+    			res.status = 409;
+    			neg_error = new Error('LC_limit crossed!. Removing generated LC.');
+    			neg_error.status = 409;
+    			LC.remove(function(rm_error,LC){
+    			    if(error){
+    				console.log('LC '+LC._id+' could not me removed. Marking it as InValid')
+    				LC.update({
+    				    status: 'InValid'
+    				})
+    			    }
+    			});
+    			return res.send(neg_error);
+    		    }else {
+    			// add LC to bank 
+    			
+    			bankMethods.addBankLC(bank, LC, function(error,bank){
+    			    if (error) {
+    				res.status = error.status;
+    				res.send(error);
+    			    }
+    			    else {
+    				console.log('LC successfully added to : '+ bank.name);
+    			    }
+    			});
+    		    }
+
+
+    		}
 	    });
+
+        supplierDB.findById(supplier, function(error, supplier){
+            if(error){
+                console.log('error retreiving supplier data.');
+                console.error('error')
+                res.send('An error occured while retreiving issuing supplier data.')
+            } else {
+                supplierMethods.addLC(supplier, LC, function(error,supplier){
+                    if (error) {
+                    res.status = error.status;
+                    res.send(error);
+                    }
+                    else {
+                    console.log('LC successfully added to : '+ supplier.name);
+                    }
+                });
+                }
+            }
+        );
+
 	    console.log('POST creating new LC : '+ LC);
 	    res.format({
 
@@ -326,6 +355,25 @@ router.get('/:id/addDueDetails', function(req, res) {
     });
 });
 
+router.get('/:id/addDocument', function(req, res) {
+    var LC = res.locals.LC;
+    console.log('GET Processing ID: ' + LC._id);
+    //format the date properly for the value to show correctly in our edit form
+    res.format({
+        //HTML response will render the 'edit.jade' template
+        html: function(){
+            res.render('LCs/addDueDetails', {
+                title: 'LC: ' + LC._id,
+                "LC": LC
+            });
+        },
+        //JSON response will return the JSON output
+        json: function(){
+            res.json(LC);
+        }
+    });
+});
+
 //GET the individual blob by Mongo ID
 router.get('/:id/close', function(req, res) {
     var LC = res.locals.LC;
@@ -473,17 +521,22 @@ router.put('/:id/addPayment', function(req, res) {
     //find the document by ID
     var LC = res.locals.LC; // is this pass by reference?
     var payment = parseFloat(req.body.payment);
-    
+    var pay_ref = req.body.pay_ref;
     var payArray = LC.payment.DT_amt; // is this pass by reference?
-    var lastInstallment = payArray[payArray.length -1]; // is this pass by reference?
+    console.log(req.body)
+    var index = parseFloat(req.body.index)
+    
+    var lastInstallment = payArray[index];
+    console.log('Installment :' + String(lastInstallment))
     var payed_amt = parseFloat(lastInstallment['payed_amt']);
     var total_payed = parseFloat(LC.payment.total_payed);
     
-    payed_amt += payment;
+    payed_amt = payment;
     total_payed += payment;
     
     lastInstallment['payed_amt'] = payed_amt;
-    payArray[payArray.length -1] = lastInstallment;
+    lastInstallment['pay_ref'] = pay_ref;
+    payArray[index] = lastInstallment;
     
     LC.payment.total_payed = total_payed;
     LC.payment.DT_amt = payArray;
@@ -507,6 +560,82 @@ router.put('/:id/addPayment', function(req, res) {
         }
     });
 });
+
+/* Document Upload Handle*/
+
+router.put('/:id/addDocument', function(req, res) {
+    // Get our REST or form values. These rely on the "name" attributes
+    //find the document by ID
+    var LC = res.locals.LC;
+    while(LC.lock == true){};
+    LC.lock = true;
+    LC.save(function(error,LCID){
+        if(error)  {
+            console.log(error)
+            res.send(error)
+        }
+        console.log('Lock Acquired')
+    })
+    var form = new formidable.IncomingForm();
+    form.parse(req, function (err, fields, files){
+        if(err) {
+            console.log(err); res.send(err)
+        }
+        console.log(files.fileupload)
+        var oldpath = files.fileupload.path
+        console.log('oldpath: '+oldpath);
+        console.log('dirname: '+ __dirname)
+    })
+
+    mv(oldpath,newpath,{mkdirp: true}, function (err){
+        if (err){
+            console.log(err)
+            res.send(err)
+        }
+        //res.writeHead(200,{"Content-Type" : "text/html"});
+        //res.write('File uploaded and moved to '+ newpath+"<br>");
+        //res.end(util.inspect({fields:fields, files:files}))
+        });
+
+    
+    var rec = req.body.rec
+    var accept = req.body.accept
+    
+    var lastInstallment = payArray[index];
+    console.log('Installment :' + String(lastInstallment))
+    var payed_amt = parseFloat(lastInstallment['payed_amt']);
+    var total_payed = parseFloat(LC.payment.total_payed);
+    
+    payed_amt = payment;
+    total_payed += payment;
+    
+    lastInstallment['payed_amt'] = payed_amt;
+    lastInstallment['pay_ref'] = pay_ref;
+    payArray[index] = lastInstallment;
+    
+    LC.payment.total_payed = total_payed;
+    LC.payment.DT_amt = payArray;
+
+    LC.save(function (err, LCID) {
+        if (err) {
+            res.send("There was a problem updating the information to the database: " + err);
+        } 
+        else {
+            //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            res.format({
+                html: function(){
+                    res.redirect("/LCs/" + LC._id);
+                },
+                //JSON responds showing the updated values
+                json: function(){
+                    res.json(LC);
+                }
+            });
+            
+        }
+    });
+});
+
 
 /* Can only edit LC_no, FDR_no, amount. Need authorisation.*/    
 router.put('/:id/edit', function(req, res) {
@@ -578,7 +707,7 @@ router.delete('/:id/edit', function (req, res){
             console.log('DELETE removing ID: ' + LC._id);
 
 	    // need to increase issuer LC_used value!
-	    bankMethods.removeLC(res.locals.issuer,res.locals.LC,
+	    bankMethods.removeBankLC(res.locals.issuer,res.locals.LC,
 				 function(error,bank){
 				     if (error) {
 					 return res.send(error);

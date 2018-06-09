@@ -8,7 +8,7 @@ import Typography from "views/Typography/Typography.jsx";
 import Icons from "views/Icons/Icons.jsx";
 import Maps from "views/Maps/Maps.jsx";
 import NotificationsPage from "views/Notifications/Notifications.jsx";
-import NewLCForm from 'views/LCs/AddNewLCForm.jsx'
+import Projects from 'views/Projects/Projects.jsx';
 import {
   Dashboard,
   Person,
@@ -27,7 +27,7 @@ const dashboardRoutes = [
     icon: Dashboard,
     component: DashboardPage
   },
-  {
+  /*{
     path: "/user",
     sidebarName: "User Profile",
     navbarName: "Profile",
@@ -40,7 +40,7 @@ const dashboardRoutes = [
     navbarName: "Table List",
     icon: ContentPaste,
     component: TableList
-  },
+  },*/
   {
     path: "/typography",
     sidebarName: "Typography",
@@ -55,7 +55,7 @@ const dashboardRoutes = [
     icon: BubbleChart,
     component: Icons
   },
-  {
+  /*{
     path: "/maps",
     sidebarName: "Maps",
     navbarName: "Map",
@@ -68,7 +68,7 @@ const dashboardRoutes = [
     navbarName: "Notifications",
     icon: Notifications,
     component: NotificationsPage
-  },
+  },*/
   {
     path: "/Banks",
     sidebarName: "Banks",
@@ -87,12 +87,12 @@ const dashboardRoutes = [
     icon: ContentPaste,
     component: LCs
   },
-  /*{
-    path: "LCs/AddNewLC",
-    sidebarName: "New LC",
+  {
+    path: "/Projects",
+    sidebarName: "Projects",
     icon: ContentPaste,
-    component: NewLCForm
-  },*/
+    component: Projects
+  },
   { redirect: true, path: "/", to: "/dashboard", navbarName: "Redirect" }
 ];
 

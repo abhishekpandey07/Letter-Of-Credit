@@ -5,7 +5,10 @@ var LC_Payment_Schema = new mongoose.Schema({
     DT_amt: [{
 	due_DT : { type : Date, required : true },
 	due_amt : { type : mongoose.Schema.Types.Decimal128, required : true },
-	payed_amt : { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 }
+	payed_amt : { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 },
+    pay_ref: {type: String},
+    receipt: {name: String, rec: { type: Boolean, default: false}},
+    acceptance: {name: String, rec: { type: Boolean, default: false}},
     }],
     total_due: { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 },
     total_payed: { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 }
@@ -19,8 +22,12 @@ var LCSchema = new mongoose.Schema({
 		 ref : 'Supplier',
 		 required : true },
     dates: [{
+
 	openDT :{ type : Date, required : true, default : Date.now},
-	expDT : { type : Date, required : true, }
+	expDT : { type : Date, required : true, },
+    bankCharges: {name: String, rec: { type: Boolean, default: false}},
+    application: {name: String, rec: { type: Boolean, default: false}},
+    
     }],
     LC_no : { type : String, required : true },
     FDR_no: { type : String, required : true },
@@ -39,7 +46,8 @@ var LCSchema = new mongoose.Schema({
 	       total : mongoose.Schema.Types.Decimal128
 	     },
     status : {type: String, enum: ['Active', 'Expired', 'InValid', 'Extended']},
-    documents : [ String ] // storing addresses to uploaded documents
+    lock: {type: Boolean, deafault: false}
+
    
 });
 

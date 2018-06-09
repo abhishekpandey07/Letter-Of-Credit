@@ -13,7 +13,8 @@ var supplierBankSchema  = new mongoose.Schema({
 var supplierSchema = new mongoose.Schema({
     name : { type: String, required: true },
     city : { type: String, required: true },
-    projects : [mongoose.Schema.Types.ObjectId],              // can supply to multiple projects
+    projects : [{ type: mongoose.Schema.Types.ObjectId,
+                    ref: "projects"}],              // can supply to multiple projects
     banks : [supplierBankSchema],    // can have multiple bank accounts
     LCs : [{ type : mongoose.Schema.Types.ObjectId,
 	     ref : "LC",
