@@ -1,5 +1,5 @@
 import React from "react";
-import {NavLink} from 'react-router-dom'
+import {NavLink, Redirect} from 'react-router-dom'
 import { Grid, InputLabel, withStyles, Divider, Paper} from "@material-ui/core";
 import Input from '@material-ui/core/Input';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -54,9 +54,9 @@ class NewLCForm extends React.Component{
       GST: 0,
       disbursement:0,
       suppliersList: [],
-      issuerList: []
+      issuerList: [],
+      redirect: false
     }
-
       
   }
 
@@ -103,10 +103,10 @@ class NewLCForm extends React.Component{
     console.log(this.state)
   };
 
-    componentDidMount() {
+    componentWillMount() {
       console.log('async was called');
       this.callSupplierApi()
-      .then(res => this.setState({ suppliersList: res }))
+      .then(res => this.setState({suppliersList:res}))
       .catch(err => console.log(err));
 
       this.callIssuerApi()
@@ -119,13 +119,22 @@ class NewLCForm extends React.Component{
 
     axios.post('/LCs', this.state)
      .then(function(response){
-       console.log(response);
-       //Perform action based on response
+       console.log(response)
+       //this.setState({redirect: true})
+       window.location ='/LCs'
    })
      .catch(function(error){
-       console.log(error);
+       console.log(error)
        //Perform action based on error
      });
+  }
+
+  renderRedirect = () => {
+    if(this.state.redirect){
+      return(
+        <Redirect to='/LCs'/>
+        )
+      }
   }
 
   render () {
@@ -242,7 +251,7 @@ class NewLCForm extends React.Component{
                     </ItemGrid>
                     <ItemGrid xs={6} sm={3} md={3}>
                       <FormControl fullWidth className={classes.margin} margin='normal'>
-                          <InputLabel htmlFor="adornment-amount">Margin Amount</InputLabel>
+                          <InputLabel htmlFor="adornment-amount">Margin Amount ({Math.round(this.state.amount*0.15)})</InputLabel>
                           <Input
                             id="adornment-margin-amount"
                             type="number"
@@ -314,7 +323,6 @@ class NewLCForm extends React.Component{
                     <ItemGrid xs={6} sm={3} md={3}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
-                          required
                           id="m_cl_DT"
                           label="Margin Clear Date"
                           type="date"
@@ -355,6 +363,7 @@ class NewLCForm extends React.Component{
                       <FormControl fullWidth className={classes.margin} margin='normal'>
                           <InputLabel htmlFor="adornment-amount">Installment Amount</InputLabel>
                           <Input
+                            required
                             id="adornment-due-amount"
                             type="number"
                             value={this.state.due_amt}
@@ -378,7 +387,6 @@ class NewLCForm extends React.Component{
                     <ItemGrid xs={6} sm={3} md={3}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
-                          required
                           id="pay_ref"
                           label="Payment Ref."
                           type="text"
@@ -395,13 +403,10 @@ class NewLCForm extends React.Component{
                 </div>  
                 }
                 footer={
+                  
                   <div>
-                    <NavLink
-                      to="/LCs"
-                      activeClassName="active"
-                      >
+                    {this.renderRedirect()}
                       <Button color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
-                  </NavLink>
                   </div>
                   }/>            
           </ItemGrid>

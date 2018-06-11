@@ -70,6 +70,7 @@ class NewBankForm extends React.Component{
      .then(function(response){
        console.log(response);
        //Perform action based on response
+       window.location='/Banks'
    })
      .catch(function(error){
        console.log(error);
@@ -176,12 +177,7 @@ class NewBankForm extends React.Component{
                 </div>  
                 }
                footer={<div>
-                        <NavLink
-                          to="/Banks"
-                          activeClassName="active"
-                        >
                           <Button color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
-                        </NavLink>
                       </div>
 
               }

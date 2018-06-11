@@ -567,55 +567,78 @@ router.put('/:id/addDocument', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC;
-    while(LC.lock == true){};
+    /*while(LC.lock == true){};
     LC.lock = true;
-    LC.save(function(error,LCID){
+    LC.save(function(error,LCID,num_updated){
         if(error)  {
             console.log(error)
             res.send(error)
         }
+       if(num_updated != 1) 
         console.log('Lock Acquired')
-    })
+    })*/
+    var name = req.body.name
+    var index = parseFloat(req.body.index)
+    console.log(req.body.files)
+    var oldpath = null
+    var newpath = null
     var form = new formidable.IncomingForm();
     form.parse(req, function (err, fields, files){
         if(err) {
             console.log(err); res.send(err)
         }
         console.log(files.fileupload)
-        var oldpath = files.fileupload.path
-        console.log('oldpath: '+oldpath);
-        console.log('dirname: '+ __dirname)
+        oldpath = files.fileupload.path
+        newpath = __dirname+ '/' + 'DATA_FILES/' + res.locals.id
+                    +'/' + name + '.' + files.fileupload.name.split('.')[1]
+        
     })
 
-    mv(oldpath,newpath,{mkdirp: true}, function (err){
-        if (err){
-            console.log(err)
-            res.send(err)
+    console.log(__dirname)
+    console.log('oldpath: '+oldpath);
+    console.log('newpath: '+ newpath)
+
+    if (oldpath && newpath){
+        mv(oldpath,newpath,{mkdirp: true}, function (err){
+            if (err){
+                console.log(err)
+                res.send(err)
+            }
+            //res.writeHead(200,{"Content-Type" : "text/html"});
+            //res.write('File uploaded and moved to '+ newpath+"<br>");
+            //res.end(util.inspect({fields:fields, files:files}))
+            });
+    }
+    
+    switch(name){
+        case "receipt": {
+            LC.payment.DT_amt[index].rec.name = newpath;
+            LC.payment.DT_amt[index].rec.rec = true;
+            break;
         }
-        //res.writeHead(200,{"Content-Type" : "text/html"});
-        //res.write('File uploaded and moved to '+ newpath+"<br>");
-        //res.end(util.inspect({fields:fields, files:files}))
-        });
+        case "acceptance": {
+            LC.payment.DT_amt[index].acc.name = newpath;
+            LC.payment.DT_amt[index].acc.rec = true;
+            break;   
+        }
+        case "bankCharges": {
+            LC.dates[index].bc.name = newpath;
+            LC.dates[index].bc.rec = true;
+            break;      
+        }
+        case "application": {
+            LC.dates[index].app.name = newpath;
+            LC.dates[index].app.rec = true;
+            break;         
+        }
 
+        default: {
+            error = new Error('Invalid request')
+            error.status = 405
+            return res.send(error)
+        }
+    }
     
-    var rec = req.body.rec
-    var accept = req.body.accept
-    
-    var lastInstallment = payArray[index];
-    console.log('Installment :' + String(lastInstallment))
-    var payed_amt = parseFloat(lastInstallment['payed_amt']);
-    var total_payed = parseFloat(LC.payment.total_payed);
-    
-    payed_amt = payment;
-    total_payed += payment;
-    
-    lastInstallment['payed_amt'] = payed_amt;
-    lastInstallment['pay_ref'] = pay_ref;
-    payArray[index] = lastInstallment;
-    
-    LC.payment.total_payed = total_payed;
-    LC.payment.DT_amt = payArray;
-
     LC.save(function (err, LCID) {
         if (err) {
             res.send("There was a problem updating the information to the database: " + err);
@@ -672,8 +695,25 @@ router.put('/:id/close', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC;
-    
     LC.status = 'Expired';
+
+    bankMethods.closeLC(res.locals.issuer,LC,function(error,bank){
+        if(error) {
+            console.error(error)
+            return res.send(error)
+        }
+        console.log('LC Closed')
+    })
+
+    supplierMethods.removeLC(res.locals.supplier,LC,function(error,supplier){
+        if(error){
+            console.error(error)
+            return res.send(error)
+        }
+
+        console.log('LC successfully removed from supplier.')
+
+    })
     
     LC.save(function (err, LCID) {
         if (err) {
@@ -715,6 +755,16 @@ router.delete('/:id/edit', function (req, res){
 					 console.log('LC removed successfully.');
 				     }
 				 });
+
+        supplierMethods.removeLC(res.locals.supplier,res.locals.LC,
+                function(error,supplier){
+                    if(error) {
+                        console.error(error)
+                        return res.send(error)
+                    }
+
+                    console.log('LC removed from supplier successfully.')
+                })
 	    
 	    res.format({
 		//HTML returns us back to the main page, or you can create a success page

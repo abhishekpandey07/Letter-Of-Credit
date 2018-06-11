@@ -82,7 +82,7 @@ class LCHome extends React.Component{
       this.setState({addMode: false});
       console.log('Modal closed')
     }
-    componentDidMount() {
+    componentWillMount() {
       console.log('async was called')
       this.callApi()
       .then(res => this.setState({ LCs: res }))

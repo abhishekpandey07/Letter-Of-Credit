@@ -72,6 +72,7 @@ class NewSupplierForm extends React.Component{
      .then(function(response){
        console.log(response);
        //Perform action based on response
+       window.location('/Suppliers')
    })
      .catch(function(error){
        console.log(error);

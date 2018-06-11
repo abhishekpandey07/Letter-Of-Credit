@@ -7,8 +7,8 @@ var LC_Payment_Schema = new mongoose.Schema({
 	due_amt : { type : mongoose.Schema.Types.Decimal128, required : true },
 	payed_amt : { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 },
     pay_ref: {type: String},
-    receipt: {name: String, rec: { type: Boolean, default: false}},
-    acceptance: {name: String, rec: { type: Boolean, default: false}},
+    rec: {name: String, rec: { type: Boolean, default: false}}, // material receipt
+    acc: {name: String, rec: { type: Boolean, default: false}}, // bank acceptance
     }],
     total_due: { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 },
     total_payed: { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 }
@@ -25,8 +25,8 @@ var LCSchema = new mongoose.Schema({
 
 	openDT :{ type : Date, required : true, default : Date.now},
 	expDT : { type : Date, required : true, },
-    bankCharges: {name: String, rec: { type: Boolean, default: false}},
-    application: {name: String, rec: { type: Boolean, default: false}},
+    bc: {name: String, rec: { type: Boolean, default: false}}, // bank charges document
+    app: {name: String, rec: { type: Boolean, default: false}}, // application document
     
     }],
     LC_no : { type : String, required : true },

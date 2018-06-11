@@ -9,12 +9,16 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import Icon from '@material-ui/core/Icon'
 //import {Table, TableHead, TableRow, TableCell, TableBody} from '@material-ui/core'
 import {Table} from "components"
-import { Grid, Paper,Divider, List, MenuItem, Button, TextField, Input, InputLabel, FormControl } from '@material-ui/core'
+import
+{ Grid, Paper,Divider, List, MenuItem, Button,
+  TextField, Input, InputLabel, FormControl,
+  Dialog, DialogTitle } from '@material-ui/core'
 import red from '@material-ui/core/colors/red'
 import FileUpload from '@material-ui/icons/FileUpload'
 import FileDownload from '@material-ui/icons/FileDownload'
 import axios from 'axios'
 import InputAdornment from '@material-ui/core/InputAdornment';
+import FileUploadButton from './FileInput'
 
 
 const styles = theme => ({
@@ -38,6 +42,10 @@ const styles = theme => ({
 
   button:{
     margin: theme.spacing.unit,
+  },
+
+  input:{
+    display:'none',
   }
 });
 
@@ -63,7 +71,8 @@ class LCPanel extends React.Component {
       openDT: '',
       expDate:'',
       due_DT: '',
-      due_amt: 0
+      due_amt: 0,
+      refFile: '',
 
     }
   }
@@ -148,7 +157,6 @@ class LCPanel extends React.Component {
     })
   }
 
-
   render() {
     const { classes, LC } = this.props;
     const { expanded } = this.state;
@@ -176,12 +184,42 @@ class LCPanel extends React.Component {
     })
   */
 
+    function uploadLink(name,index) {
+        return (<div>
+                  <input
+                  accept="image/*"
+                  className={classes.input}
+                  id={"contained-button-file"+name+String(index)}
+                  multiple
+                  type="file"
+                />
+                <label htmlFor={"contained-button-file"+name+String(index)}>
+                  <Button variant="contained" component="span" className={classes.button}>
+                    <FileUpload/>
+                  </Button>
+                </label>
+        
+      </div>)
+    }
+
+    function uploadLink1(name,index) {
+        return (
+          <Button
+            component='span'
+            variant='raised'
+             containerElement='label' // <-- Just add me!
+             label='My Label'>
+             <input type="file" className={classes.input}/>
+          </Button>
+        )
+    }
+
     const paymentData = LC.payment.DT_amt.reduce((array,item,index) => {
       const ref = item.pay_ref? item.pay_ref : <Button variant='contained' size='small'
                             onClick={this.handlePaymentClick(index)}>Add Pay</Button>
-      console.log(item.receipt.rec, item.acceptance.rec)
-      const rec = item.receipt.rec ? <FileDownload/>:<FileUpload/>
-      const accep = item.acceptance.rec ? <FileDownload/>:<FileUpload/>
+      console.log(item.rec.rec, item.acc.rec)
+      const rec = item.rec.rec ? <FileDownload/>:<FileUploadButton id={this.state.LC._id} name='receipt' index={index}/>
+      const accep = item.acc.rec ? <FileDownload/>:<FileUpload/>
       array.push([item.due_DT.slice(0,10),String(item.due_amt),
         String(item.payed_amt),ref,rec,accep])
       return array
@@ -189,8 +227,9 @@ class LCPanel extends React.Component {
 
     const extensionData = LC.dates.reduce((array,item,index) => {
       var index = index === 0? 'original': 'extended'
-      const bc = item.bankCharges.rec ? <FileDownload/>:<FileUpload/>
-      const app = item.application.rec ? <FileDownload/>:<FileUpload/>
+      const bc = item.bc.rec ? (<FileDownload align='center'/>):
+                                (<FileUpload align='center'/>)
+      const app = item.app.rec ? <FileDownload/>:<FileUpload/>
       array.push([index,item.openDT.slice(0,10),item.expDT.slice(0,10),
                   app, bc])
       return array

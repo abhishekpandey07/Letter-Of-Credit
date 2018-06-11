@@ -101,7 +101,7 @@ class Banks extends React.Component{
                     </ NavLink>
                    </div>
               }/> 
-              />
+              
             </ItemGrid>
           </Grid>
         </div>

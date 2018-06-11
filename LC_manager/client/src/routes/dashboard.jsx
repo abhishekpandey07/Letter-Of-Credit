@@ -40,7 +40,7 @@ const dashboardRoutes = [
     navbarName: "Table List",
     icon: ContentPaste,
     component: TableList
-  },*/
+  },
   {
     path: "/typography",
     sidebarName: "Typography",

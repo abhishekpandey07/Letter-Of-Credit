@@ -65,6 +65,7 @@ class NewProjectForm extends React.Component{
      .then(function(response){
        console.log(response);
        //Perform action based on response
+       window.location('/Projects')
    })
      .catch(function(error){
        console.log(error);
