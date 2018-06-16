@@ -31,15 +31,14 @@ class FileIOButton extends React.Component {
 		this.index = props.index
 	}
 
-	handleChange = (event) => {
-		console.log('in files: ' + JSON.stringify(this.uploadInput.files))
+	handleChange = (files) => {
+		console.log('in files: ' + JSON.stringify(files))
 		this.setState({selected:true})
 		this.data = new FormData()
-		this.data.append('file',this.uploadInput.files[0])
+		this.data.append('file',files[0])
 		this.data.append('name',this.name)		
 		this.data.append('index',this.index)
-
-		this.filename = this.uploadInput.files[0].name
+		this.filename = files[0].name
 	}
 
 	handleSubmit = ({}) => {
@@ -58,15 +57,19 @@ class FileIOButton extends React.Component {
 		const url = '/documents/' + this.id
 					+ '/' + String(this.index)
 					+ '/' + this.name		
-		
-		/*var request = new FormData()
-		request.append('name',this.name)
-		request.append('index',this.index)
-		*/
 
+		var a = document.createElement("a");
 		fetch (url).
 		then(response => {
-			console.log('File Downloaded')
+			console.log(response)
+			return response.blob();
+		}).then( blob => {
+				var documentURL = window.URL.createObjectURL(blob);
+				/*a.href = documentURL
+				a.download = 'download.pdf'
+				a.click()
+				window.URL.revokeObjectURL(documentURL)*/
+				window.open(documentURL)
 		}).catch(error => {
 			console.log(error)
 		})
@@ -84,28 +87,16 @@ class FileIOButton extends React.Component {
 		}
 		if (!this.state.selected){
 		return (
-				<div>
-				<div>
-						<input
-							id='fileinput'
-							ref = {(ref) => {this.uploadInput = ref}}
-					        type="file"
-					        onChange={this.handleChange}
-					        
-					      />
-					     <label htmlFor='fileinput' >
-					    	<Button variant='contained'>Upload <FileUpload/>
-					    	</Button>
-					    </label>
-					
-			    </div>
-			    
-			    {/*<Files 
-			    	onChange={this.handleChange}
-			    	clickable
-			    	>
-			    	Upload
-			    </Files>*/}
+			    <div>
+			    	<Files 
+			    		onChange={this.handleChange}
+			    		accepts={['image/png','.pdf','.txt','.xlsx']}
+			    		clickable
+			    		>
+				    	<Button variant='contained'>
+				    		Upload <FileUpload/>
+						</Button>
+			    	</Files>
 			    </div>
 			)
 		}

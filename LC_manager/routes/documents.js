@@ -7,8 +7,11 @@ const express = require('express'),
       path = require('path'),
       fs = require('fs'),
       mv = require('mv')
+      mime = require('mime')
 
 const LCDB = mongoose.model('LC')
+const baseDirectory = path.resolve(__dirname + '/../DATA_FILES/')
+
 
 router.use(bodyParser.urlencoded({ extended: true }))
 
@@ -76,31 +79,33 @@ router.route('/:id').post(function(req, res) {
     
     var index = parseFloat(req.fields.index);
     var DueDate = LC.payment.DT_amt[index].due_DT
-          
-    var newpath = __dirname + '/' +'../DATA_FILES/'
-                  +sName +'/' + LC.LC_no +'/' + name
-                  +'/' + getDateString(DueDate) + '.'
-                  + file.name.split('.')[1]
+    
+    var filepath = sName +'/' + LC.LC_no +'/' + name +'/';
+    var filename = getDateString(DueDate) + '.' + file.name.split('.')[1]
+
+   
+    var newpath = baseDirectory + '/' +filepath + filename
+    console.log(newpath)
     
     switch(name){
         case "receipt": {            
-            LC.payment.DT_amt[index].rec.name = newpath;
+            LC.payment.DT_amt[index].rec.name = filepath + filename;
             LC.payment.DT_amt[index].rec.rec = true;
             break;
         }
         case "acceptance": {
-            LC.payment.DT_amt[index].acc.name = newpath;
+            LC.payment.DT_amt[index].acc.name = filepath + filename;
             LC.payment.DT_amt[index].acc.rec = true;
             break;   
         }
         case "bankCharges": {
 
-            LC.dates[index].bc.name = newpath;
+            LC.dates[index].bc.name = filepath + filename;
             LC.dates[index].bc.rec = true;
             break;      
         }
         case "application": {
-            LC.dates[index].app.name = newpath;
+            LC.dates[index].app.name = filepath + filename;
             LC.dates[index].app.rec = true;
             break;         
         }
@@ -114,7 +119,6 @@ router.route('/:id').post(function(req, res) {
     
 
     console.log('moving')
-    newpath = path.resolve(newpath)
     mv(file.path,newpath,{mkdirp: true}, function (err){
         if (err){ 
             console.log('moving error')
@@ -199,7 +203,6 @@ router.route('/:id/:index/:name').get(function(req,res){
 
       }
 
-      filepath = path.resolve(filepath)
       console.log('checking reply: path : ' + filepath)
       
       if(error){
@@ -210,12 +213,21 @@ router.route('/:id/:index/:name').get(function(req,res){
       }
 
       console.log('Sending reply')
-      var filename = filepath.split('/').slice(-1).pop()
+      var fullname = baseDirectory + '/' + filepath;
+      console.log(fullname)
+      var filename = path.basename(filepath)
       console.log(filename)
+      try {
+            var mimetype = mime.getType(fullname)
+      }
+      catch(error) {
+            console.log(error)
+      }
+      console.log(mimetype)
 
-      res.setHeader('Content-disposition','attachment; filename='+filename)
-      res.setHeader('content-type','application/pdf')
-      res.download(path.resolve(filepath),filename,(error) => {
+      //res.set('Content-disposition','attachment; filename='+filename)
+      //res.set('content-type',mimetype)
+      res.download(fullname,filename,(error) => {
             if(error) {
                   console.log(error)
             }else{

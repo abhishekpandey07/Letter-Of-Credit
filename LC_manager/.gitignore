@@ -115,3 +115,6 @@ typings/
 
 # Serverless directories
 .serverless
+
+# data files
+DATA_Files/
