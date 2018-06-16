@@ -5,14 +5,14 @@ const express = require('express'),
       methodOverride = require('method-override'),
       bankMethods = require('./helpers/nativeBanks'),
       supplierMethods = require('./helpers/Suppliers'),
-      formidable = require('formidable'),
+      formidable = require('express-formidable'),
       fs = require('fs'),
       mv = require('mv'),
       util = require('util');
 
-LCDB = mongoose.model('LC')
-natBankDB = mongoose.model('nativeBanks')
-supplierDB = mongoose.model('Supplier')
+const LCDB = mongoose.model('LC')
+const natBankDB = mongoose.model('nativeBanks')
+const supplierDB = mongoose.model('Supplier')
 //  router.use makes sure that all the requests go through the defined packages first
 
 // adds req.body property to manipulate post requests
@@ -27,7 +27,7 @@ router.use(methodOverride(function(req, res){
         return method
     }
 }))
-
+//router.use(formidable())
 
 // building the Rest Operations at the base of supplier directory
 // this will be accessible from https:127.0.0.1:300/suppliers/ if the default router for /
@@ -97,7 +97,6 @@ router.route('/').post(function(req,res){
 	disbursement: req.body.disbursement
     }
 
-    console.log('AAAAAAAA '+JSON.stringify(req.body))
     // creating the entry
     LCDB.create({
 	issuer: issuer,
@@ -180,13 +179,13 @@ router.route('/').post(function(req,res){
 	    console.log('POST creating new LC : '+ LC);
 	    res.format({
 
-		html: function(){
+		/*html: function(){
 		    res.location("LettersOfCredit");
 		    res.redirect("/LCs");
-		},
+		},*/
 
 		json: function(){
-		    res.json(LC)
+		    res.json(JSON.stringify(LC))
 		}
 	    })
 	}
@@ -201,27 +200,29 @@ router.get('/new', function(req,res){
 
 router.param('id', function(req,res,next,id){
     // find the LC by ID
+    console.log('In param function.')
     LCDB.findById(id)
 	.populate('supplier')
 	.populate('issuer')
 	.exec(function(error,LC){
 	    if (error){
-		console.log('Error retreiving LC with ID : '+ id)
-		res.status(404);
-		var err = new Error('Not Found.');
-		err.status = 404
-		res.format({
-		    html: function(){
-			next(err);
-		    },
-		    json: function(){
-			res.json({message: err.status + ' ' + err});
-		    }
-		});
-	    }else{
-
-		console.log(LC);
-		res.locals.id = id;
+    		console.log('Error retreiving LC with ID : '+ id)
+    		var err = new Error('LC with ID : '+ id + ' not found');
+    		err.status = 404
+            console.log('sending error response')
+    		res.format({
+    		    /*html: function(){
+    			next(err);
+    		    },*/
+    		    json: function(){
+    			res.json({message: err.status + ' ' + err});
+    		    }
+    		})
+	    }
+        else{
+        //console.log(LC);
+        console.log(' Setting locals variables')
+		res.locals.id = LC._id;
 		res.locals.LC = LC;
 		res.locals.issuer = LC.issuer;
 		res.locals.supplier = LC.supplier;
@@ -235,23 +236,21 @@ router.param('id', function(req,res,next,id){
 // used findByID in router.param  as well. Maybe this can be optimised
 router.route('/:id')
     .get(function(req, res){
-	res.format({
-	    html: function(){
-		res.render('LCs/show', {
-		    "LC": res.locals.LC,
-		    "supplier": res.locals.supplier,
-		    "issuer": res.locals.issuer
-		    
-		});
-	    },
-	    json: function(){
-		res.json({'LC': res.locals.LC,
-			  'supplier': res.locals.supplier,
-			  'issuer': res.locals.issuer
-			 });
-	    }
-	    
-	});
+        console.log('in route /LCs/:id')
+    	res.format({
+    	    /*html: function(){
+    		res.render('LCs/show', {
+    		    "LC": res.locals.LC,
+    		    "supplier": res.locals.supplier,
+    		    "issuer": res.locals.issuer
+    		    
+    		});
+    	    },*/
+    	    json: function(){
+    		res.json(res.locals.LC);
+    	    }
+    	    
+    	});
     });
 
 
@@ -262,15 +261,15 @@ router.get('/:id/edit', function(req, res) {
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
-        html: function(){
+        /*html: function(){
             res.render('LCs/edit', {
                 title: 'LC: ' + LC._id,
                 "LC": LC
             });
-        },
+        },*/
         //JSON response will return the JSON output
         json: function(){
-            res.json(LC);
+            res.json(JSON.stringify(LC));
         }
     });
 });
@@ -282,15 +281,15 @@ router.get('/:id/addCharges', function(req, res) {
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
-        html: function(){
+        /*html: function(){
             res.render('LCs/addCharges', {
                 title: 'LC: ' + LC._id,
                 "LC": LC
             });
-        },
+        },*/
         //JSON response will return the JSON output
         json: function(){
-            res.json(LC);
+            res.json(JSON.stringify(LC));
         }
     });
 });
@@ -302,15 +301,15 @@ router.get('/:id/addExtension', function(req, res) {
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
-        html: function(){
+        /*html: function(){
             res.render('LCs/addExtension', {
                 title: 'LC: ' + LC._id,
                 "LC": LC
             });
-        },
+        },*/
         //JSON response will return the JSON output
         json: function(){
-            res.json(LC);
+            res.json(JSON.stringify(LC));
         }
     });
 });
@@ -322,15 +321,15 @@ router.get('/:id/addPayment', function(req, res) {
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
-        html: function(){
+        /*html: function(){
             res.render('LCs/addPayment', {
                 title: 'LC: ' + LC._id,
                 "LC": LC
             });
-        },
+        },*/
         //JSON response will return the JSON output
         json: function(){
-            res.json(LC);
+            res.json(JSON.stringify(LC));
         }
     });
 });
@@ -342,15 +341,15 @@ router.get('/:id/addDueDetails', function(req, res) {
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
-        html: function(){
+        /*html: function(){
             res.render('LCs/addDueDetails', {
                 title: 'LC: ' + LC._id,
                 "LC": LC
             });
-        },
+        },*/
         //JSON response will return the JSON output
         json: function(){
-            res.json(LC);
+            res.json(JSON.stringify(LC));
         }
     });
 });
@@ -361,15 +360,15 @@ router.get('/:id/addDocument', function(req, res) {
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
-        html: function(){
+        /*html: function(){
             res.render('LCs/addDueDetails', {
                 title: 'LC: ' + LC._id,
                 "LC": LC
             });
-        },
+        },*/
         //JSON response will return the JSON output
         json: function(){
-            res.json(LC);
+            res.json(JSON.stringify(LC));
         }
     });
 });
@@ -381,15 +380,15 @@ router.get('/:id/close', function(req, res) {
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
-        html: function(){
+        /*html: function(){
             res.render('LCs/close', {
                 title: 'LC: ' + LC._id,
                 "LC": LC
             });
-        },
+        },*/
         //JSON response will return the JSON output
         json: function(){
-            res.json(LC);
+            res.json(JSON.stringify(LC));
         }
     });
 });
@@ -424,12 +423,12 @@ router.put('/:id/addCharges', function(req, res) {
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             res.format({
-                html: function(){
+                /*html: function(){
                     res.redirect("/LCs/" + LC._id);
-                },
+                },*/
                 //JSON responds showing the updated values
                 json: function(){
-                    res.json(LC);
+                    res.json(JSON.stringify(LC));
                 }
             });
             
@@ -456,12 +455,12 @@ router.put('/:id/addExtension', function(req, res) {
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             res.format({
-                html: function(){
+                /*html: function(){
                     res.redirect("/LCs/" + LC._id);
-                },
+                },*/
                 //JSON responds showing the updated values
                 json: function(){
-                    res.json(LC);
+                    res.json(JSON.stringify(LC));
                 }
             });
             
@@ -479,21 +478,21 @@ router.put('/:id/addDueDetails', function(req, res) {
     var details = {
 	due_DT: req.body.due_DT,
 	due_amt: req.body.due_amt,
-	payed_amt: req.body.payed_amt // remember to make it default to 0 in form
+	//payed_amt: req.body.payed_amt // remember to make it default to 0 in form
     }
 
     LC.payment.DT_amt.push(details);
 
     var total_due = parseFloat(LC.payment.total_due);
     var due_amt = parseFloat(req.body.due_amt);
-    var total_payed = parseFloat(LC.payment.total_payed);
-    var payed_amt = parseFloat(req.body.payed_amt);
+    //var total_payed = parseFloat(LC.payment.total_payed);
+    //var payed_amt = parseFloat(req.body.payed_amt);
 
     total_due += due_amt;
-    total_payed += payed_amt;
+    //total_payed += payed_amt;
     
     LC.payment.total_due = total_due;
-    LC.payment.total_payed = total_payed;
+    //LC.payment.total_payed = total_payed;
     
     LC.save(function (err, LCID) {
         if (err) {
@@ -503,12 +502,12 @@ router.put('/:id/addDueDetails', function(req, res) {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
 	    console.log('Installment Details Added: '+ LC.payment)
             res.format({
-                html: function(){
+                /*html: function(){
                     res.redirect("/LCs/" + LC._id);
-                },
+                },*/
                 //JSON responds showing the updated values
                 json: function(){
-                    res.json(LC);
+                    res.json(JSON.stringify(LC));
                 }
             });
             
@@ -529,17 +528,20 @@ router.put('/:id/addPayment', function(req, res) {
     var lastInstallment = payArray[index];
     console.log('Installment :' + String(lastInstallment))
     var payed_amt = parseFloat(lastInstallment['payed_amt']);
-    var total_payed = parseFloat(LC.payment.total_payed);
+    
     
     payed_amt = payment;
-    total_payed += payment;
-    
     lastInstallment['payed_amt'] = payed_amt;
     lastInstallment['pay_ref'] = pay_ref;
+
     payArray[index] = lastInstallment;
-    
-    LC.payment.total_payed = total_payed;
     LC.payment.DT_amt = payArray;
+
+    
+    var total_payed = parseFloat(LC.payment.total_payed);
+    total_payed += payment;
+    LC.payment.total_payed = total_payed;
+    
 
     LC.save(function (err, LCID) {
         if (err) {
@@ -547,13 +549,14 @@ router.put('/:id/addPayment', function(req, res) {
         } 
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            console.log('Sending reply!')
             res.format({
-                html: function(){
+                /*html: function(){
                     res.redirect("/LCs/" + LC._id);
-                },
+                },*/
                 //JSON responds showing the updated values
                 json: function(){
-                    res.json(LC);
+                    res.json(JSON.stringify(LC));
                 }
             });
             
@@ -563,55 +566,22 @@ router.put('/:id/addPayment', function(req, res) {
 
 /* Document Upload Handle*/
 
-router.put('/:id/addDocument', function(req, res) {
+router.route('/:id/addDocument').post(function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC;
-    /*while(LC.lock == true){};
-    LC.lock = true;
-    LC.save(function(error,LCID,num_updated){
-        if(error)  {
-            console.log(error)
-            res.send(error)
-        }
-       if(num_updated != 1) 
-        console.log('Lock Acquired')
-    })*/
-    var name = req.body.name
-    var index = parseFloat(req.body.index)
-    console.log(req.body.files)
-    var oldpath = null
-    var newpath = null
-    var form = new formidable.IncomingForm();
-    form.parse(req, function (err, fields, files){
-        if(err) {
-            console.log(err); res.send(err)
-        }
-        console.log(files.fileupload)
-        oldpath = files.fileupload.path
-        newpath = __dirname+ '/' + 'DATA_FILES/' + res.locals.id
-                    +'/' + name + '.' + files.fileupload.name.split('.')[1]
-        
-    })
-
-    console.log(__dirname)
-    console.log('oldpath: '+oldpath);
-    console.log('newpath: '+ newpath)
-
-    if (oldpath && newpath){
-        mv(oldpath,newpath,{mkdirp: true}, function (err){
-            if (err){
-                console.log(err)
-                res.send(err)
-            }
-            //res.writeHead(200,{"Content-Type" : "text/html"});
-            //res.write('File uploaded and moved to '+ newpath+"<br>");
-            //res.end(util.inspect({fields:fields, files:files}))
-            });
-    }
     
+    var file = req.files.file;
+    var name = req.fields.name;
+    var index = parseFloat(req.fields.index);    
+    
+    var newpath = null
     switch(name){
         case "receipt": {
+            console.log('entered case')
+            newpath = __dirname + '/' +'../DATA_FILES/'+res.locals.id
+                            + '/receipt.' + file.name.split('.')[1]
+            
             LC.payment.DT_amt[index].rec.name = newpath;
             LC.payment.DT_amt[index].rec.rec = true;
             break;
@@ -639,6 +609,23 @@ router.put('/:id/addDocument', function(req, res) {
         }
     }
     
+
+    console.log('moving')
+    mv(file.path,newpath,{mkdirp: true}, function (err){
+        if (err){ 
+            console.log('moving error')
+            console.log(err);
+            return res.send(err)
+        }
+        //res.writeHead(200,{"Content-Type" : "text/html"});
+        //res.write('File uploaded and moved to '+ newpath+"<br>");
+        //res.end(util.inspect({fields:fields, files:files}))
+        
+    });
+    
+
+    //res.send(new Error('just checking'))
+    console.log('saving')
     LC.save(function (err, LCID) {
         if (err) {
             res.send("There was a problem updating the information to the database: " + err);
@@ -646,12 +633,12 @@ router.put('/:id/addDocument', function(req, res) {
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             res.format({
-                html: function(){
+                /*html: function(){
                     res.redirect("/LCs/" + LC._id);
-                },
+                },*/
                 //JSON responds showing the updated values
                 json: function(){
-                    res.json(LC);
+                    res.json(JSON.stringify(LC));
                 }
             });
             
@@ -677,12 +664,12 @@ router.put('/:id/edit', function(req, res) {
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             res.format({
-                html: function(){
+                /*html: function(){
                     res.redirect("/LCs/" + LC._id);
-                },
+                },*/
                 //JSON responds showing the updated values
                 json: function(){
-                    res.json(LC);
+                    res.json(JSON.stringify(LC));
                 }
             });
             
@@ -722,12 +709,12 @@ router.put('/:id/close', function(req, res) {
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             res.format({
-                html: function(){
+                /*html: function(){
                     res.redirect("/LCs/" + LC._id);
-                },
+                },*/
                 //JSON responds showing the updated values
                 json: function(){
-                    res.json(LC);
+                    res.json(JSON.stringify(LC));
                 }
             });
             
@@ -768,13 +755,13 @@ router.delete('/:id/edit', function (req, res){
 	    
 	    res.format({
 		//HTML returns us back to the main page, or you can create a success page
-		html: function(){
+		/*html: function(){
 		    res.redirect("/LCs");
-		},
+		},*/
 		//JSON returns the item with the message that is has been deleted
 		json: function(){
 		    res.json({message : 'deleted',
-			      item : LC
+			      item : JSON.stringify(LC)
 			     });
 		}
 	    });

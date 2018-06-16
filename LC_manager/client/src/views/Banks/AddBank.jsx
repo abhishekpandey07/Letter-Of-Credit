@@ -92,7 +92,7 @@ class NewBankForm extends React.Component{
     const {classes} = this.props
     return (
       <div>
-      <form onSubmit={this.handleSubmit}>
+      <form>
         <Grid container>
           <ItemGrid xs={12} sm={12} md={12}>
             <RegularCard

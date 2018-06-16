@@ -14,13 +14,13 @@ supplier = require('./model/supplier')
 project = require('./model/projects')
 LC = require('./model/lc')
 
-
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var nativeBanksRouter = require('./routes/nativeBanks');
 var suppliersRouter = require('./routes/suppliers');
 var projectsRouter = require('./routes/projects');
 var LCsRouter = require('./routes/lc');
+var documents = require('./routes/documents')
 
 // database connections
 var db = require('./model/db');
@@ -45,6 +45,7 @@ app.use('/nativeBanks',nativeBanksRouter);
 app.use('/suppliers', suppliersRouter);
 app.use('/projects', projectsRouter);
 app.use('/LCs', LCsRouter);
+app.use('/documents',documents)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

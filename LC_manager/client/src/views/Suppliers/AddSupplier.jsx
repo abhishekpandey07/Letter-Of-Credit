@@ -72,7 +72,7 @@ class NewSupplierForm extends React.Component{
      .then(function(response){
        console.log(response);
        //Perform action based on response
-       window.location('/Suppliers')
+       window.location = '/Suppliers'
    })
      .catch(function(error){
        console.log(error);
@@ -94,7 +94,7 @@ class NewSupplierForm extends React.Component{
     const {classes} = this.props
     return (
       <div>
-      <form onSubmit={this.handleSubmit}>
+      <form>
         <Grid container>
           <ItemGrid xs={12} sm={12} md={12}>
             <RegularCard
@@ -207,12 +207,7 @@ class NewSupplierForm extends React.Component{
                 </div>  
                 }
                footer={<div>
-                        <NavLink
-                          to="/Suppliers"
-                          activeClassName="active"
-                        >
                           <Button color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
-                        </NavLink>
                       </div>
 
               }

@@ -7,21 +7,6 @@ import EJSON from 'mongodb-extended-json'
 import { NavLink } from "react-router-dom";
 import { RegularCard, Table, ItemGrid, LCPanel } from "components";
 import LCRoutes from 'routes/lcs.jsx'
-//import LCCard from 'components/LCs/LCCards'
-function rand() {
-  return Math.round(Math.random() * 20) - 10;
-}
-
-function getModalStyle() {
-  const top = 50 + rand();
-  const left = 50 + rand();
-
-  return {
-    top: `${top}%`,
-    left: `${left}%`,
-    transform: `translate(-${top}%, -${left}%)`,
-  };
-}
 
 const styles = theme => ({
   paper: {
@@ -33,38 +18,28 @@ const styles = theme => ({
   },
 });
 
-/*const styles = theme => ({
-  root: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  icon: {
-    margin: theme.spacing.unit * 2,
-  },
-  iconHover: {
-    margin: theme.spacing.unit * 2,
-    '&:hover': {
-      color:"blue",
-    },
-  },
-});
-*/
-
 class LCHome extends React.Component{
     constructor(props){
       super(props)
       this.state = {
         LCs: [],
-        addMode: false,
+        
       }
-      this.forceUpdate()
-      console.log('Created LCs instance')
-      console.log(this.state)
     }
 
-    callApi = async () => {
+    callAllApi = async () => {
       const response = await fetch('/LCs');
+      console.log(response)
+      const body = await response.json();
+      if (response.status !== 200) throw Error(body.message);
+      
+      return EJSON.parse(body);
+
+    };
+
+    callApi = async (key) => {
+      const uri = '/LCs/' + this.state.LCs[key]._id
+      const response = await fetch(uri)
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
       
@@ -73,62 +48,51 @@ class LCHome extends React.Component{
     };
 
 
-    handleAddOpen = () => {
-      this.setState({addMode: true});
-      console.log('addMode set to True.')
-    };
-
-    handleAddClose = () => {
-      this.setState({addMode: false});
-      console.log('Modal closed')
-    }
     componentWillMount() {
       console.log('async was called')
-      this.callApi()
+      this.callAllApi()
       .then(res => this.setState({ LCs: res }))
       .catch(err => console.log(err));
     }
 
+    updateLCPanel = (key,LC) => {
+      var LCs = this.state.LCs
+      LCs[key] = LC;
+      console.log(LCs)
+      this.setState({LCs: LCs})
+      console.log(this.state.LCs)
+    }
+
+    deleteLC = (id) => {
+      var LCs = this.state.LCs
+      delete LCs[id]
+      this.setState({LCs:LCs})
+    }
+
     render() {
       
-      let LCData = this.state.LCs.reduce((LCs,LC)=>{
-  //      console.log(getComponent(LC.LC_used))
-        /*LCs.push([LC["name"],LC["branch"],LC["IFSC"],
-                            LC["LC_limit"]["numberdecimal"],
-                            LC["LC_used"]["$numberdecimal"],
-                            LC["LCs"]])*/
-        if(LC != null){                  
-        LCs.push([ LC.supplier.name, LC.issuer.name,
-                    LC.dates[0].openDT.slice(0,10), LC.dates[0].expDT.slice(0,10),
-                    LC.LC_no,LC.FDR_no,
-                    LC.FDR_DT.slice(0,10),String(LC.m_amt),
-                    String(LC.amount),
-                    String(LC.payment.DT_amt[0].due_DT.slice(0,10)),
-                    String(LC.payment.DT_amt[0].due_amt),
-                    String(LC.payment.DT_amt[0].payed_amt),
-                    String(LC.payment.total_due),
-                    String(LC.payment.total_payed),
-                    LC.status])}
-        return LCs
-
-      },[])
-      console.log(this.state.LCs)
-      console.log('LCData: ' + String(LCData))
-      const {classes} = this.props
-      
-      var panels = this.state.LCs.map((prop,key) => {
-        return (
-          <LCPanel LC={prop} />
+      if(this.state.LCs < 1){
+        var panels = (
+          <Typography varaint='title'>
+          No LCs to Display
+          </Typography>
           )
-      })
-
+      }else{
+        var panels = this.state.LCs.reduce((arr,prop,key) => {
+          console.log(key)
+          arr.push(<LCPanel LC={prop} id={key}
+                      onUpdate={this.updateLCPanel}
+                      onDelete={this.deleteLC}/>)
+          return arr
+        },[])
+      }
       return (
         <div className="grid">
           <Grid container>
             <ItemGrid xs={12} sm={12} md={12}>
               <RegularCard
-                cardTitle="LCs"
-                cardSubtitle="Here is a subtitle for this table"
+                cardTitle="Letters of Credit"
+                cardSubtitle="Click on a panel to know more about or to update a Letter of Credit."
                 content={
                   panels
               }
@@ -148,27 +112,6 @@ class LCHome extends React.Component{
           </Grid>
         </div>
       )
-      /*const data = this.state.LCs.map((prop,key)=>{
-              return (
-                <Grid item xs={12}>
-                  <LCCard LC = {prop}/>
-                </Grid>
-                )
-            })
-
-
-      return (
-      <RegularCard xs={12} sm={12} md={12}
-        cardTitle = "Letters of Credit"
-        cardSubtitle = "List of LCs"
-        content = {<div>
-                    <Grid container>
-                      {data}
-                    </Grid>
-                  </div>
-                }
-          />
-        )*/
     }
 }
 export default withStyles(styles)(LCHome);

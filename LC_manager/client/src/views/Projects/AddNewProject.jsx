@@ -64,8 +64,7 @@ class NewProjectForm extends React.Component{
     axios.post('/projects', this.state)
      .then(function(response){
        console.log(response);
-       //Perform action based on response
-       window.location('/Projects')
+       window.location = '/Projects'
    })
      .catch(function(error){
        console.log(error);
@@ -79,7 +78,7 @@ class NewProjectForm extends React.Component{
     const {classes} = this.props
     return (
       <div>
-      <form onSubmit={this.handleSubmit}>
+      <form>
         <Grid container>
           <ItemGrid xs={12} sm={12} md={12}>
             <RegularCard
@@ -151,12 +150,7 @@ class NewProjectForm extends React.Component{
                 </div>  
                 }
                footer={<div>
-                        <NavLink
-                          to="/Projects"
-                          activeClassName="active"
-                        >
                           <Button color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
-                        </NavLink>
                       </div>
 
               }

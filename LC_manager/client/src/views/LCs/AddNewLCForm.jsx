@@ -1,6 +1,5 @@
 import React from "react";
-import {NavLink, Redirect} from 'react-router-dom'
-import { Grid, InputLabel, withStyles, Divider, Paper} from "@material-ui/core";
+import { Grid, InputLabel, withStyles} from "@material-ui/core";
 import Input from '@material-ui/core/Input';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
@@ -18,9 +17,6 @@ import {
   CustomInput,
   ItemGrid
 } from "components";
-
-
-//import avatar from "assets/img/faces/marc.jpg";
 
 
 const styles = theme =>{
@@ -55,7 +51,6 @@ class NewLCForm extends React.Component{
       disbursement:0,
       suppliersList: [],
       issuerList: [],
-      redirect: false
     }
       
   }
@@ -74,72 +69,35 @@ class NewLCForm extends React.Component{
      return EJSON.parse(body);
    };
 
-    /*createMenuItems(list) {
-    return ( {list.map((prop, key) => {
-                  return (
-                    <MenuItem
-                      className={classes.tableCell + " " + classes.tableHeadCell}
-                      key={key}
-                      value={prop._id}
-                    >
-                      {prop.name}
-                    </MenuItem>
-                  );
-                })}
-    );
-   }
-
-   */
-  handleSupplierChange = name => event => {
-    this.setState({ ['supplier']: event.target.value });
-  };
-
-  handleIssuerChange = name => event => {
-    this.setState({ 'issuer': event.target.value });
-  };
-
   handleChange = name => event => {
     this.setState({ [name]: event.target.value.toUpperCase() });
     console.log(this.state)
   };
 
-    componentWillMount() {
-      console.log('async was called');
-      this.callSupplierApi()
-      .then(res => this.setState({suppliersList:res}))
-      .catch(err => console.log(err));
+  componentWillMount() {
+    console.log('async was called');
+    this.callSupplierApi()
+    .then(res => this.setState({suppliersList:res}))
+    .catch(err => console.log(err));
 
-      this.callIssuerApi()
-      .then(res => this.setState({issuerList: res}))
-      .catch(err => console.log(err));
-
-    }
+    this.callIssuerApi()
+    .then(res => this.setState({issuerList: res}))
+    .catch(err => console.log(err));
+  }
 
   handleSubmit = event => {
-
+    
     axios.post('/LCs', this.state)
      .then(function(response){
-       console.log(response)
-       //this.setState({redirect: true})
-       window.location ='/LCs'
-   })
+        console.log(response)
+        window.location ='/LCs'
+      })
      .catch(function(error){
        console.log(error)
-       //Perform action based on error
      });
   }
 
-  renderRedirect = () => {
-    if(this.state.redirect){
-      return(
-        <Redirect to='/LCs'/>
-        )
-      }
-  }
-
   render () {
-    //console.log(this.suppliersList)
-    //console.log(this.issuerList)
 
     var suppliersList = this.state.suppliersList.map(prop => {
       return(
@@ -156,10 +114,11 @@ class NewLCForm extends React.Component{
         </option>
       )
     })
+    
     const {classes} = this.props
     return (
       <div>
-      <form onSubmit={this.handleSubmit}>
+      <form >
         <Grid container>
           <ItemGrid xs={12} sm={12} md={12}>
             <RegularCard
@@ -273,9 +232,7 @@ class NewLCForm extends React.Component{
                           onChange = {this.handleChange('openDT')}
                           InputLabelProps={{
                             shrink: true,
-
                           }}
-                          margin = {'inherit'}
                       />
                       <FormHelperText> Please put LC opening Date.</FormHelperText>
                      </FormControl> 
@@ -292,9 +249,7 @@ class NewLCForm extends React.Component{
                           onChange = {this.handleChange('expDT')}
                           InputLabelProps={{
                             shrink: true,
-
                           }}
-                          margin = {'inherit'}
                       />
 
                       <FormHelperText> Please put LC expiry Date.</FormHelperText>
@@ -314,7 +269,7 @@ class NewLCForm extends React.Component{
                             shrink: true,
 
                           }}
-                          margin = {'inherit'}
+                          
                       />
 
                       <FormHelperText> Please put FDR Date.</FormHelperText>
@@ -333,7 +288,7 @@ class NewLCForm extends React.Component{
                             shrink: true,
 
                           }}
-                          margin = {'inherit'}
+                          
                       />
                       <FormHelperText> Please put Margin Clearance Date.</FormHelperText>
                      </FormControl> 
@@ -354,7 +309,7 @@ class NewLCForm extends React.Component{
                             shrink: true,
 
                           }}
-                          margin = 'inherit'
+                          
                       />
                       <FormHelperText> Please put First Installment due date.</FormHelperText>
                      </FormControl> 
@@ -395,7 +350,7 @@ class NewLCForm extends React.Component{
                           InputLabelProps={{
                             shrink: true,
                           }}
-                          margin = 'inherit'
+                          
                       />
                      </FormControl> 
                     </ItemGrid>
@@ -405,7 +360,6 @@ class NewLCForm extends React.Component{
                 footer={
                   
                   <div>
-                    {this.renderRedirect()}
                       <Button color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
                   </div>
                   }/>            
