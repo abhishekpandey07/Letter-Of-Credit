@@ -36,6 +36,9 @@ router.use(methodOverride(function(req, res){
 // the root directory will show all suppliers
 router.route('/')
     .get(function(req,res){
+
+    console.log('request session: ' + req.sessionID)
+    console.log(req.session)
 	LCDB.find({})
 	    .populate('supplier')
 	    .populate('issuer')
@@ -45,6 +48,8 @@ router.route('/')
 		throw err;
 
 	    }else{
+        console.log('response Session : '+res.sessionID);
+        console.log(res.session)
 		res.format({
 		    /*html: function(){
 			res.render('LCs/index',{

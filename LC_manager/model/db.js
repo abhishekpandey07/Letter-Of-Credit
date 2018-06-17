@@ -7,3 +7,7 @@ mongoose.connect(url, options).then(
 	      throw err;
 	   }
 );
+
+var db = mongoose.connection;
+module.exports = db
+

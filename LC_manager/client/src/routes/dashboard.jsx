@@ -16,7 +16,8 @@ import {
   LibraryBooks,
   BubbleChart,
   LocationOn,
-  Notifications
+  Notifications,
+  Home
 } from "@material-ui/icons";
 
 const dashboardRoutes = [
@@ -26,8 +27,8 @@ const dashboardRoutes = [
     navbarName: "Material Dashboard",
     icon: Dashboard,
     component: DashboardPage
-  },
-  /*{
+  },/*
+  {
     path: "/user",
     sidebarName: "User Profile",
     navbarName: "Profile",
@@ -72,26 +73,31 @@ const dashboardRoutes = [
   {
     path: "/Banks",
     sidebarName: "Banks",
-    icon: ContentPaste,
-    component: Banks
+    icon: Home,
+    component: Banks,
+    navbarName: "Bank Accounts And Information"
+
   },
   {
     path: "/Suppliers",
     sidebarName: "Suppliers",
-    icon: ContentPaste,
-    component: Suppliers
+    icon: Person,
+    component: Suppliers,
+    navbarName: "Suppliers Information"
   },
   {
     path: "/LCs",
     sidebarName: "Letters Of Credit",
-    icon: ContentPaste,
-    component: LCs
+    icon: LibraryBooks,
+    component: LCs,
+    navbarName: "Letters of Credit"
   },
   {
     path: "/Projects",
     sidebarName: "Projects",
     icon: ContentPaste,
-    component: Projects
+    component: Projects,
+    navbarName: "Projects Information"
   },
   { redirect: true, path: "/", to: "/dashboard", navbarName: "Redirect" }
 ];

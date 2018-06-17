@@ -16,42 +16,45 @@ import appStyle from "assets/jss/material-dashboard-react/appStyle.jsx";
 import image from "assets/img/sidebar-2.jpg";
 import logo from "assets/img/reactlogo.png";
 
-const switchRoutes = (
-  <Switch>
-    {dashboardRoutes.map((prop, key) => {
-      if (prop.redirect)
-        return <Redirect from={prop.path} to={prop.to} key={key} />;
-      return <Route path={prop.path} component={prop.component} key={key} />;
-    })}
-    {LCRoutes.map((prop, key) => {
-      if (prop.redirect)
-        return <Redirect from={prop.path} to={prop.to} key={key} />;
-      return <Route path={prop.path} component={prop.component} key={key} />;
-    })}
-  </Switch>
-);
+//This is the class
+class DashLayout extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = {
+      mobileOpen: false,
+      data: this.props.data
+    }
+    console.log(this.props)
+  }
 
-class App extends React.Component {
-  state = {
-    mobileOpen: false
-  };
   handleDrawerToggle = () => {
     this.setState({ mobileOpen: !this.state.mobileOpen });
   };
-  getRoute() {
-    return this.props.location.pathname !== "/maps";
-  }
+
+  getRoute = () => { return true}
+  
   componentDidMount() {
     if(navigator.platform.indexOf('Win') > -1){
       // eslint-disable-next-line
       const ps = new PerfectScrollbar(this.refs.mainPanel);
     }
   }
+  
   componentDidUpdate() {
     this.refs.mainPanel.scrollTop = 0;
   }
+  
   render() {
     const { classes, ...rest } = this.props;
+    const switchRoutes = (
+            <Switch>
+              {dashboardRoutes.map((prop, key) => {
+                if (prop.redirect)
+                  return <Redirect from={prop.path} to={prop.to} key={key} />;
+                return <Route path={prop.path} render={(props) => {return <prop.component {...props} data={this.state.data}/>}} key={key} />;
+              })}
+            </Switch>
+          );
     return (
       <div className={classes.wrapper}>
         <Sidebar
@@ -62,8 +65,10 @@ class App extends React.Component {
           handleDrawerToggle={this.handleDrawerToggle}
           open={this.state.mobileOpen}
           color="blue"
+          data={this.state.data}
           {...rest}
         />
+        
         <div className={classes.mainPanel} ref="mainPanel">
           <Header
             routes={dashboardRoutes}
@@ -85,8 +90,8 @@ class App extends React.Component {
   }
 }
 
-App.propTypes = {
+DashLayout.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(appStyle)(App);
+export default withStyles(appStyle)(DashLayout);

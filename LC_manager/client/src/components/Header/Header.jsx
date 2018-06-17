@@ -20,7 +20,12 @@ function Header({ ...props }) {
     var name;
     props.routes.map((prop, key) => {
       if (prop.path === props.location.pathname) {
-        name = prop.navbarName;
+        if(prop.path === '/dashboard'){
+          name = 'Welcome '+ props.data.name
+        } else{
+          name = prop.navbarName;
+        }
+        
       }
       return null;
     });

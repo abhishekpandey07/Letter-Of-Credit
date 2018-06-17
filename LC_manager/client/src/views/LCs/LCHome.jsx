@@ -28,7 +28,7 @@ class LCHome extends React.Component{
     }
 
     callAllApi = async () => {
-      const response = await fetch('/LCs');
+      const response = await fetch('/LCs',{credentials:'include'});
       console.log(response)
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
