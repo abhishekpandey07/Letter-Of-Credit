@@ -9,8 +9,12 @@ import {
   Grow,
   Paper,
   ClickAwayListener,
-  Hidden
-} from "material-ui";
+  Hidden,
+  Button
+
+} from "@material-ui/core";
+
+import { NavLink } from 'react-router-dom'
 import { Person, Notifications, Dashboard, Search } from "@material-ui/icons";
 
 import { CustomInput, IconButton as SearchButton } from "components";
@@ -28,11 +32,27 @@ class HeaderLinks extends React.Component {
   handleClose = () => {
     this.setState({ open: false });
   };
+
   render() {
     const { classes } = this.props;
     const { open } = this.state;
+    const roles = ['Admin','COO']
     return (
       <div>
+      { 
+        roles.includes(this.props.role)?
+        <div>
+        <NavLink
+          to='/register'
+        >
+        <Button varaint='contained' >
+          Register New User
+        </Button>
+        </NavLink>
+        </div>
+        :
+        <div/>
+      }
         <CustomInput
           formControlProps={{
             className: classes.margin + " " + classes.search

@@ -37,18 +37,7 @@ class LCHome extends React.Component{
 
     };
 
-    callApi = async (key) => {
-      const uri = '/LCs/' + this.state.LCs[key]._id
-      const response = await fetch(uri)
-      const body = await response.json();
-      if (response.status !== 200) throw Error(body.message);
-      
-      return EJSON.parse(body);
-
-    };
-
-
-    componentWillMount() {
+    componentDidMount() {
       console.log('async was called')
       this.callAllApi()
       .then(res => this.setState({ LCs: res }))

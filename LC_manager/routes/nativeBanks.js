@@ -32,7 +32,9 @@ router.route('/')
     //GET all banks
     .get(function(req, res, next) {
         //retrieve all blobs from Monogo
-        natBankDB.find({}, function (err, banks) {
+        natBankDB.find({})
+        .populate('LCs','status')
+        .exec(function (err, banks) {
               if (err) {
                   return console.error(err);
 		  

@@ -22,7 +22,7 @@ const styles = theme => ({
   },
   heading: {
     fontSize: theme.typography.pxToRem(15),
-    flexBasis: '25.00%',
+    flexBasis: '20.00%',
     flexShrink: 0,
   },
   secondaryHeading: {
@@ -48,6 +48,7 @@ class LCPanel extends React.Component {
   constructor(props){
     super(props)
     this.state ={
+      expaned: null,
       payment: null,
       index: null,
       extension: false,
@@ -64,8 +65,6 @@ class LCPanel extends React.Component {
 
     console.log(this.props.id)
   }
-
-
 
   handlePanelChange = panel => (event, expanded) => {
     this.setState({
@@ -133,8 +132,6 @@ class LCPanel extends React.Component {
       console.log(error)
     })
   }
-
-
   // Extension Handles
 
   handleExtensionClick = (event) => {
@@ -178,35 +175,37 @@ class LCPanel extends React.Component {
     })
   }
 
-  // document submission handle
+// document submission handle
   onDocumentSubmit = (LC) =>  {
     this.props.onUpdate(this.props.id,EJSON.parse(LC))
   }
-
 
   render() {
     const { classes ,LC} = this.props;
     const { expanded } = this.state;
     console.log(LC)
     const paymentData = LC.payment.DT_amt.reduce((array,item,index) => {
+      if(item.due_DT){
+        const ref = item.pay_ref ? item.pay_ref:
+                    <Button variant='contained' size='small'
+                      onClick={this.handlePaymentClick(index)}>
+                      Add Pay
+                    </Button>      
 
-      const ref = item.pay_ref ? item.pay_ref:
-                  <Button variant='contained' size='small'
-                    onClick={this.handlePaymentClick(index)}>
-                    Add Pay
-                  </Button>      
+        const rec = <FileIOButton id={LC._id}
+                      name='receipt' index={index}
+                      onSubmit = {this.onDocumentSubmit}
+                      exists = {item.rec.rec}/>
+        const accep = <FileIOButton id={LC._id}
+                      name='acceptance' index={index}
+                      onSubmit = {this.onDocumentSubmit}
+                      exists = {item.acc.rec}/>
 
-      const rec = <FileIOButton id={LC._id}
-                    name='receipt' index={index}
-                    onSubmit = {this.onDocumentSubmit}
-                    exists = {item.rec.rec}/>
-      const accep = <FileIOButton id={LC._id}
-                    name='acceptance' index={index}
-                    onSubmit = {this.onDocumentSubmit}
-                    exists = {item.acc.rec}/>
+        array.push([item.due_DT.slice(0,10),String(item.due_amt),
+          String(item.payed_amt),ref,rec,accep])
+        return array
+      }
 
-      array.push([item.due_DT.slice(0,10),String(item.due_amt),
-        String(item.payed_amt),ref,rec,accep])
       return array
     },[])
 
@@ -230,12 +229,15 @@ class LCPanel extends React.Component {
       return array
     },[])
 
+       
+
     return (
     <div>
       <div className={classes.root}>
         <ExpansionPanel expanded={expanded === 'panel1'} onChange={this.handlePanelChange('panel1')}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography className={classes.heading}>{LC.supplier.name}</Typography>
+            <Typography className={classes.heading}>{LC.project.name + '(' + (LC.project.location) + ')'}</Typography>
             <Typography className={classes.heading}>{LC.LC_no}</Typography>
             <Typography className={classes.heading}>Rs. {String(LC.amount)}</Typography>
             <Typography className={classes.heading}>{LC.status}</Typography>

@@ -16,7 +16,7 @@ class RegisterPage extends React.Component {
       role: null,
       username: null,
       password: null,
-      _id : 1,
+      _id : null,
       email: null,
       passconf: null,
     }
@@ -47,7 +47,7 @@ class RegisterPage extends React.Component {
     data.append('name',this.state.name);
     data.append('role',this.state.role);
     data.append('email',this.state.email);
-    data.append('_id','001')
+    data.append('_id',this.state._id)
     data.append('username',this.state.username);
     data.append('password',this.state.password);
     data.append('_method','PUT')

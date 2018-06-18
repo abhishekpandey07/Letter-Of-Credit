@@ -42,6 +42,7 @@ router.route('/')
 	LCDB.find({})
 	    .populate('supplier')
 	    .populate('issuer')
+        .populate('project',['name','location'])
 	    .exec(function(err,LCs){
 	    if(err){
 		console.log(err);
@@ -114,7 +115,9 @@ router.route('/').post(function(req,res){
 	amount: amount,
 	payment: payment,
 	charges: charges,
-	status: 'Active'
+	status: 'Active',
+    project: req.body.project,
+    supBank: req.body.supBank
 	
     }, function(error,LC){
 	if(error){
@@ -168,7 +171,7 @@ router.route('/').post(function(req,res){
                 console.error('error')
                 res.send('An error occured while retreiving issuing supplier data.')
             } else {
-                supplierMethods.addLC(supplier, LC, function(error,supplier){
+                supplierMethods.addLC(supplier, req.body.supBank, LC, function(error,supplier){
                     if (error) {
                     res.status = error.status;
                     res.send(error);

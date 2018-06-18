@@ -21,13 +21,19 @@ import {
 } from "@material-ui/icons";
 */
 import RegisterPage from 'views/Login/Register.jsx'
+import LoginPage from 'views/Login/Login.jsx'
+
 const loginRoutes = [
   {
     path: "/register",
-    component: RegistPage
+    component: RegisterPage
+  },
+  {
+    path: "/login",
+    component: LoginPage
   },
 
-  { redirect: true, path: "/", to: "/Login", navbarName: "Redirect" }
+  { redirect: true, path: "/", to: "/register", navbarName: "Redirect" }
 ];
 
 export default loginRoutes;

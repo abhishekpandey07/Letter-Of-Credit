@@ -31,6 +31,7 @@ router.route('/')
     .get(function(req,res){
 	supplierDB.find({}).
     populate('projects','name').
+    populate('banks.LCs',['status','amount','LC_no']).
     exec(function(err,suppliers){
 	    if(err){
 		console.log(err);
@@ -230,6 +231,64 @@ router.put('/:id/edit', function(req, res) {
                 //JSON responds showing the updated values
                 json: function(){
                     res.json(supplier);
+                }
+            });
+        }
+    });
+});
+
+//PUT to update a bank by ID
+router.put('/:id/addProject', function(req, res) {
+    // Get our REST or form values. These rely on the "name" attributes
+    var supplier = res.locals.supplier;
+    var project = req.body.project;
+    
+    
+    supplier.projects.push(project)
+    supplier.save(function (err, supplierID) {
+        if (err) {
+            res.send("There was a problem updating the information to the database: " + err);
+        } 
+        else {
+            //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            res.format({
+                /*html: function(){
+                    res.redirect("/suppliers/" + supplier._id);
+                },*/
+                //JSON responds showing the updated values
+                json: function(){
+                    res.json(JSON.stringify(supplier));
+                }
+            });
+        }
+    });
+});
+
+router.put('/:id/addBank', function(req, res) {
+    // Get our REST or form values. These rely on the "name" attributes
+    var supplier = res.locals.supplier;
+    console.log(req.body)
+    var bank = {
+        name: req.body.name,
+        branch: req.body.branch,
+        IFSC: req.body.IFSC
+    }
+    
+    
+    supplier.bank.push(bank)
+    supplier.save(function (err, supplierID) {
+        if (err) {
+            res.send("There was a problem updating the information to the database: " + err);
+        } 
+        else {
+            //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            res.format({
+                /*html: function(){
+                    res.redirect("/suppliers/" + supplier._id);
+                },*/
+                //JSON responds showing the updated values
+                json: function(){
+                    res.json(JSON.stringify(supplier));
                 }
             });
         }

@@ -31,6 +31,8 @@ class NewLCForm extends React.Component{
     this.state = {
       supplier: '',
       issuer: '',
+      supBank: '',
+      project: '',
       openDT: '',
       expDT: '',
       LC_no: '',
@@ -39,7 +41,7 @@ class NewLCForm extends React.Component{
       m_amt: 0,
       m_cl_DT: '',
       amount: 0,
-      due_DT: '',
+      /*due_DT: '',
       due_amt: 0,
       payed_amt: 0,
       pay_ref: '',
@@ -48,11 +50,10 @@ class NewLCForm extends React.Component{
       boea: 0,
       postal: 0,
       GST: 0,
-      disbursement:0,
+      disbursement:0,*/
       suppliersList: [],
       issuerList: [],
     }
-      
   }
 
   callSupplierApi = async () => {
@@ -70,11 +71,23 @@ class NewLCForm extends React.Component{
    };
 
   handleChange = name => event => {
-    this.setState({ [name]: event.target.value.toUpperCase() });
+    this.setState({ [name]: event.target.value });
     console.log(this.state)
   };
 
-  componentWillMount() {
+  componentDidMount() {
+    var input = document.getElementById("submit");
+
+      // Execute a function when the user releases a key on the keyboard
+      input.addEventListener("keyup", function(event) {
+        // Cancel the default action, if needed
+        event.preventDefault();
+        // Number 13 is the "Enter" key on the keyboard
+        if (event.keyCode === 13) {
+          // Trigger the button element with a click
+          input.click();
+        }
+      });
     console.log('async was called');
     this.callSupplierApi()
     .then(res => this.setState({suppliersList:res}))
@@ -107,13 +120,31 @@ class NewLCForm extends React.Component{
       )
     })
 
-    var issuersList = this.state.issuerList.map(prop => {
-      return(
-        <option value={prop._id} >
-          {prop.name}
-        </option>
-      )
-    })
+    var issuersList = this.state.issuerList.reduce((arr,prop,index) => {
+      arr.push(<option value={prop._id} >{prop.name}</option>)
+      return arr
+    },[<option value=''/>])
+
+    var projectsList = []
+    var supBankList = []
+    if(this.state.supplier){
+      console.log(this.state.supplier)
+      const supplier = this.state.suppliersList.find((obj) => {
+        console.log(obj._id)
+        return obj._id === String(this.state.supplier);
+      })
+
+      projectsList = supplier.projects.reduce((arr,prop,index) => {
+        arr.push(<option value={prop._id} >{prop.name}</option>)
+        return arr
+      },[<option value=''/>])
+
+      supBankList = supplier.banks.reduce((arr,prop,index) => {
+        arr.push(<option value={prop._id} >{prop.name}</option>)
+        return arr
+      },[<option value=''/>])      
+    }
+
     
     const {classes} = this.props
     return (
@@ -127,13 +158,29 @@ class NewLCForm extends React.Component{
               content={
                 <div>
                   <Grid container>
-                    <ItemGrid xs={12} sm={6} md={6}>
+                    <ItemGrid xs={12} sm={12} md={3}>
+                       <FormControl fullWidth={true}>
+                        <InputLabel htmlFor="issuer"> Issuer Bank</InputLabel>
+                        <Select
+                          required
+                          native
+                          onChange={this.handleChange('issuer')}
+                          inputProps={{
+                            name: 'issuer',
+                            id: 'issuer'
+                          }}
+                        >
+                          <option value=""/>
+                          {issuersList}
+                        </Select>
+                      </FormControl>
+                    </ItemGrid>
+                    <ItemGrid xs={12} sm={12} md={3}>
                       <div>
                        <FormControl fullWidth={true}>
                         <InputLabel htmlFor="Supplier">Supplier</InputLabel>
                         <Select
                           native
-                          value={this.state.supplier.name}
                           onChange={this.handleChange('supplier')}
                           inputProps={{
                             name: 'supplier',
@@ -146,55 +193,64 @@ class NewLCForm extends React.Component{
                       </FormControl>
                       </div>
                     </ItemGrid>
-                    <ItemGrid xs={12} sm={6} md={6}>
-                      
+                    <ItemGrid xs={12} sm={12} md={3}>
                        <FormControl fullWidth={true}>
-                        <InputLabel htmlFor="Issuer">Issuer Bank</InputLabel>
+                        <InputLabel htmlFor="supBank"> Supplier's Bank</InputLabel>
                         <Select
                           required
                           native
-                          value={this.state.issuer.name}
-                          onChange={this.handleChange('issuer')}
+                          onChange={this.handleChange('supBank')}
                           inputProps={{
-                            name: 'issuer',
-                            id: 'issuer-field'
+                            name: 'supBank',
+                            id: 'supBank'
                           }}
                         >
-                          <option value=""/>
-                          {issuersList}
+                          {this.state.supplier?(supBankList):
+                            <option value=""/>
+                          }
                         </Select>
                       </FormControl>
                     </ItemGrid>
+                    <ItemGrid xs={12} sm={12} md={3}>
+                       <FormControl fullWidth={true}>
+                        <InputLabel htmlFor="project">Project</InputLabel>
+                        <Select
+                          required
+                          native
+                          value={this.state.project.name}
+                          onChange={this.handleChange('project')}
+                          inputProps={{
+                            name: 'project',
+                            id: 'project'
+                          }}
+                        >
+                          {this.state.supplier?(projectsList):
+                            <option value=""/>
+                          }
+                        </Select>
+                      </FormControl>
+                    </ItemGrid>
+                    </Grid>
+                    <Grid container>
                     <ItemGrid xs={6} sm={3} md={3}>
-                      <CustomInput
-                          labelText="LC number"
-                          id="LC_NO"
-                          value={this.state.LC_no}
-                          onChange={this.handleChange('LC_no')}
-                          formControlProps={{
-                            fullWidth: true
-                          }}
-                          inputProps ={{
-                            required: true,
-                            onChange: this.handleChange('LC_no')
-                          }}
-                        />
+                      <FormControl fullWidth={true} margin='normal'>
+                        <TextField
+                            required
+                            label="LC number"
+                            id="LC_NO"
+                            onChange={this.handleChange('LC_no')}
+                          />
+                      </FormControl>
                     </ItemGrid>
                     <ItemGrid xs={6} sm={3} md={3}>
-                      <CustomInput
-                          labelText="FDR number"
-                          id="FDR_NO"
-                          value={this.state.FDR_no}
-                          onChange={this.handleChange('FDR_no')}
-                          formControlProps={{
-                            fullWidth: true
-                          }}
-                          inputProps ={{
-                            required: true,
-                            onChange: this.handleChange('FDR_no')
-                          }}
-                          
-                        />
+                      <FormControl fullWidth={true} margin='normal'>
+                        <TextField
+                            required
+                            label="FDR number"
+                            id="FDR_NO"
+                            onChange={this.handleChange('FDR_no')}
+                          />
+                      </FormControl>
                     </ItemGrid>
                     <ItemGrid xs={6} sm={3} md={3}>
                       <FormControl fullWidth className={classes.margin} margin='normal'>
@@ -294,7 +350,7 @@ class NewLCForm extends React.Component{
                      </FormControl> 
                     </ItemGrid>
                   </Grid>
-                  <Grid container padding={true}>
+                  {/*<Grid container padding={true}>
                     <ItemGrid xs={6} sm={3} md={3}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
@@ -308,8 +364,7 @@ class NewLCForm extends React.Component{
                           InputLabelProps={{
                             shrink: true,
 
-                          }}
-                          
+                          }}                       
                       />
                       <FormHelperText> Please put First Installment due date.</FormHelperText>
                      </FormControl> 
@@ -354,13 +409,13 @@ class NewLCForm extends React.Component{
                       />
                      </FormControl> 
                     </ItemGrid>
-                  </Grid>  
+                  </Grid>*/}  
                 </div>  
                 }
                 footer={
                   
                   <div>
-                      <Button color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
+                      <Button id='submit' color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
                   </div>
                   }/>            
           </ItemGrid>

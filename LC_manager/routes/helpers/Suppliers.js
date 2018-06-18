@@ -1,11 +1,37 @@
 const mongoose = require('mongoose');
 
-// add a new LC to a supplier
+var removeByAttr = function(arr, attr, value){
+    var i = arr.length;
+    while(i--){
+       if( arr[i] 
+           && arr[i].hasOwnProperty(attr) 
+           && (arguments.length > 2 && arr[i][attr] === value ) ){ 
 
-function addLC(supplier,LC,callback){
+           arr.splice(i,1);
+
+       }
+    }
+    return arr;
+}
+
+// add a new LC to a supplier
+function addLC(supplier, supBank, LC, callback){
     console.log('Attempting to upgrade the LC details');
     // Adding LC to the ;
-    supplier.LCs.push(LC._id);
+    var banks = supplier.banks;
+
+    /*findBank = (bank) => {
+    	return  bank._id === supBank;
+    }*/
+    console.log(supBank)
+    const index = banks.findIndex( (bank) => {console.log(bank._id); return String(bank._id) === String(supBank);}) 
+    console.log(index)
+    
+    var bank = banks[index]
+	bank.LCs.push(LC._id);
+
+	banks[index] = bank;
+	supplier.banks = banks;
     var neg_error = null
     supplier.save(function(err,supplierID){
 	if(err){
@@ -31,7 +57,14 @@ function addLC(supplier,LC,callback){
 
 function removeLC(supplier,LC,callback){
 
-    supplier.LCs.pull(LC._id);
+    var banks = supplier.banks;
+    const index = banks.findIndex((bank) => {return bank._id === LC.supBank})
+    var bank = banks[index]
+
+    bank.LCs = removeByAttr(bank.LCs,'_id',LC._id);
+
+    banks[index] = bank;
+    supplier.banks=banks
     console.log('LC removed from supplier: '+ supplier._id);
     supplier.save(function(error,supplier){
 	if(error){

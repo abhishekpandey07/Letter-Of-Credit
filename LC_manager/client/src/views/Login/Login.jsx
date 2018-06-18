@@ -8,19 +8,18 @@ import EJSON from 'mongodb-extended-json';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid'
 import axios from 'axios'
-import {instanceOf} from 'prop-types'
-import { withCookies, Cookies } from 'react-cookie'
+
 
 class LoginPage extends React.Component {
    constructor(props){
     super(props);
     this.state = {
-      username: null,
-      password: null,
+      authenticated: false,
     }
   }
 
   componentWillMount = () => {
+
     const url = '/users/sessionAuthentication'
     axios.get(url,{credentials: 'include'})
     .then(res => {
@@ -34,18 +33,22 @@ class LoginPage extends React.Component {
     })
   }
 
-  handleValueChange = target => event => {
+  /*handleValueChange = target => event => {
     this.setState({ [target] : event.target.value });
     console.log(this.state)
-  }
+  }*/
 
   handleSubmit = event => {
     const url = '/users/login'
 
+    const username = document.getElementById('username').value
+    const password = document.getElementById('pass').value
+    
     const payload = {
-      username: this.state.username,
-      password: this.state.password, 
+      username: username,
+      password: password, 
     }
+
 
     axios.post(url,payload,{credentials:'include'})
     .then(res => {
@@ -54,8 +57,7 @@ class LoginPage extends React.Component {
       if(data.authenticated === true){
         console.log('Authenticated! providing access')
         this.setState({
-          username: null, 
-          password: null, 
+          authenticated: true 
         })
         this.props.onLoginSuccess(data)
       }
@@ -72,31 +74,29 @@ class LoginPage extends React.Component {
           <Grid container>
             <Grid xs={12} sm={12} md={4} />
             <Grid xs={12} sm={12} md={4}>
-              <Paper>
+              <Paper margin='normal'>
                 <div>
-                <FormControl fullWidth={true}>
+                <FormControl fullWidth={true} margin='normal'>
                   <TextField
                     required
                     id='username'
                     type='text'
                     label='username'
-                    onChange={this.handleValueChange('username')}
                   />
                 </FormControl>
                 </div>
                 <div>
-                <FormControl fullWidth={true}>
+                <FormControl fullWidth={true} margin='normal'>
                   <TextField
                     required
                     id='pass'
                     type='password'
                     label='password'
-                    onChange={this.handleValueChange('password')}
                   />
                 </FormControl>
                 </div>
                 <div>
-                <Button variant='contained' onClick={this.handleSubmit}>
+                <Button variant='contained' onClick={this.handleSubmit} align='center'>
                   Submit
                 </Button>
                 </div>
@@ -111,8 +111,4 @@ class LoginPage extends React.Component {
 
 }
 
-LoginPage.propTypes = {
-  cookies: instanceOf(Cookies).isRequired
-}
-
-export default withCookies(LoginPage);
+export default LoginPage;

@@ -6,21 +6,7 @@ import EJSON from 'mongodb-extended-json'
 //import getComponent from 'hadron-react-bson'
 import { NavLink } from "react-router-dom";
 import { RegularCard, Table, ItemGrid } from "components";
-
-function rand() {
-  return Math.round(Math.random() * 20) - 10;
-}
-
-function getModalStyle() {
-  const top = 50 + rand();
-  const left = 50 + rand();
-
-  return {
-    top: `${top}%`,
-    left: `${left}%`,
-    transform: `translate(-${top}%, -${left}%)`,
-  };
-}
+import SupplierPanel from 'components/Suppliers/SupExpPanel.jsx'
 
 const styles = theme => ({
   paper: {
@@ -55,13 +41,14 @@ class SupplierHome extends React.Component{
     constructor(props){
       super(props)
       this.state = {
-        suppliers: []
+        suppliers: [],
+        projects: []
       }
       console.log('Created suppliers instance')
       console.log(this.state)
     }
 
-    callApi = async () => {
+    callSupplierApi = async () => {
       const response = await fetch('/suppliers');
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
@@ -70,27 +57,61 @@ class SupplierHome extends React.Component{
 
     }
 
+    callProjectsApi = async() => {
+      const response = await fetch('/projects');
+      const body = await response.json();
+      if (response.status !== 200) throw Error(body.message);
+      
+      return EJSON.parse(body);      
+    }
+
     componentDidMount() {
       console.log('async was called')
-      this.callApi()
+      this.callSupplierApi()
       .then(res => this.setState({ suppliers: res }))
+      .catch(err => console.log(err));
+
+      this.callProjectsApi()
+      .then(res => this.setState({ projects: res }))
       .catch(err => console.log(err));
     }
 
-    render() {
-      let supplierData = this.state.suppliers.reduce((suppliers,supplier)=>{
-  //      console.log(getComponent(supplier.LC_used))
-        /*suppliers.push([supplier["name"],supplier["branch"],supplier["IFSC"],
-                            supplier["LC_limit"]["numberdecimal"],
-                            supplier["LC_used"]["$numberdecimal"],
-                            supplier["LCs"]])*/
-        suppliers.push([ supplier.name, supplier.city, String(supplier.projects[0].name), String(supplier.banks[0].name),
-                      String(supplier.banks[0].branch),String(supplier.banks[0].IFSC),supplier.LCs])
-        return suppliers
-
-      },[])
+    updateSupplierPanel = (key,supplier) => {
+      var suppliers = this.state.suppliers
+      suppliers[key] = supplier;
+      console.log(suppliers)
+      this.setState({suppliers: suppliers})
       console.log(this.state.suppliers)
-      console.log('supplierData: ' + String(supplierData))
+    }
+
+    deleteSupplier = (id) => {
+      var suppliers = this.state.suppliers
+      delete suppliers[id]
+      this.setState({suppliers:suppliers})
+    }
+
+    render() {
+      const projectsList  = this.state.projects.reduce((arr,project) => {
+        arr.push(<option value={project._id}>{project.name}</option>)
+          //returning array
+        return arr;
+      },[<option value=''/>])
+      if(this.state.suppliers < 1){
+        var panels = (
+          <Typography varaint='title'>
+          No Suppliers to Display
+          </Typography>
+          )
+      }else{
+        var panels = this.state.suppliers.reduce((arr,prop,key) => {
+          console.log(key)
+          arr.push(<SupplierPanel supplier={prop} id={key}
+                      onUpdate={this.updateSupplierPanel}
+                      onDelete={this.deleteSupplier}
+                      projectsList={projectsList}/>)
+          return arr
+        },[])
+      }
       return (
        <div> 
         <Grid container>
@@ -99,20 +120,7 @@ class SupplierHome extends React.Component{
               cardTitle="suppliers"
               cardSubtitle="Here is a subtitle for this table"
               content={
-                <Table
-                  tableHeaderColor="primary"
-                  tableHead={["Name", "City", "Projects", "Bank", "Branch", "IFSC", "LCs"]}
-                  /*tableData={[
-                    ["Dakota Rice", "Niger", "Oud-Turnhout", "$36,738"],
-                    ["Minerva Hooper", "Curaçao", "Sinaai-Waas", "$23,789"],
-                    ["Sage Rodriguez", "Netherlands", "Baileux", "$56,142"],
-                    ["Philip Chaney", "Korea, South", "Overland Park", "$38,735"],
-                    ["Doris Greene", "Malawi", "Feldkirchen in Kärnten", "$63,542"],
-                    ["Mason Porter", "Chile", "Gloucester", "$78,615"]
-                  ]}*/
-                  tableData={supplierData}
-                  expansionHead = "Letters of Credit."
-                />
+                panels
               }
               footer={
                 <div>

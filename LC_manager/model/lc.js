@@ -1,17 +1,18 @@
 const mongoose = require('mongoose')
+const supplierBankSchema = require('./supplier')
 var ObjectID = mongoose.Schema.Types.ObjectId;
 
 var LC_Payment_Schema = new mongoose.Schema({
     DT_amt: [{
-	due_DT : { type : Date, required : true },
-	due_amt : { type : mongoose.Schema.Types.Decimal128, required : true },
-	payed_amt : { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 },
+	due_DT : { type : Date },
+	due_amt : { type : mongoose.Schema.Types.Decimal128, default: 0},
+	payed_amt : { type : mongoose.Schema.Types.Decimal128, default: 0},
     pay_ref: {type: String},
     rec: {name: String, rec: { type: Boolean, default: false}}, // material receipt
     acc: {name: String, rec: { type: Boolean, default: false}}, // bank acceptance
     }],
-    total_due: { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 },
-    total_payed: { type : mongoose.Schema.Types.Decimal128, required : true, default: 0 }
+    total_due: { type : mongoose.Schema.Types.Decimal128,  default: 0 },
+    total_payed: { type : mongoose.Schema.Types.Decimal128, default: 0 }
 });
 
 var LCSchema = new mongoose.Schema({
@@ -21,17 +22,20 @@ var LCSchema = new mongoose.Schema({
     supplier : { type : ObjectID, // can use projection to get name
 		 ref : 'Supplier',
 		 required : true },
+    project : { type : ObjectID, 
+         ref : 'projects',
+         required : true },
+    supBank : { type : ObjectID},
+                 
     dates: [{
-
-	openDT :{ type : Date, required : true, default : Date.now},
-	expDT : { type : Date, required : true, },
-    bc: {name: String, rec: { type: Boolean, default: false}}, // bank charges document
-    app: {name: String, rec: { type: Boolean, default: false}}, // application document
-    
+    	openDT :{ type : Date, required : true, default : Date.now},
+    	expDT : { type : Date, required : true, },
+        bc: {name: String, rec: { type: Boolean, default: false}}, // bank charges document
+        app: {name: String, rec: { type: Boolean, default: false}}, // application document
     }],
     LC_no : { type : String, required : true },
     FDR_no: { type : String, required : true },
-    FDR_DT: { type : Date, default : Date.now },
+    FDR_DT: { type : Date, required: true, default : Date.now },
     m_amt : { type : mongoose.Schema.Types.Decimal128, required : true },
     m_cl_DT : { type : String },
     amount : { type : mongoose.Schema.Types.Decimal128, required : true },

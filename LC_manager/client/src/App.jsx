@@ -47,6 +47,7 @@ class App extends React.Component {
 				        return <Route path={prop.path} render={(props) => {return <prop.component {...props} data={this.state }/>}} key={key} />;
 				      	})
 				  	  }
+				  	  
 				    </Switch>
 		return (
 

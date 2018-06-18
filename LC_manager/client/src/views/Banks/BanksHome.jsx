@@ -7,20 +7,22 @@ import { RegularCard, Table, ItemGrid } from "components";
 
 
 const styles = theme => ({
-  root: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  icon: {
-    margin: theme.spacing.unit * 2,
-  },
-  iconHover: {
-    margin: theme.spacing.unit * 2,
-    '&:hover': {
-      color:"blue",
+  button: {
+    root: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'flex-end',
     },
-  },
+    icon: {
+      margin: theme.spacing.unit * 2,
+    },
+    iconHover: {
+      margin: theme.spacing.unit * 2,
+      '&:hover': {
+        color:"blue",
+      },
+    },
+  }
 });
 
 
@@ -58,8 +60,16 @@ class Banks extends React.Component{
                             bank["LC_limit"]["numberdecimal"],
                             bank["LC_used"]["$numberdecimal"],
                             bank["LCs"]])*/
+        const active = bank.LCs.reduce((total,lc)=>{
+          if(lc.status === 'Active' || lc.status === 'Extended')
+            total++;
+          return total
+        },0)                            
+        const limit = String(bank.LC_limit)
+        const used = String(bank.LC_used)                            
+        const available = String(parseFloat(limit)-parseFloat(used))
         banks.push([ bank.name, bank.branch, bank.IFSC, String(bank.LC_limit),
-                      String(bank.LC_used), bank.LCs])
+                      String(bank.LC_used), available,active])
         return banks
 
       },[])
@@ -76,7 +86,7 @@ class Banks extends React.Component{
                 content={
                   <Table
                     tableHeaderColor="primary"
-                    tableHead={["Name", "Branch", "IFSC", "LC LIMIT", "LC Used","LCs"]}
+                    tableHead={["Name", "Branch", "IFSC", "LC LIMIT", "LC Used","LC Remaining", "Active LCs"]}
                     /*tableData={[
                       ["Dakota Rice", "Niger", "Oud-Turnhout", "$36,738"],
                       ["Minerva Hooper", "Curaçao", "Sinaai-Waas", "$23,789"],
@@ -95,7 +105,7 @@ class Banks extends React.Component{
                       to={'/Banks/AddNewBank'}
                       activeClassName="active"
                     >
-                      <Button variant="fab" color="secondary" aria-label="add" >
+                      <Button variant="fab" color="secondary" aria-label="add" className={classes.button}>
                         <AddIcon />
                       </Button>
                     </ NavLink>

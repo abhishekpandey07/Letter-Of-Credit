@@ -8,6 +8,7 @@ import Typography from "views/Typography/Typography.jsx";
 import Icons from "views/Icons/Icons.jsx";
 import Maps from "views/Maps/Maps.jsx";
 import NotificationsPage from "views/Notifications/Notifications.jsx";
+import RegisterPage from 'views/Login/Register.jsx';
 import Projects from 'views/Projects/Projects.jsx';
 import {
   Dashboard,
@@ -98,6 +99,12 @@ const dashboardRoutes = [
     icon: ContentPaste,
     component: Projects,
     navbarName: "Projects Information"
+  },
+  {
+    path: "/register",
+    sidebarName: 'register',
+    icon: ContentPaste,
+    component: RegisterPage,
   },
   { redirect: true, path: "/", to: "/dashboard", navbarName: "Redirect" }
 ];

@@ -9,6 +9,7 @@ import { withStyles } from "material-ui";
 import { Header, Footer, Sidebar } from "components";
 
 import dashboardRoutes from "routes/dashboard.jsx";
+import loginRoutes from 'routes/login.js'
 import LCRoutes from "routes/lcs.jsx"
 
 import appStyle from "assets/jss/material-dashboard-react/appStyle.jsx";
@@ -31,6 +32,10 @@ class DashLayout extends React.Component {
     this.setState({ mobileOpen: !this.state.mobileOpen });
   };
 
+  handleRegister = () => {
+    window.location = '/register'
+  }
+
   getRoute = () => { return true}
   
   componentDidMount() {
@@ -52,7 +57,14 @@ class DashLayout extends React.Component {
                 if (prop.redirect)
                   return <Redirect from={prop.path} to={prop.to} key={key} />;
                 return <Route path={prop.path} render={(props) => {return <prop.component {...props} data={this.state.data}/>}} key={key} />;
-              })}
+              })
+              }
+              {loginRoutes.map((prop, key) => {
+                if (prop.redirect)
+                  return <Redirect from={prop.path} to={prop.to} key={key} />;
+                return <Route path={prop.path} render={(props) => {return <prop.component {...props} data={this.state.data}/>}} key={key} />;
+              })
+              }
             </Switch>
           );
     return (
@@ -73,6 +85,7 @@ class DashLayout extends React.Component {
           <Header
             routes={dashboardRoutes}
             handleDrawerToggle={this.handleDrawerToggle}
+            handleRegister={this.handleRegister}
             {...rest}
           />
           {/* On the /maps route we want the map to be on full screen - this is not possible if the content and conatiner classes are present because they have some paddings which would make the map smaller */}
