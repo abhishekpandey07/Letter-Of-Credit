@@ -155,7 +155,6 @@ class SupplierPanel extends React.Component {
     const Data = supplier.banks.reduce((data,bank) =>{
       if(bank.LCs.length > 0){
         bank.LCs.map(lc=> {
-
           if(lc.status === 'Active' || lc.status === 'Extended'){
             data.LCData.push([lc.LC_no,String(lc.amount),lc.status])
           }

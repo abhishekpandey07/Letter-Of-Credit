@@ -275,7 +275,7 @@ router.put('/:id/addBank', function(req, res) {
     }
     
     
-    supplier.bank.push(bank)
+    supplier.banks.push(bank)
     supplier.save(function (err, supplierID) {
         if (err) {
             res.send("There was a problem updating the information to the database: " + err);

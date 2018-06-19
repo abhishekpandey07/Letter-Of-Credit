@@ -45,7 +45,8 @@ function Header({ ...props }) {
           </Button>
         </div>
         <Hidden smDown implementation="css">
-          <HeaderLinks role={props.data.role} handleRegister={props.handleRegister}/>
+          <HeaderLinks handleLogout={props.handleLogout}
+            role={props.data.role}handleRegister={props.handleRegister}/>
         </Hidden>
         <Hidden mdUp>
           <IconButton

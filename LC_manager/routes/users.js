@@ -170,5 +170,23 @@ router.route('/sessionAuthentication')
     }
   })
 
+router.route('/logout')
+  .post(function(req,res){
+    console.log('Logging out user: ' + req.session.name)
+    var logout = false
+    try{
+      req.session.destroy()
+      logout = true
+    } catch(error){
+      console.log(error)
+    }
+
+    res.format({
+      json: function(){
+        res.json(JSON.stringify({logout: logout}))
+      }
+    })
+
+  })
 
 module.exports = router;

@@ -1,7 +1,7 @@
 {
-  "name": "material-dashboard-react",
+  "name": "lc-manager",
   "version": "1.2.0",
-  "description": "Material Dashboard React. Coded by Creative Tim",
+  "description": "Letter of Credit Manager",
   "private": false,
   "main": "index.js",
   "dependencies": {
@@ -17,7 +17,6 @@
     "perfect-scrollbar": "1.3.0",
     "react": "16.2.0",
     "react-chartist": "0.13.1",
-    "react-cookie": "^2.2.0",
     "react-dom": "16.2.0",
     "react-google-maps": "9.4.5",
     "react-router-dom": "4.2.2",
@@ -33,13 +32,9 @@
   "proxy": "http://localhost:3001",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/creativetimofficial/material-dashboard-react.git"
+    "url": "git+https://github.com/abhishekpandey07/Letter-Of-Credit.git"
   },
   "keywords": [],
-  "author": "Creative Tim <hello@creative-tim.com> (https://www.creative-tim.com/)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/creativetimofficial/material-dashboard-react/issues"
-  },
-  "homepage": "https://creativetimofficial.github.io/material-dashboard-react/#/dashboard"
+  "author": "Abhishek Pandey",
+  "license": "MIT"
 }

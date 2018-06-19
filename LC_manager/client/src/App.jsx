@@ -1,7 +1,6 @@
 import React from 'react'
 import { createBrowserHistory } from "history";
 import indexRoutes from "routes/index.jsx";
-import loginRoutes from "routes/index.jsx"
 import { Router, Route, Switch } from "react-router-dom";
 import LoginPage from 'views/Login/Login.jsx'
 import Dashboard from 'layouts/Dashboard/Dashboard'
@@ -15,6 +14,10 @@ class App extends React.Component {
 			role: null,
 			authenticated: false,
 		}
+	}
+
+	componentDidMount(){
+		document.title=" LC Manager"
 	}
 
 	handleLoginSuccess = (data) => {
@@ -35,7 +38,6 @@ class App extends React.Component {
 	}
 
 	render () {
-		const loginPage = <LoginPage onLoginSuccess={this.handleLoginSuccess}/>
 		const LoginSwitch = (<Switch>
 								<Route path='/' component={this.loginPage} key='login' />
 							</Switch>) 

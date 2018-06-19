@@ -10,8 +10,8 @@ import {
   Paper,
   ClickAwayListener,
   Hidden,
-  Button
-
+  Button,
+  Typography
 } from "@material-ui/core";
 
 import { NavLink } from 'react-router-dom'
@@ -23,19 +23,34 @@ import headerLinksStyle from "assets/jss/material-dashboard-react/headerLinksSty
 
 class HeaderLinks extends React.Component {
   state = {
-    open: false
+    open: false,
+    prof: false,
   };
   handleClick = () => {
     this.setState({ open: !this.state.open });
+  };
+
+  handleProfClick = () => {
+    console.log('in prof click')
+    this.setState({prof: !this.state.prof})
   };
 
   handleClose = () => {
     this.setState({ open: false });
   };
 
+  handleProfClose = () =>  {
+    this.setState({ prof: false})
+  };
+
+  handleLogout = () => {
+    this.handleProfClose();
+    this.props.handleLogout();
+  }
+
   render() {
     const { classes } = this.props;
-    const { open } = this.state;
+    const { open, prof } = this.state;
     const roles = ['Admin','COO']
     return (
       <div>
@@ -153,16 +168,55 @@ class HeaderLinks extends React.Component {
             </ClickAwayListener>
           </Popper>
         </Manager>
-        <IconButton
-          color="inherit"
-          aria-label="Person"
-          className={classes.buttonLink}
-        >
-          <Person className={classes.links} />
-          <Hidden mdUp>
-            <p className={classes.linkText}>Profile</p>
-          </Hidden>
-        </IconButton>
+        <Manager style={{ display: "inline-block" }}>
+          <Target>
+            <IconButton
+              color="inherit"
+              aria-label="Person"
+              aria-owns={prof ? "menu-list" : null}
+              aria-haspopup="true"
+              onClick={this.handleProfClick}
+              className={classes.buttonLink}              
+            >
+              <Person className={classes.links} />
+              <Hidden mdUp>
+                <p onClick={this.handleProfClick} className={classes.linkText}>
+                Profile</p>
+              </Hidden>
+            </IconButton>
+              
+          </Target>
+          <Popper
+            placement="bottom-start"
+            eventsEnabled={prof}
+            className={
+              classNames({ [classes.popperClose]: !prof }) +
+              " " +
+              classes.pooperResponsive
+            }
+          >
+            <ClickAwayListener onClickAway={this.handleProfClose}>
+              <Grow
+                in={prof}
+                id="prof-list"
+                style={{ transformOrigin: "0 0 0" }}
+              >
+                <Paper className={classes.dropdown}>
+                  <MenuList role="menu">
+                    <MenuItem
+                      onClick={this.handleLogout}
+                      className={classes.dropdownItem}
+                    >
+                    <Typography align='center' variant='subheading'>
+                      Logout
+                    </Typography>
+                    </MenuItem>
+                  </MenuList>
+                </Paper>
+              </Grow>
+            </ClickAwayListener>
+          </Popper>
+        </Manager>
       </div>
     );
   }

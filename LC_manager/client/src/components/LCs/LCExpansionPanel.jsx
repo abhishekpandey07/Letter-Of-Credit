@@ -48,7 +48,6 @@ class LCPanel extends React.Component {
   constructor(props){
     super(props)
     this.state ={
-      expaned: null,
       payment: null,
       index: null,
       extension: false,
@@ -61,9 +60,14 @@ class LCPanel extends React.Component {
       due_DT: '',
       due_amt: 0,
       refFile: '',
+      closed: '',
+      edit: false,
     }
+  }
 
-    console.log(this.props.id)
+  componentWillMount() {
+
+    String(this.props.LC.payment.total_payed)===String(this.props.LC.amount)? this.setState({closed: 'completed'}):null
   }
 
   handlePanelChange = panel => (event, expanded) => {
@@ -103,7 +107,11 @@ class LCPanel extends React.Component {
                     '/addPayment'
     axios.post(url,payload)
     .then((response) =>{
-      this.setState({payment:null})
+      this.setState({
+        payment: null,
+        payed_amt: 0,
+        pay_ref: ''
+      })
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
@@ -127,6 +135,10 @@ class LCPanel extends React.Component {
     axios.post(url,payload)
     .then((response) =>{
       this.handleCycle()
+      this.setState({
+        due_DT: '',
+        due_amt:0
+      })
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
@@ -157,8 +169,48 @@ class LCPanel extends React.Component {
 
   }
 
-  // Deletion Handles
+  handleEditClick = (event) => {
+    this.setState({
+      edit: !this.state.edit
+    })
+  }
 
+  handleEditSubmit = (event) => {
+    const url = 'LCs/'+this.props.LC._id+
+                    '/edit'
+    const payload = {
+      FDR_no: document.getElementById('FDR_no').value,
+      LC_no: document.getElementById('LC_no').value,
+      amount: document.getElementById('amount').value,
+      _method: 'PUT'
+    }
+
+    console.log(payload)
+
+    axios.post(url,payload,{credentials:'include'})
+    .then((response) =>{
+      this.handleEditClick()
+      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+    }).then((error) => {
+      console.log(error)
+    })
+
+
+  }
+
+  handleClose = (event) => {
+    const url = 'LCs/'+this.props.LC._id+
+                    '/close'
+    axios.post(url,{_method: 'PUT'},{credentials:'include'})
+    .then((response) => {
+      console.log(response)
+      this.setState({closed:'closed'})
+    }).catch((error) => {
+      console.log(error)
+    })
+  }
+
+  // Deletion Handles
   handleDelete = (event) => {
     var payload = {
       _method : 'DELETE'
@@ -166,7 +218,7 @@ class LCPanel extends React.Component {
 
     const url = 'LCs/'+this.props.LC._id+
                     '/edit'
-    axios.post(url,payload)
+    axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.props.onDelete(this.props.id)
 
@@ -183,7 +235,12 @@ class LCPanel extends React.Component {
   render() {
     const { classes ,LC} = this.props;
     const { expanded } = this.state;
-    console.log(LC)
+    
+    console.log(this.state)
+    var disableCloseButton = ''
+    if(this.state.closed){
+       disableCloseButton = this.state.close === 'completed'?false:true
+    }
     const paymentData = LC.payment.DT_amt.reduce((array,item,index) => {
       if(item.due_DT){
         const ref = item.pay_ref ? item.pay_ref:
@@ -253,7 +310,7 @@ class LCPanel extends React.Component {
                 />
               </Grid>
                 
-                  {this.state.payment ?
+                  {(this.state.payment && !this.state.edit)?
                           <div>
                           <Grid>
                             <Grid item xs={6} sm={3}>
@@ -291,7 +348,7 @@ class LCPanel extends React.Component {
                               </Button>
                             </div>
                               : 
-                              this.state.newCycle ?
+                              (this.state.newCycle && !this.state.edit) ?
 
                           <div>
                             <Grid item xs={6} sm={3}>
@@ -329,6 +386,53 @@ class LCPanel extends React.Component {
                                 submit
                               </Button>
                           </div>
+                              : 
+                              this.state.edit ?
+                                <div>
+                            <Grid item xs={12} sm={4}>
+                            <FormControl fullWidth={true} margin='normal'>
+                                <TextField
+                                  required
+                                  id="LC_no"
+                                  label="LC Number"
+                                  type="text"
+                                  defaultValue = {LC.LC_no}
+                                  InputLabelProps={{
+                                    shrink: true,
+                                  }}
+                              /> </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                            <FormControl fullWidth={true} margin='normal'>
+                                <TextField
+                                  required
+                                  id="FDR_no"
+                                  label="FDR Number"
+                                  type="text"
+                                  defaultValue = {LC.FDR_no}
+                                  InputLabelProps={{
+                                    shrink: true,
+                                  }}
+                              /> </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                              <FormControl className={classes.margin} margin='normal'>
+                                <InputLabel htmlFor="amount"> Amount</InputLabel>
+                                <Input
+                                  id="amount"
+                                  type="number"
+                                  defaultValue = {String(LC.amount)}
+                                  startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                                />
+                              </FormControl>
+                              </Grid>
+                              <Button color="primary" size='small'
+                                variant='outlined' className={classes.button}
+                                onClick={this.handleEditSubmit}>
+                                submit
+                              </Button>
+                          </div>
+
                               : <Button mini variant='contained' className={classes.button}
                                   onClick={this.handleCycle}>Create New Cycle</Button>
                         }
@@ -344,7 +448,7 @@ class LCPanel extends React.Component {
                 </Grid>
                 <div top-margin='15px'>
                   <Grid item xs={12} sm={3} spacing='24'>
-                    {this.state.extension ?
+                    {this.state.extension && !this.state.edit ?
 
                           <div>
                             <FormControl fullWidth={true} margin='normal'>
@@ -384,16 +488,20 @@ class LCPanel extends React.Component {
                 </Grid>
                 </div>
               </Grid>
-            {/*<Grid item xs={12} sm={2}>
-              <Table
-                tableHead = {['Documents','Uploaded']}
-                tableData = {documentData}
-              />
-            </Grid>*/}
             <Grid item xs={12} sm={12}>
-              <Button mini variant='contained' className={classes.button}>Edit</Button>
+              <Button mini variant='contained' className={classes.button}
+                onClick={this.handleEditClick}>Edit</Button>
               <Button mini variant='contained' className={classes.button}
                   onClick={this.handleDelete} colour={red}>Delete</Button>
+              {
+                this.state.closed?
+                <Button mini disabled={disableCloseButton} variant='contained' className={classes.button}
+                  onClick={this.handleClose}>
+                  Close
+                </Button>
+                :
+                <div/>
+              }
             </Grid>
           </Grid>
           </ExpansionPanelDetails>

@@ -1,7 +1,6 @@
 import React from "react";
-import { Grid, InputLabel, withStyles} from "@material-ui/core";
+import { Grid, InputLabel} from "@material-ui/core";
 import Input from '@material-ui/core/Input';
-import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
@@ -14,16 +13,8 @@ import {
   //ProfileCard,
   RegularCard,
   Button,
-  CustomInput,
   ItemGrid
 } from "components";
-
-
-const styles = theme =>{
-  formControl : {
-    fullWidth: true
-  }
-}
 
 class NewLCForm extends React.Component{
   constructor(props){
@@ -145,8 +136,6 @@ class NewLCForm extends React.Component{
       },[<option value=''/>])      
     }
 
-    
-    const {classes} = this.props
     return (
       <div>
       <form >
@@ -253,7 +242,7 @@ class NewLCForm extends React.Component{
                       </FormControl>
                     </ItemGrid>
                     <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth className={classes.margin} margin='normal'>
+                      <FormControl fullWidth margin='normal'>
                         <InputLabel htmlFor="adornment-amount">Amount</InputLabel>
                         <Input
                           id="adornment-amount"
@@ -265,7 +254,7 @@ class NewLCForm extends React.Component{
                       </FormControl>
                     </ItemGrid>
                     <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth className={classes.margin} margin='normal'>
+                      <FormControl fullWidth margin='normal'>
                           <InputLabel htmlFor="adornment-amount">Margin Amount ({Math.round(this.state.amount*0.15)})</InputLabel>
                           <Input
                             id="adornment-margin-amount"
@@ -370,7 +359,7 @@ class NewLCForm extends React.Component{
                      </FormControl> 
                     </ItemGrid>
                     <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth className={classes.margin} margin='normal'>
+                      <FormControl fullWidth  margin='normal'>
                           <InputLabel htmlFor="adornment-amount">Installment Amount</InputLabel>
                           <Input
                             required
@@ -383,7 +372,7 @@ class NewLCForm extends React.Component{
                         </FormControl>
                     </ItemGrid>
                     <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth className={classes.margin} margin='normal'>
+                      <FormControl fullWidth  margin='normal'>
                           <InputLabel htmlFor="adornment-amount">Payed Amount</InputLabel>
                           <Input
                             id="adornment-payed-amount"
@@ -426,4 +415,4 @@ class NewLCForm extends React.Component{
   }
 }
 
-export default withStyles(styles)(NewLCForm);
+export default NewLCForm;

@@ -670,6 +670,15 @@ router.put('/:id/edit', function(req, res) {
             res.send("There was a problem updating the information to the database: " + err);
         } 
         else {
+
+            bankMethods.update(LC.issuer,function(error,bank){
+                if(error){
+                    console.log(error)
+                } else{
+                    console.log('Bank updated')
+                }
+            })
+
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             res.format({
                 /*html: function(){
@@ -690,6 +699,8 @@ router.put('/:id/close', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC;
+    LC.status === 'Expired'? res.format({json:function(){res.json(JSON.stringify(LC))}}): null
+    console.log('Updating LC')
     LC.status = 'Expired';
 
     bankMethods.closeLC(res.locals.issuer,LC,function(error,bank){
@@ -700,7 +711,7 @@ router.put('/:id/close', function(req, res) {
         console.log('LC Closed')
     })
 
-    supplierMethods.removeLC(res.locals.supplier,LC,function(error,supplier){
+    try{supplierMethods.removeLC(res.locals.supplier,LC,function(error,supplier){
         if(error){
             console.error(error)
             return res.send(error)
@@ -708,7 +719,10 @@ router.put('/:id/close', function(req, res) {
 
         console.log('LC successfully removed from supplier.')
 
-    })
+    })}
+    catch(error){
+        console.log(error)
+    }
     
     LC.save(function (err, LCID) {
         if (err) {

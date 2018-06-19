@@ -16,6 +16,7 @@ import appStyle from "assets/jss/material-dashboard-react/appStyle.jsx";
 
 import image from "assets/img/sidebar-2.jpg";
 import logo from "assets/img/reactlogo.png";
+import axios from 'axios'
 
 //This is the class
 class DashLayout extends React.Component {
@@ -34,6 +35,17 @@ class DashLayout extends React.Component {
 
   handleRegister = () => {
     window.location = '/register'
+  }
+
+  handleLogout = () => {
+    axios.post('/users/logout',{credentials:'include'})
+    .then( res => {
+      if(res.data.logout)
+        console.log('Logged out successfully')
+        window.location = '/'
+    }).catch(error => {
+      console.log(error)
+    })
   }
 
   getRoute = () => { return true}
@@ -86,6 +98,7 @@ class DashLayout extends React.Component {
             routes={dashboardRoutes}
             handleDrawerToggle={this.handleDrawerToggle}
             handleRegister={this.handleRegister}
+            handleLogout={this.handleLogout}
             {...rest}
           />
           {/* On the /maps route we want the map to be on full screen - this is not possible if the content and conatiner classes are present because they have some paddings which would make the map smaller */}

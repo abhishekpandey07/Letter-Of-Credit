@@ -72,8 +72,8 @@ class LoginPage extends React.Component {
     return(
         <div>
           <Grid container>
-            <Grid xs={12} sm={12} md={4} />
-            <Grid xs={12} sm={12} md={4}>
+            <Grid item xs={12} sm={12} md={4} />
+            <Grid item xs={12} sm={12} md={4}>
               <Paper margin='normal'>
                 <div>
                 <FormControl fullWidth={true} margin='normal'>
@@ -102,7 +102,7 @@ class LoginPage extends React.Component {
                 </div>
               </Paper>
             </Grid>
-            <Grid xs={12} sm={12} md={4} />
+            <Grid item xs={12} sm={12} md={4} />
           </Grid>
         </div>
       );

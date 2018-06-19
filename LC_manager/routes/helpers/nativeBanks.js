@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+bankDB = mongoose.model('nativeBanks')
 // add a new LC to a bank
 
 function addBankLC(bank,LC,callback){
@@ -62,12 +62,12 @@ function removeBankLC(bank,LC,callback){
 }
 
 function closeLC(bank,LC,callback){
-
     var LC_used = parseFloat(bank.LC_used);
     var amount = parseFloat(LC.amount);
     LC_used -= amount;
 
-    console.log('issuer LC_used changed to : '+ bank.LC_used);
+    bank.LC_used = LC_used
+    console.log('issuer LC_used changed to : '+ LC_used);
     bank.save(function(error,bank){
 	if(error){
 	    console.error(error);
@@ -81,9 +81,52 @@ function closeLC(bank,LC,callback){
 
 }
 
+function update(bankID, callback){
+
+	console.log('retreiving bank with ID '+ bankID)
+	bankDB.findById(bankID._id)
+	.populate('LCs',['amount','status'])
+	.exec(function(error,bank){
+		if(error){
+			console.error(error)
+			return callback(error,bank)
+		} else {
+			console.log('Recalculating.')
+			console.log(bank.LCs)
+			const LC_used = bank.LCs.reduce((total,lc)=>{
+				if(lc.status === 'Active' || lc.status === 'Extended')
+					var amount = parseFloat(lc.amount)
+					console.log(amount)
+					
+					total += amount
+				return total
+			},0)
+
+			if(LC_used === bank.LC_used){
+				console.log('No inconsistencies found. LC_used : ' + LC_used)
+			} else {
+				bank.LC_used = LC_used;
+				bank.save(function(error,bank){
+					if(error){
+					    console.error(error);
+					    return callback(error,bank)
+					} else {
+					    console.log('issuing Bank: ' + bank.name +
+							' updated LC_used : ' + bank.LC_used);
+					    console.log('returning');
+					    return callback(null,bank);
+					}
+			    });
+			}
+		}
+	})
+
+}
+
 module.exports = {
     addBankLC,
     removeBankLC,
-    closeLC
+    closeLC,
+    update
     
 }

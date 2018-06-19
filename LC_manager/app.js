@@ -25,6 +25,7 @@ var suppliersRouter = require('./routes/suppliers');
 var projectsRouter = require('./routes/projects');
 var LCsRouter = require('./routes/lc');
 var documents = require('./routes/documents')
+var info = require('./routes/info')
 
 // database connections
 var db = require('./model/db');
@@ -68,6 +69,7 @@ app.use('/suppliers', suppliersRouter);
 app.use('/projects', projectsRouter);
 app.use('/LCs', LCsRouter);
 app.use('/documents',documents)
+app.use('/info',info)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   

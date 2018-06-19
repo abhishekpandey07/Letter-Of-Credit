@@ -1,14 +1,8 @@
 import React from "react";
-import {NavLink} from 'react-router-dom'
-import { Grid, InputLabel, withStyles, Divider, Paper} from "@material-ui/core";
-import Input from '@material-ui/core/Input';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormHelperText from '@material-ui/core/FormHelperText';
+import { Grid, InputLabel} from "@material-ui/core";
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import EJSON from 'mongodb-extended-json';
-import TextField from '@material-ui/core/TextField';
-import InputAdornment from '@material-ui/core/InputAdornment';
 import axios from 'axios'
 
 import {
@@ -21,13 +15,6 @@ import {
 
 
 //import avatar from "assets/img/faces/marc.jpg";
-
-
-const styles = theme =>{
-  formControl : {
-    fullWidth: true
-  }
-}
 
 class NewSupplierForm extends React.Component{
   constructor(props){
@@ -91,7 +78,7 @@ class NewSupplierForm extends React.Component{
       )
     })
 
-    const {classes} = this.props
+    
     return (
       <div>
       <form>
@@ -184,7 +171,7 @@ class NewSupplierForm extends React.Component{
                         />
                     </ItemGrid>
                     
-                    <ItemGrid xs={12} sm={6} md={6}>
+                    <ItemGrid xs={12} sm={4} md={4}>
                       <div>
                        <FormControl fullWidth={true}>
                         <InputLabel htmlFor="Project">Project</InputLabel>
@@ -220,4 +207,4 @@ class NewSupplierForm extends React.Component{
   }
 }
 
-export default withStyles(styles)(NewSupplierForm);
+export default NewSupplierForm;

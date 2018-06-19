@@ -58,7 +58,7 @@ function addLC(supplier, supBank, LC, callback){
 function removeLC(supplier,LC,callback){
 
     var banks = supplier.banks;
-    const index = banks.findIndex((bank) => {return bank._id === LC.supBank})
+    const index = banks.findIndex((bank) => {return String(bank._id) === String(LC.supBank)})
     var bank = banks[index]
 
     bank.LCs = removeByAttr(bank.LCs,'_id',LC._id);
