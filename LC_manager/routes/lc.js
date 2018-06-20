@@ -212,6 +212,7 @@ router.param('id', function(req,res,next,id){
     LCDB.findById(id)
 	.populate('supplier')
 	.populate('issuer')
+    .populate('project')
 	.exec(function(error,LC){
 	    if (error){
     		console.log('Error retreiving LC with ID : '+ id)

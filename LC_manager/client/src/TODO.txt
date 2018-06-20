@@ -1,0 +1,39 @@
+CLIENT
+	
+	BUGS:
+		ROUTING: Fix rendering of login page between redirects
+
+	DASHBOARD:
+		Add routines for Listing LCs expiring in next 14 days
+
+	LC:
+		Payment:
+			Implement decrease of LC_used of issuer bank on completeion of payment
+
+		Close:
+			Fix close button.
+			Add closing routines
+				Closing Advice
+				Acknowledgment
+				Margin Clearance Date
+				Interest
+
+	Projects:
+		Create a format and make a list of all projects
+
+
+SERVER
+
+	TESTS:
+		WRITE CRUD API TESTS
+
+	INFO.js:
+		Write an api endpoint to return all LCs expiring in 14 days
+
+
+
+OTHER
+
+ADD PURCHASE ORDER ATTRIBUTES.
+
+

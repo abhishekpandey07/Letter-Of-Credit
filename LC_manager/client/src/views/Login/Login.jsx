@@ -1,13 +1,58 @@
 import React from 'react'
-import { Header, Footer} from 'components'
 import Input from '@material-ui/core/Input';
 import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
-import EJSON from 'mongodb-extended-json';
 import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
+import {withStyles} from '@material-ui/core/'
 import axios from 'axios'
+import EJSON from 'mongodb-extended-json';
+
+import Header from './LoginHeader.jsx'
+import { transition, container } from "assets/jss/material-dashboard-react.jsx";
+import { createMuiTheme } from '@material-ui/core/styles';
+import purple from '@material-ui/core/colors/purple';
+import green from '@material-ui/core/colors/green';
+
+
+const appStyle = theme => ({
+  wrapper: {
+    position: "relative",
+    top: "0",
+    height: "100vh"
+  },
+  mainPanel: {
+    [theme.breakpoints.up("md")]: {
+      width: '100%'
+    },
+    overflow: "auto",
+    position: "relative",
+    float: "right",
+    ...transition,
+    maxHeight: "100%",
+    width: "100%",
+    overflowScrolling: 'touch'
+  },
+  content: {
+    marginTop: "70px",
+    padding: "30px 15px",
+    minHeight: "calc(100% - 123px)"
+  },
+  container,
+  paper: theme.mixins.gutters({
+    paddingTop: 16,
+    paddingBottom: 16,
+    marginTop: theme.spacing.unit * 3,
+    justifyContent: 'center'
+  }),
+  formHeading: {
+    variant: 'headline',
+    align: 'center',
+    color: '#e91e6'
+  }
+});
 
 
 class LoginPage extends React.Component {
@@ -68,15 +113,23 @@ class LoginPage extends React.Component {
   }
 
   render () {
-
+    var {classes , ...rest} = this.props
     return(
-        <div>
+      <div className={classes.mainPanel} ref='mainPanel'>
+        <Header {...rest}/>
+        <div className={classes.content}>
+        <div className={classes.container}>
           <Grid container>
             <Grid item xs={12} sm={12} md={4} />
             <Grid item xs={12} sm={12} md={4}>
-              <Paper margin='normal'>
+              <Paper margin='normal' className={classes.paper} elevation={6}>
                 <div>
-                <FormControl fullWidth={true} margin='normal'>
+                  <Typography variant='headline' align='center' >
+                    LC Manager Login
+                  </Typography>
+                </div>
+                <div clasName={classes.content} justifyContent='center'>
+                <FormControl margin='normal' fullWidth={true} >
                   <TextField
                     required
                     id='username'
@@ -105,10 +158,11 @@ class LoginPage extends React.Component {
             <Grid item xs={12} sm={12} md={4} />
           </Grid>
         </div>
+        </div>
+      </div>
       );
-
   }
-
+  //end
 }
 
-export default LoginPage;
+export default withStyles(appStyle)(LoginPage);

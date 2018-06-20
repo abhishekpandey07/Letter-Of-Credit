@@ -5,6 +5,7 @@ import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import {Table} from "components"
 import
@@ -15,6 +16,7 @@ import axios from 'axios'
 import InputAdornment from '@material-ui/core/InputAdornment';
 import FileIOButton from 'components/FileIOButtons/FileIOButton'
 import EJSON from 'mongodb-extended-json'
+import {formatDate} from 'utils/common'
 
 const styles = theme => ({
   root: {
@@ -243,6 +245,7 @@ class LCPanel extends React.Component {
     }
     const paymentData = LC.payment.DT_amt.reduce((array,item,index) => {
       if(item.due_DT){
+        const due = formatDate(new Date(item.due_DT))
         const ref = item.pay_ref ? item.pay_ref:
                     <Button variant='contained' size='small'
                       onClick={this.handlePaymentClick(index)}>
@@ -258,8 +261,7 @@ class LCPanel extends React.Component {
                       onSubmit = {this.onDocumentSubmit}
                       exists = {item.acc.rec}/>
 
-        array.push([item.due_DT.slice(0,10),String(item.due_amt),
-          String(item.payed_amt),ref,rec,accep])
+        array.push([due,String(item.due_amt),String(item.payed_amt),ref,rec,accep])
         return array
       }
 
@@ -280,9 +282,10 @@ class LCPanel extends React.Component {
                   name='application' index={index}
                   onSubmit = {this.onDocumentSubmit}
                   exists = {item.app.rec}/>
-
-      array.push([id,item.openDT.slice(0,10),item.expDT.slice(0,10),
-                  app, bc])
+      
+      const open = formatDate(new Date(item.openDT))
+      const exp = formatDate(new Date(item.expDT))
+      array.push([id,open,exp,app, bc])
       return array
     },[])
 
@@ -291,7 +294,7 @@ class LCPanel extends React.Component {
     return (
     <div>
       <div className={classes.root}>
-        <ExpansionPanel expanded={expanded === 'panel1'} onChange={this.handlePanelChange('panel1')}>
+        <ExpansionPanel expanded={expanded === 'panel1'} onChange={this.handlePanelChange('panel1')} divider>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography className={classes.heading}>{LC.supplier.name}</Typography>
             <Typography className={classes.heading}>{LC.project.name + '(' + (LC.project.location) + ')'}</Typography>

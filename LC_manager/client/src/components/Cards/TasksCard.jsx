@@ -17,7 +17,7 @@ import { bugs, website, server } from "variables/general";
 
 import tasksCardStyle from "assets/jss/material-dashboard-react/tasksCardStyle";
 
-class TasksCard extends React.Component {
+class PaymentsCard extends React.Component {
   state = {
     value: 0
   };
@@ -34,7 +34,7 @@ class TasksCard extends React.Component {
             title: classes.cardTitle,
             content: classes.cardHeaderContent
           }}
-          title="Tasks:"
+          title={this.props.title}
           action={
             <Tabs
               classes={{
@@ -53,7 +53,7 @@ class TasksCard extends React.Component {
                   textColorInheritSelected: classes.textColorInheritSelected
                 }}
                 icon={<BugReport className={classes.tabIcon} />}
-                label={"Bugs"}
+                label="This Week"
               />
               <Tab
                 classes={{
@@ -63,7 +63,7 @@ class TasksCard extends React.Component {
                   textColorInheritSelected: classes.textColorInheritSelected
                 }}
                 icon={<Code className={classes.tabIcon} />}
-                label={"Website"}
+                label="Month"
               />
               <Tab
                 classes={{
@@ -112,8 +112,8 @@ class TasksCard extends React.Component {
   }
 }
 
-TasksCard.propTypes = {
+PaymentsCard.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(tasksCardStyle)(TasksCard);
+export default withStyles(tasksCardStyle)(PaymentsCard);

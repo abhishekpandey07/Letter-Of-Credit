@@ -1,5 +1,5 @@
 import React from "react";
-import { Grid, Icon, withStyles,  Button, Typography } from "@material-ui/core";
+import { Grid, Icon, withStyles,  Button, Typography,List,ListItem, Divider } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add'
 
 import EJSON from 'mongodb-extended-json'
@@ -68,12 +68,14 @@ class LCHome extends React.Component{
           )
       }else{
         var panels = this.state.LCs.reduce((arr,prop,key) => {
-          console.log(key)
-          arr.push(<LCPanel LC={prop} id={key}
+          var panel = <ListItem divider>
+                        <LCPanel LC={prop} id={key}
                       onUpdate={this.updateLCPanel}
-                      onDelete={this.deleteLC}/>)
+                      onDelete={this.deleteLC}/>
+                      </ListItem>
+          arr.push(panel)
           return arr
-        },[])
+        },[]);
       }
       return (
         <div className="grid">
@@ -83,7 +85,9 @@ class LCHome extends React.Component{
                 cardTitle="Letters of Credit"
                 cardSubtitle="Click on a panel to know more about or to update a Letter of Credit."
                 content={
-                  panels
+                  <List>
+                    {panels}
+                  </List>
               }
               footer={
                   <div>

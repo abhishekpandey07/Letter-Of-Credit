@@ -109,4 +109,168 @@ router.route('/')
       } 
       })
 
+router.route('/cycle').get(function(req,res){
+  LCDB.aggregate([
+      {
+        $project: {
+          dueDetails : "$payment.DT_amt"
+        }
+      },
+      {
+        $unwind: "$dueDetails"
+      },
+      {
+        $group: {
+          _id : {month : {$month: "$dueDetails.due_DT"}, year : {$year : "$dueDetails.due_DT"} },
+          dueAmount : { $sum : "$dueDetails.due_amt"},
+
+          count : { $sum : 1}
+        }
+      },
+      {
+        $match : {
+          "_id.month" : { $ne : null}
+        }
+      },
+      {
+        $sort : {"_id.year" : 1 , "_id.month" : 1}
+      }
+    ]).exec(function(error, dist){
+      if(error){
+        console.log(error)
+        res.end(error)
+      }else{
+        res.format({
+          json: function(){
+            res.json(JSON.stringify(dist))
+          }
+        })
+      }
+    })
+  
+})
+
+router.route('/thisWeek').get(function(req,res){
+  var today = new Date(Date.now())
+  console.log(today)
+  var sunday = new Date()
+  sunday.setDate(today.getDate() - today.getDay())
+  var nextSunday = new Date()
+  nextSunday.setDate(sunday.getDate() + 7)
+
+  console.log('today: ' + today)
+  console.log('sunday: ' + sunday)
+  console.log('nextSunday: ' + nextSunday)
+  LCDB.aggregate([
+    {
+      $lookup : {
+        from:"nativebanks",
+        localField: "issuer",
+        foreignField: "_id",
+        as: "issuingBank"
+      }
+    },
+    {
+      $lookup : {
+        from: "suppliers",
+        localField: "supplier",
+        foreignField: "_id",
+        as: "supplierd"
+      }
+    },
+    {
+      $addFields : {
+        dueDetails : {$arrayElemAt : ["$payment.DT_amt", -1 ]}
+      }
+    },
+    {
+      $match: {
+         "dueDetails.due_DT": { $gte: sunday , $lt: nextSunday }
+      }
+    },
+    {
+      $group: {
+        _id : "$issuingBank.name",
+        amount : {$sum: "$dueDetails.due_amt"},
+        LC : {$push : {supplier : "$supplierd.name", LC_no: "$LC_no", payment : "$dueDetails"}},
+        count : {$sum : 1}
+      }
+    }
+  ]).exec(function(error,LCs){
+    if(error){
+      console.log(error)
+      
+      res.end(error)
+    }else{
+      console.log(LCs)
+      res.format({
+        json: function(){
+          res.json(JSON.stringify(LCs))
+        }
+      })
+    }
+  })
+})
+
+// Remember that the :month parameter must start from base 1 for aggregation.
+router.route('/month').get(function(req,res){
+  LCDB.aggregate([
+    {
+      $lookup : {
+        from:"nativebanks",
+        localField: "issuer",
+        foreignField: "_id",
+        as: "issuingBank"
+      }
+    },
+    {
+      $lookup : {
+        from: "suppliers",
+        localField: "supplier",
+        foreignField: "_id",
+        as: "supplierd"
+      }
+    },
+    {
+      $addFields : {
+        dueDetails : {$arrayElemAt : ["$payment.DT_amt", -1 ]},
+      }
+    },
+    {
+      $sort : {"dueDetails.due_DT" : 1}
+    },
+    {
+      $group: {
+        _id : { issuer : "$issuingBank.name" ,month : {$month: "$dueDetails.due_DT"}, year : {$year : "$dueDetails.due_DT"} },
+        amount : {$sum: "$dueDetails.due_amt"},
+        LC : {$push : {supplier : "$supplierd.name", LC_no: "$LC_no", payment : "$dueDetails", issuer : "$issuingBank.name"}},
+        count : {$sum : 1}
+      }
+    },
+    {
+      $match : {
+        "_id.month" : { $ne : null}
+      }
+    },
+    {
+      $sort : {"_id.year" : 1,"_id.month":1}
+    }
+  ]).exec(function(error,LCs){
+    if(error){
+      console.log(error)
+      
+      res.end(error)
+    }else{
+      console.log(LCs)
+      res.format({
+        json: function(){
+          res.json(JSON.stringify(LCs))
+        }
+      })
+    }
+  })
+})
+
+// TODO : Add a routine to get all the LCs expiring in 14 days.
+
 module.exports = router;

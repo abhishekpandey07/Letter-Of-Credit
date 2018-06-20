@@ -43,7 +43,9 @@ const regularCardStyle = {
     ...defaultFont,
     marginBottom: "0",
     color: "rgba(255, 255, 255, 0.62)",
-    margin: "0 0 10px"
+    margin: "0 0 10px",
+    flexBasis: '50.00%',
+    flexShrink: 0,
   },
   cardActions: {
     padding: "14px",
