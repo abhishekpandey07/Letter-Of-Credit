@@ -8,7 +8,7 @@ var projectSchema = new mongoose.Schema({
 		 required : true },
     
     manager : { type : String },
-    
+        
     value : { type : mongoose.Schema.Types.Decimal128,
 	      required : true },
 

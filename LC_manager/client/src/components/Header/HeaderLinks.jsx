@@ -56,15 +56,15 @@ class HeaderLinks extends React.Component {
       <div>
       { 
         roles.includes(this.props.role)?
-        <div>
         <NavLink
-          to='/register'
+          to='/Register'
+          activeClassName="active"
+
         >
-        <Button varaint='contained' >
-          Register New User
-        </Button>
+          <Button varaint='contained' >
+            Register New User
+          </Button>
         </NavLink>
-        </div>
         :
         <div/>
       }

@@ -7,49 +7,7 @@ import EJSON from 'mongodb-extended-json'
 import { NavLink } from "react-router-dom";
 import { RegularCard, Table, ItemGrid } from "components";
 import axios from 'axios'
-
-function rand() {
-  return Math.round(Math.random() * 20) - 10;
-}
-
-function getModalStyle() {
-  const top = 50 + rand();
-  const left = 50 + rand();
-
-  return {
-    top: `${top}%`,
-    left: `${left}%`,
-    transform: `translate(-${top}%, -${left}%)`,
-  };
-}
-
-const styles = theme => ({
-  paper: {
-    position: 'absolute',
-    width: theme.spacing.unit * 50,
-    backgroundColor: theme.palette.background.paper,
-    boxShadow: theme.shadows[5],
-    padding: theme.spacing.unit * 4,
-  },
-});
-
-/*const styles = theme => ({
-  root: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  icon: {
-    margin: theme.spacing.unit * 2,
-  },
-  iconHover: {
-    margin: theme.spacing.unit * 2,
-    '&:hover': {
-      color:"blue",
-    },
-  },
-});
-*/
+import PageTable from 'components/Table/PaginationTable'
 
 
 class ProjectHome extends React.Component{
@@ -107,7 +65,7 @@ class ProjectHome extends React.Component{
               cardTitle="Projects"
               cardSubtitle="List of All Projects"
               content={
-                <Table
+                <PageTable
                   tableHeaderColor="primary"
                   tableHead={["Name", "Location", "Value", "Manager", "Suppliers"]}
                   /*tableData={[

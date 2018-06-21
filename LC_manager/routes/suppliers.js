@@ -131,6 +131,7 @@ router.param('id', function(req,res,next,id){
     // find the supplier by ID
     supplierDB.findById(id)
 	.populate({ path:'LCs', match: { status : "Active" }})
+    .populate('projects',['name','location'])
 	.exec(function(err,supplier){
 	    if (err){
 		console.log('Error retreiving supplier with ID : '+ id)
@@ -148,8 +149,6 @@ router.param('id', function(req,res,next,id){
 	    }else{
 
 
-
-		console.log(supplier);
 		res.locals.id = id;
 		res.locals.supplier = supplier;
 		res.locals.LCs = supplier.LCs;
@@ -251,15 +250,28 @@ router.put('/:id/addProject', function(req, res) {
         } 
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
-            res.format({
-                /*html: function(){
-                    res.redirect("/suppliers/" + supplier._id);
-                },*/
-                //JSON responds showing the updated values
-                json: function(){
-                    res.json(JSON.stringify(supplier));
+
+            // rereading supplier to have the new project name
+            supplierDB.findById(supplier._id)
+            .populate({ path:'LCs', match: { status : "Active" }})
+            .populate('projects',['name','location'])
+            .exec(function(error, supplier) {
+                if(error){
+                    res.status =500
+                    res.end(error)
+                } else{
+                    res.format({
+                        /*html: function(){
+                            res.redirect("/suppliers/" + supplier._id);
+                        },*/
+                        //JSON responds showing the updated values
+                        json: function(){
+                            res.json(JSON.stringify(supplier));
+                        }
+                    });
                 }
-            });
+            })
+
         }
     });
 });
@@ -267,7 +279,6 @@ router.put('/:id/addProject', function(req, res) {
 router.put('/:id/addBank', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     var supplier = res.locals.supplier;
-    console.log(req.body)
     var bank = {
         name: req.body.name,
         branch: req.body.branch,

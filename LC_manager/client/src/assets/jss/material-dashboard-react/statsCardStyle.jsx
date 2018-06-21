@@ -55,7 +55,7 @@ const statsCardStyle = {
   cardTitle: {
     margin: "0",
     ...defaultFont,
-    fontSize: "1.625em"
+    fontSize: "1.25em"
   },
   cardTitleSmall: {
     fontSize: "65%",

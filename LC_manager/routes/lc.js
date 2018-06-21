@@ -557,6 +557,16 @@ router.put('/:id/addPayment', function(req, res) {
             res.send("There was a problem updating the information to the database: " + err);
         } 
         else {
+
+            // Need to free utilized from bank.
+            bankMethods.onPayment(LC.issuer,payment, function(error,bank){
+                if(error){
+                    res.status = 500;
+                    res.end(error)
+                }
+            })
+
+
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             console.log('Sending reply!')
             res.format({

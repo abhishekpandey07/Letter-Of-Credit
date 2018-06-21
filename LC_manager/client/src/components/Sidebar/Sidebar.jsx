@@ -9,110 +9,130 @@ import {
   List,
   ListItem,
   ListItemIcon,
-  ListItemText
-} from "material-ui";
+  ListItemText,
+  Button,
+} from "@material-ui/core";
 
 import { HeaderLinks } from "components";
 
 import sidebarStyle from "assets/jss/material-dashboard-react/sidebarStyle.jsx";
-
-const Sidebar = ({ ...props }) => {
+import Header from 'components/Header/Header.jsx'
+class Sidebar extends React.Component {
   // verifies if routeName is the one active (in browser input)
-  function activeRoute(routeName) {
-    return props.location.pathname.indexOf(routeName) > -1 ? true : false;
+  constructor(props){
+    super(props)
+    this.state = {
+      open: true
+    }
   }
-  const { classes, color, logo, image, logoText, routes } = props;
-  var links = (
-    <List className={classes.list}>
-      {routes.map((prop, key) => {
-        if (prop.redirect) return null;
-        const listItemClasses = cx({
-          [" " + classes[color]]: activeRoute(prop.path)
-        });
-        const whiteFontClasses = cx({
-          [" " + classes.whiteFont]: activeRoute(prop.path)
-        });
-        return (
-          <NavLink
-            to={prop.path}
-            className={classes.item}
-            activeClassName="active"
-            key={key}
-          >
-            <ListItem button className={classes.itemLink + listItemClasses}>
-              <ListItemIcon className={classes.itemIcon + whiteFontClasses}>
-                <prop.icon />
-              </ListItemIcon>
-              <ListItemText
-                primary={prop.sidebarName}
-                className={classes.itemText + whiteFontClasses}
-                disableTypography={true}
-              />
-            </ListItem>
-          </NavLink>
-        );
-      })}
-    </List>
-  );
-  var brand = (
-    <div className={classes.logo}>
-      <a href="https://www.creative-tim.com" className={classes.logoLink}>
-        <div className={classes.logoImage}>
-          <img src={logo} alt="logo" className={classes.img} />
-        </div>
-        {logoText}
-      </a>
-    </div>
-  );
-  return (
-    <div>
-      <Hidden mdUp>
-        <Drawer
-          variant="temporary"
-          anchor="right"
-          open={props.open}
-          classes={{
-            paper: classes.drawerPaper
-          }}
-          onClose={props.handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true // Better open performance on mobile.
-          }}
-        >
-          {brand}
-          <div className={classes.sidebarWrapper}>
-            <HeaderLinks />
-            {links}
-          </div>
-          {image !== undefined ? (
-            <div
-              className={classes.background}
-              style={{ backgroundImage: "url(" + image + ")" }}
-            />
-          ) : null}
-        </Drawer>
-      </Hidden>
-      <Hidden smDown>
-        <Drawer
-          anchor="left"
-          variant="permanent"
-          open
-          classes={{
-            paper: classes.drawerPaper
-          }}
-        >
-          {brand}
-          <div className={classes.sidebarWrapper}>{links}</div>
-          {image !== undefined ? (
-            <div
-              className={classes.background}
-              style={{ backgroundImage: "url(" + image + ")" }}
-            />
-          ) : null}
-        </Drawer>
-      </Hidden>
-    </div>
-  );
+  
+  handleDrawerToggle = () => {
+    this.setState(prev => {return { open : !prev.open}})
+  }
+
+  activeRoute = (routeName) => {
+    return this.props.location.pathname.indexOf(routeName) > -1 ? true : false;
+  }
+
+ render ()
+   {const { classes, color, logo, image, logoText, routes } = this.props;
+       var links = (
+       <List className={classes.list}>
+         {routes.map((prop, key) => {
+           if (prop.redirect || prop.path==='/Register') return null;
+           const listItemClasses = cx({
+             [" " + classes[color]]: this.activeRoute(prop.path)
+           });
+           const whiteFontClasses = cx({
+             [" " + classes.whiteFont]: this.activeRoute(prop.path)
+           });
+           return (
+             <NavLink
+               to={prop.path}
+               className={classes.item}
+               activeClassName="active"
+               key={key}
+             >
+               <ListItem button className={classes.itemLink + listItemClasses}>
+                 <ListItemIcon className={classes.itemIcon + whiteFontClasses}>
+                   <prop.icon />
+                 </ListItemIcon>
+                 <ListItemText
+                   primary={prop.sidebarName}
+                   className={classes.itemText + whiteFontClasses}
+                   disableTypography={true}
+                 />
+               </ListItem>
+             </NavLink>
+           );
+         })}
+       </List>
+     );
+     var brand = (
+       <div className={classes.logo}>
+         <div className = {classes.logoLink} >
+           <div className={classes.logoImage}>
+             <img src={logo} alt="logo" className={classes.img} onclick={this.handleDrawerToggle}/>
+           </div>
+           {logoText}
+         </div>
+       </div>
+     );
+    console.log(routes)
+     return (
+       <div>
+        <Header permHandle={this.props.permHandle}
+          open={this.props.permOpen} routes={routes}
+          handleLogout={this.props.handleLogout}
+          {...this.props}/>
+         <Hidden mdUp>
+           <Drawer
+             variant="temporary"
+             anchor="right"
+             open={this.props.open}
+             classes={{
+               paper: classes.drawerPaper
+             }}
+             onClose={this.props.handleDrawerToggle}
+             ModalProps={{
+               keepMounted: true // Better open performance on mobile.
+             }}
+           >
+             {brand}
+             <div className={classes.sidebarWrapper}>
+               <HeaderLinks />
+               {links}
+             </div>
+             {image !== undefined ? (
+               <div
+                 className={classes.background}
+                 style={{ backgroundImage: "url(" + image + ")" }}
+               />
+             ) : null}
+           </Drawer>
+         </Hidden>
+         <Hidden smDown>
+           <Drawer
+             anchor="left"
+             variant="persistent"
+             open={this.props.permOpen}
+             classes={{
+               paper: classes.drawerPaper
+             }}
+             onClose={this.props.permHandle}
+           >
+             <Button onClick={this.props.permHandle}>{brand}</Button>
+             <div className={classes.sidebarWrapper}>{links}</div>
+             {image !== undefined ? (
+               <div
+                 className={classes.background}
+                 style={{ backgroundImage: "url(" + image + ")" }}
+               />
+             ) : null}
+           </Drawer>
+         </Hidden>
+       </div>
+     );}
 };
 
 Sidebar.propTypes = {

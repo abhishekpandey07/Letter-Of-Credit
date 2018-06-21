@@ -70,7 +70,22 @@ class RegisterPage extends React.Component {
 
     return(
         <div>
-          <div>
+          <div><Grid container>
+            <Grid item xs={12} sm ={12} md={4}/>
+            <Grid item xs={12} sm ={12} md={4}>
+              <FormControl fullWidth={true}>
+                <TextField
+                  required
+                  id='name'
+                  label='Employee ID'
+                  type='text'
+                  onChange={this.handleValueChange('_id')}
+                  InputLabelProps={{shrink:true}}
+                />
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm ={12} md={4}/>
+          </Grid>
           <Grid container>
             <Grid item xs={12} sm ={12} md={4}/>
             <Grid item xs={12} sm ={12} md={4}>

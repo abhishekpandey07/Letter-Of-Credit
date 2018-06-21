@@ -113,8 +113,6 @@ router.get('/new', function(req,res){
     res.render('nativeBanks/new', {title: 'Register New Native Bank'});
 });
 
-
-
 // route middleware to validate :id
 router.param('id', function(req, res, next, id) {
     //console.log('validating ' + id + ' exists');
@@ -149,42 +147,32 @@ router.param('id', function(req, res, next, id) {
 
 
 router.route('/:id')
-    .get(function(req, res) {
-
-
-	
-    natBankDB.findById(req.id, function (err, bank) {
-      if (err) {
-        console.log('GET Error: There was a problem retrieving: ' + err);
-      } else {
-        console.log('GET Retrieving ID: ' + bank._id);
-
-          /*var bankName = bank.name;
-	  var bankLC_limit = bank.LC_limit;
-	  var bankLCs = bank.LCs;
-	  var bankbranch = bank.LC_used;
-	  var bankIFSC = bank.IFSC;
-	*/
-	var bank = res.locals.bank
-        res.format({
-          html: function(){
-              res.render('nativeBanks/show', {
-		  "name" : bank.name,
-		  "branch" : bank.branch,
-		  "LC_lim" : bank.LC_limit,
-		  "IFSC" : bank.IFSC,
-		  "LC_used" : bank.LC_used,
-		  "LCs" : bank.LCs,
-		  "bank" : bank
-              });
-          },
-          json: function(){
-              res.json(bank);
-          }
-        });
+  .get(function(req, res) {
+        
+    var bank = res.locals.bank
+    res.format({
+      html: function(){
+          res.render('nativeBanks/show', {
+      		  "name" : bank.name,
+      		  "branch" : bank.branch,
+      		  "LC_lim" : bank.LC_limit,
+      		  "IFSC" : bank.IFSC,
+      		  "LC_used" : bank.LC_used,
+      		  "LCs" : bank.LCs,
+      		  "bank" : bank
+                    });
+      },
+      json: function(){
+          res.json(bank);
       }
     });
-    });
+  });
+
+// TODO: Add a routine to recalculate all bank LC limits.
+/*router.get('/update', function (req,res) {
+  var bank
+})*/
+
       //GET the individual blob by Mongo ID
 router.get('/:id/edit', function(req, res) {
     //search for the bank within Mongo

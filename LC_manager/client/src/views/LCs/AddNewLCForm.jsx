@@ -159,7 +159,6 @@ class NewLCForm extends React.Component{
                             id: 'issuer'
                           }}
                         >
-                          <option value=""/>
                           {issuersList}
                         </Select>
                       </FormControl>

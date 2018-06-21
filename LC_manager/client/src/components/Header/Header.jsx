@@ -8,11 +8,12 @@ import {
   IconButton,
   Hidden,
   Button
-} from "material-ui";
+} from "@material-ui/core";
+import MenuIcon from '@material-ui/icons/Menu'
 import cx from "classnames";
 
 import headerStyle from "assets/jss/material-dashboard-react/headerStyle.jsx";
-
+import classNames from 'classnames'
 import HeaderLinks from "./HeaderLinks";
 
 function Header({ ...props }) {
@@ -36,9 +37,21 @@ function Header({ ...props }) {
     [" " + classes[color]]: color
   });
   return (
-    <AppBar className={classes.appBar + appBarClasses}>
-      <Toolbar className={classes.container}>
-        <div className={classes.flex}>
+    <AppBar className={classNames(classes.appBar, {
+              [classes.appBarShift]: props.open,
+              [classes['appBarShift-left']]: props.open,
+            })}>
+      <Toolbar disableGutters={!props.open} className={classes.container}>
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          onClick={props.permHandle}
+          className={classNames(classes.menuButton, props.open && classes.hide)}
+        >
+          <MenuIcon />
+        </IconButton>
+        
+        <div className={classNames(classes.flex,{[classes.flex]: props.open})}>
           {/* Here we create navbar brand, based on route name */}
           <Button href="#" className={classes.title}>
             {makeBrand()}
@@ -58,6 +71,7 @@ function Header({ ...props }) {
             <Menu />
           </IconButton>
         </Hidden>
+        
       </Toolbar>
     </AppBar>
   );

@@ -3,6 +3,7 @@
 // #############################
 
 import {
+  drawerWidth,
   container,
   defaultFont,
   primaryColor,
@@ -14,6 +15,19 @@ import {
 } from "assets/jss/material-dashboard-react.jsx";
 
 const headerStyle = theme => ({
+  appBarShift: {
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  },
+  'appBarShift-left': {
+    marginLeft: drawerWidth,
+  },
+  'appBarShift-right': {
+    marginRight: drawerWidth,
+  },
   appBar: {
     backgroundColor: "transparent",
     boxShadow: "none",
@@ -27,7 +41,10 @@ const headerStyle = theme => ({
     border: "0",
     borderRadius: "3px",
     padding: "10px 0",
-    transition: "all 150ms ease 0s",
+    transition: theme.transitions.create(['margin', 'width'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
     minHeight: "50px",
     display: "block"
   },
@@ -36,7 +53,8 @@ const headerStyle = theme => ({
     minHeight: "50px",
   },
   flex: {
-    flex: 1
+    flex: 1,
+    marginLeft: drawerWidth
   },
   title: {
     ...defaultFont,

@@ -100,12 +100,12 @@ const dashboardRoutes = [
     component: Projects,
     navbarName: "Projects Information"
   },
-  /*{
-    path: "/register",
-    sidebarName: 'register',
+  {
+    path: "/Register",
+    sidebarName: 'Register',
     icon: ContentPaste,
     component: RegisterPage,
-  },*/
+  },
   { redirect: true, path: "/", to: "/dashboard", navbarName: "Redirect" }
 ];
 

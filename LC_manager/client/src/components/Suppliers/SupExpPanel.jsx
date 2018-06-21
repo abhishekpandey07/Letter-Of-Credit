@@ -53,8 +53,6 @@ class SupplierPanel extends React.Component {
       addProject: false,
       addBank: false,
     }
-
-    console.log(this.props.id)
   }
 
   handlePanelChange = panel => (event, expanded) => {
@@ -71,12 +69,11 @@ class SupplierPanel extends React.Component {
   }
 
   handleBankClick = (event) => {
-    this.setState({addBank: !this.state.addBank})
+    this.setState(prev => {return {addBank: !prev.addBank}})
   }
 
   handleProjectSubmit = (event) => {
-    const project = document.getElementById('project').value
-    console.log(project)
+    const project = document.getElementById('project').value    
     const payload = {
       project : project,
       _method: 'PUT'
@@ -86,6 +83,7 @@ class SupplierPanel extends React.Component {
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.setState({addProject:false})
+      console.log(response)
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
@@ -106,7 +104,7 @@ class SupplierPanel extends React.Component {
                     '/addBank'
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
-      this.setState({addProject:false})
+      this.handleBankClick()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
@@ -134,7 +132,6 @@ class SupplierPanel extends React.Component {
   render() {
     const { classes ,supplier} = this.props;
     const { expanded } = this.state;
-    console.log(supplier)
 
     const LCs = supplier.banks.reduce((lcs,bank) => {
             var validLCs = bank.LCs.reduce((valid,lc)=>{

@@ -1,34 +1,46 @@
 CLIENT
-	
-	BUGS:
-		ROUTING: Fix rendering of login page between redirects
+    
+    BUGS:
+        ROUTING: Fix rendering of login page between redirects
 
-	DASHBOARD:
-		Add routines for Listing LCs expiring in next 14 days
+    DASHBOARD:
+done    Convert Week to Month
+done    Add routines for Listing LCs expiring in next 14 days
 
-	LC:
-		Payment:
-			Implement decrease of LC_used of issuer bank on completeion of payment
 
-		Close:
-			Fix close button.
-			Add closing routines
-				Closing Advice
-				Acknowledgment
-				Margin Clearance Date
-				Interest
+    LC:
+        Payment:
+    done    Implement decrease of LC_used of issuer bank on completeion of payment
 
-	Projects:
-		Create a format and make a list of all projects
+        Close:
+    done    Fix close button.   
+            Add closing routines
+                Closing Advice
+                Acknowledgment
+                Margin Clearance Date
+                Interest
+
+        EDIT:
+    done    ERROR IN BANK UPDATE METHOD. lc.payment.total_payed : says payment is undefined.
+    (payment field was not populated in .populate() )
+
+    Projects:
+done    Create a format and make a list of all projects
+
+    SUPPLIERS:
+done    Projects list goes null on adding new project
+done    Close Bank form on submission
+        update project database when adding a new project.
 
 
 SERVER
 
-	TESTS:
-		WRITE CRUD API TESTS
+    TESTS:
+        WRITE CRUD API TESTS
 
-	INFO.js:
-		Write an api endpoint to return all LCs expiring in 14 days
+    INFO.js:
+done    Write an api endpoint to return all LCs expiring in 14 days
+done    Write an api endpoint to return all LC payments due in 30 days
 
 
 

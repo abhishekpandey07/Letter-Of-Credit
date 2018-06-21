@@ -27,21 +27,6 @@ router.route('/')
         console.log('current month : '+ curMonth)
         try{
         LCDB.aggregate([
-            /*{
-              $addFields:{
-                month: { $month : { $arrayElemAt : ["$payment.DT_amt", -1] }}
-              }
-
-            },*/
-            /*{
-              $redact : {
-                $cond : {
-                    if : { $eq : ["$status","Expired"] },
-                    then: "$$PRUNE",
-                    else: "$$KEEP"
-                }
-              }
-            },*/
             {
               $lookup : {
                 from:"nativebanks",
@@ -58,17 +43,6 @@ router.route('/')
                 as: "supplierd"
               }
             },
-            /*{
-              $project: {
-                dueDetails : {$arrayElemAt : ["$payment.DT_amt", -1 ]},
-                issuer : 1,
-                supplier: 1,
-                supBank: 1,
-                LC_no: 1,
-                supplierd: 1,
-                issuingBank: 1,
-              }
-            },*/
             {
               $addFields: {
                 dueDate : {$arrayElemAt : ["$payment.DT_amt", -1 ]}
@@ -272,5 +246,139 @@ router.route('/month').get(function(req,res){
 })
 
 // TODO : Add a routine to get all the LCs expiring in 14 days.
+router.route('/LC/expiring').get(function (req,res) {
+  const today = new Date(Date.now())
+  const next14 = new Date
+  next14.setDate(today.getDate() + 14)
+  LCDB.aggregate([
+    {
+      $lookup : {
+        from:"nativebanks",
+        localField: "issuer",
+        foreignField: "_id",
+        as: "issuerData"
+      }
+    },
+    {
+      $lookup : {
+        from: "suppliers",
+        localField: "supplier",
+        foreignField: "_id",
+        as: "supplierData"
+      }
+    },
+    {
+      $lookup : {
+        from: "projects",
+        localField: "project",
+        foreignField: "_id",
+        as: "projectData" 
+      } 
+    },
+    {
+      $addFields:{
+        date: {$arrayElemAt : ["$dates", -1 ]}
+      }
+    },
+    {
+      $sort : {"date": 1}
+    },
+    {
+      $match : {
+        "date.expDT" : {$gte : today , $lte : next14}
+      }
+    },
+    {
+      $project : {
+        expDT: "$date.expDT",
+        amount : 1,
+        unUtilized: { $subtract : ["$amount","$payment.total_due"]},
+        supplier: "$supplierData.name",
+        issuer : "$issuerData.name",
+        project : "$projectData.name"
+      }
+    }
+  ]).exec(function (error,info) {
+    if(error){
+      console.log(error)
+      res.status = 500
+      res.end(error)
+    } else{
+      res.format({
+        json:function () {
+          res.json(JSON.stringify(info))
+        }
+      })
+    }
+  })
+})
+
+// TODO : Add a routine to get all the LCs expiring in 14 days.
+router.route('/30days').get(function (req,res) {
+  const today = new Date(Date.now())
+  const next14 = new Date
+  next14.setDate(today.getDate() + 30)
+  LCDB.aggregate([
+    {
+      $lookup : {
+        from:"nativebanks",
+        localField: "issuer",
+        foreignField: "_id",
+        as: "issuerData"
+      }
+    },
+    {
+      $lookup : {
+        from: "suppliers",
+        localField: "supplier",
+        foreignField: "_id",
+        as: "supplierData"
+      }
+    },
+    {
+      $lookup : {
+        from: "projects",
+        localField: "project",
+        foreignField: "_id",
+        as: "projectData" 
+      } 
+    },
+    {
+      $addFields:{
+        dueDetails: {$arrayElemAt : ["$payment.DT_amt", -1 ]}
+      }
+    },
+    {
+      $sort : {"dueDetails.due_DT": 1}
+    },
+    {
+      $match : {
+        "dueDetails.due_DT" : {$gte : today , $lte : next14}
+      }
+    },
+    {
+      $project : {
+        dueDT: "$dueDetails.due_DT",
+        amount : "$dueDetails.due_amt",
+        supplier: "$supplierData.name",
+        LC_no : 1,
+        issuer : "$issuerData.name",
+        project : "$projectData.name"
+      }
+    }
+  ]).exec(function (error,info) {
+    if(error){
+      console.log(error)
+      res.status = 500
+      res.end(error)
+    } else{
+      res.format({
+        json:function () {
+          res.json(JSON.stringify(info))
+        }
+      })
+    }
+  })
+})
 
 module.exports = router;

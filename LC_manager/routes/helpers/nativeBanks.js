@@ -81,11 +81,35 @@ function closeLC(bank,LC,callback){
 
 }
 
+function onPayment(bankID,amount,callback) {
+	bankDB.findById(bankID._id,function(error,bank){
+		if(error){
+			console.log(error)
+			return callback(error,null)
+		} else {
+			console.log('Updating LC_used')
+			bank.LC_used = parseFloat(bank.LC_used) - amount
+			bank.save(function(error,bank){
+					if(error){
+					    console.error(error);
+					    return callback(error,bank)
+					} else {
+					    console.log('issuing Bank: ' + bank.name +
+							' updated LC_used : ' + bank.LC_used);
+					    console.log('returning');
+					    return callback(null,bank);
+					}
+			    });
+		}
+
+	})
+}
+
 function update(bankID, callback){
 
 	console.log('retreiving bank with ID '+ bankID)
 	bankDB.findById(bankID._id)
-	.populate('LCs',['amount','status'])
+	.populate('LCs',['amount','status','payment'])
 	.exec(function(error,bank){
 		if(error){
 			console.error(error)
@@ -96,9 +120,9 @@ function update(bankID, callback){
 			const LC_used = bank.LCs.reduce((total,lc)=>{
 				if(lc.status === 'Active' || lc.status === 'Extended')
 					var amount = parseFloat(lc.amount)
-					console.log(amount)
-					
-					total += amount
+					var payed = parseFloat(lc.payment.total_payed)
+									
+					total += (amount - payed)
 				return total
 			},0)
 
@@ -127,6 +151,7 @@ module.exports = {
     addBankLC,
     removeBankLC,
     closeLC,
-    update
+    update,
+    onPayment
     
 }

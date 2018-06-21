@@ -46,6 +46,8 @@ const styles = theme => ({
   }
 });
 
+const states = {notCompleted: 0 , completed: 1, closed: 2}
+
 class LCPanel extends React.Component {
   constructor(props){
     super(props)
@@ -62,14 +64,9 @@ class LCPanel extends React.Component {
       due_DT: '',
       due_amt: 0,
       refFile: '',
-      closed: '',
+      closed: states.notCompleted,
       edit: false,
     }
-  }
-
-  componentWillMount() {
-
-    String(this.props.LC.payment.total_payed)===String(this.props.LC.amount)? this.setState({closed: 'completed'}):null
   }
 
   handlePanelChange = panel => (event, expanded) => {
@@ -206,7 +203,7 @@ class LCPanel extends React.Component {
     axios.post(url,{_method: 'PUT'},{credentials:'include'})
     .then((response) => {
       console.log(response)
-      this.setState({closed:'closed'})
+      this.setState({closed:states.closed})
     }).catch((error) => {
       console.log(error)
     })
@@ -239,9 +236,10 @@ class LCPanel extends React.Component {
     const { expanded } = this.state;
     
     console.log(this.state)
-    var disableCloseButton = ''
+    var disableCloseButton = false
     if(this.state.closed){
-       disableCloseButton = this.state.close === 'completed'?false:true
+       disableCloseButton = (this.state.closed === states.completed)? false: true
+       console.log(disableCloseButton)
     }
     const paymentData = LC.payment.DT_amt.reduce((array,item,index) => {
       if(item.due_DT){
@@ -496,15 +494,12 @@ class LCPanel extends React.Component {
                 onClick={this.handleEditClick}>Edit</Button>
               <Button mini variant='contained' className={classes.button}
                   onClick={this.handleDelete} colour={red}>Delete</Button>
-              {
-                this.state.closed?
-                <Button mini disabled={disableCloseButton} variant='contained' className={classes.button}
+              <Button mini disabled={disableCloseButton} variant='contained' className={classes.button}
                   onClick={this.handleClose}>
                   Close
-                </Button>
-                :
-                <div/>
-              }
+              </Button>
+               
+              
             </Grid>
           </Grid>
           </ExpansionPanelDetails>

@@ -34,10 +34,10 @@ var LCSchema = new mongoose.Schema({
         app: {name: String, rec: { type: Boolean, default: false}}, // application document
     }],
     LC_no : { type : String, required : true },
-    FDR_no: { type : String, required : true },
-    FDR_DT: { type : Date, required: true, default : Date.now },
-    m_amt : { type : mongoose.Schema.Types.Decimal128, required : true },
-    m_cl_DT : { type : String },
+    FDR_no: { type : String, },
+    FDR_DT: { type : Date },
+    m_amt : { type : mongoose.Schema.Types.Decimal128 },
+    m_cl_DT : { type : Date },
     amount : { type : mongoose.Schema.Types.Decimal128, required : true },
     payment: LC_Payment_Schema,
     ex_cha : { charges : { opening : mongoose.Schema.Types.Decimal128,                // miscellaneous charges
@@ -49,8 +49,8 @@ var LCSchema = new mongoose.Schema({
 			},
 	       total : mongoose.Schema.Types.Decimal128
 	     },
-    status : {type: String, enum: ['Active', 'Expired', 'InValid', 'Extended']},
-    lock: {type: Boolean, deafault: false}
+    status : {type: String, enum: ['Active', 'Expired', 'InValid', 'Extended']} //may add these later 'Completed', 'Closed']},
+    //lock: {type: Boolean, deafault: false}
 
    
 });

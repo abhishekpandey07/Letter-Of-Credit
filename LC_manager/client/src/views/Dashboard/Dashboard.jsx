@@ -25,6 +25,7 @@ import {
   ItemGrid
 } from "components";
 
+import PageTable from 'components/Table/PaginationTable'
 import {
   dailySalesChart,
   emailsSubscriptionChart,
@@ -60,7 +61,9 @@ class Dashboard extends React.Component {
     cycleTrend:[],
     monthData: null,
     thisWeek: null,
-    bank: null
+    bank: null,
+    expiryData:null,
+    next30: null,
   };
   handleChange = (event, value) => {
     this.setState({ value });
@@ -118,6 +121,30 @@ class Dashboard extends React.Component {
     return EJSON.parse(body)  
   }
 
+  callExpiryApi = async () => {
+    const url = '/info/LC/expiring'
+    var response = await fetch(url)
+    const body = await response.json()
+    if(response.status !== 200){
+      console.log(response.status)
+      return null
+    }
+    
+    return EJSON.parse(body)   
+  }
+
+  call30daysApi = async () => {
+    const url = '/info/30days'
+    var response = await fetch(url)
+    const body = await response.json()
+    if(response.status !== 200){
+      console.log(response.status)
+      return null
+    }
+    
+    return EJSON.parse(body)   
+  }
+
   componentDidMount(){
     this.callCycleApi()
     .then(res => {this.setState({cycleTrend:res})})
@@ -125,7 +152,11 @@ class Dashboard extends React.Component {
 
     this.callMonthApi()
     .then(res => {this.setState({monthData:res})})
-    .catch(error => {console.log(error)})    
+    .catch(error => {console.log(error)})
+
+    this.call30daysApi()
+    .then(res => {this.setState({next30:res})})
+    .catch(error => {console.log(error)})        
 
     this.callWeekApi()
     .then(res => {this.setState({thisWeek:res})})
@@ -134,10 +165,14 @@ class Dashboard extends React.Component {
     this.callBankApi()
     .then(res => {this.setState({bank: res, })})
     .catch(error => {console.log(error)})        
+
+    this.callExpiryApi()
+    .then(res => {this.setState({expiryData: res, })})
+    .catch(error => {console.log(error)})        
   }
 
-  render() {
-
+  //returns an object with chartist data and options fields
+  getCycleTrendContent(){
     const cycleTrendData = this.state.cycleTrend.reduce((data,obj) => {
       data.labels.push(month[obj._id.month]+'('+obj._id.year+')')
       data.series[0].push(String(obj.count))
@@ -155,27 +190,28 @@ class Dashboard extends React.Component {
         left: 0
       }
     }
+
+    return { data: cycleTrendData, option : cycleTrendOptions}    
+  }
+
+  getMonthContent(){
     var monthContent = null
     this.today = new Date(Date.now())
     if(this.state.monthData){
-      const thisMonth = this.state.monthData.reduce((acc,item) => {
-        ( item._id.month===(this.today.getMonth()+1)) ?
-          acc.push(item) : {} 
-          return acc
-      },[])
-
+      
       this.totalDue = 0
       this.totalCount = 0
-      const monthTableData = thisMonth.reduce((data,prop,key) => {
-
-        const tableData = prop.LC.map((lc,index) => {
-          const paid = lc.payment.payed_amt > 0 ? 'PAYED' : 'NOT PAYED'
-          const date = formatDate(new Date(lc.payment.due_DT))
-          const row = [prop._id.issuer,lc.supplier[0],lc.LC_no,date,String(lc.payment.due_amt), paid]
-          data.push(row) 
-        })
-        this.totalDue += parseFloat(prop.amount)
-        this.totalCount += prop.count
+      const monthTableData = this.state.monthData.reduce((data,prop,key) => {
+        if((prop._id.month===(this.today.getMonth()+1))){
+          const tableData = prop.LC.map((lc,index) => {
+            const paid = lc.payment.payed_amt > 0 ? 'PAYED' : 'NOT PAYED'
+            const date = formatDate(new Date(lc.payment.due_DT))
+            const row = [prop._id.issuer,lc.supplier[0],lc.LC_no,date,String(lc.payment.due_amt).toLocaleString(), paid]
+            data.push(row) 
+            })
+          this.totalDue += parseFloat(prop.amount)
+          this.totalCount += prop.count
+        }
         return data
       },[])
       console.log('Total Due : ' + this.totalDue)
@@ -192,6 +228,11 @@ class Dashboard extends React.Component {
         </div>
         )
     }
+
+    return monthContent
+  }
+
+  getBankContent(){
     var bankContent = null;
     if(this.state.bank){
       let bankData = this.state.bank.reduce((banks,bank)=>{
@@ -217,8 +258,57 @@ class Dashboard extends React.Component {
         />
       )
     }
+    return bankContent
+  }
 
+  getExpiryContent(){
+    var expContent = null
+    if(this.state.expiryData){
+      console.log('expiry Data : ' + this.state.expiryData)
+      expContent = this.state.expiryData.reduce((acc,prop,key) => {
+        const expDT = formatDate(new Date(prop.expDT))
+        acc.push([prop.issuer,prop.supplier,prop.project,
+                  String(prop.amount),String(prop.unUtilized),expDT])
+        return acc
+      },[])
+    }
+    return (
+      <Table
+        tableHead={'orange'}
+        tableHead={['Issuer', 'Supplier', 'Project', 'Amount' , 'Un-Utilized', 'Expiry Date']}
+        tableData={expContent? expContent : [[]]}
+      />
+    )
+  }
+  //
+  getNext30Content(){
+    var next30Content = null
+    if(this.state.next30){
+      console.log('expiry Data : ' + this.state.next30)
+      next30Content = this.state.next30.reduce((acc,prop,key) => {
+        const dueDT = formatDate(new Date(prop.dueDT))
+        acc.push([prop.issuer,prop.LC_no,prop.supplier,prop.project,
+                  dueDT, String(prop.amount)])
+        return acc
+      },[])
+    }
+    return (
+      <PageTable
+        tableHead={'orange'}
+        tableHead={['Issuer', 'LC Number', 'Supplier', 'Project', 'Due Date','Due Amount']}
+        tableData={next30Content? next30Content : [[]]}
+      />
+    )
+  }
+
+  render() {
+
+    const cycleTrend = this.getCycleTrendContent()
+    const monthContent = this.getMonthContent()
+    const bankContent = this.getBankContent()
+    const next30Content = this.getNext30Content()
     var weekDueCount = this.state.thisWeek ? (this.state.thisWeek.length > 0 ? this.state.thisWeek[0].count : 0) : 0
+    var weekDueAmount = this.state.thisWeek ? (this.state.thisWeek.length > 0 ? String(this.state.thisWeek[0].amount) : 0) : 0
 
     return (
       <div>
@@ -239,12 +329,12 @@ class Dashboard extends React.Component {
               icon={Store}
               iconColor="green"
               title="Payments this Week"
-              description="$34,245"
+              description={ "Rs. " + weekDueAmount}
               statIcon={DateRange}
               statText="Last 24 Hours"
             />
           </ItemGrid>
-          <ItemGrid xs={12} sm={6} md={3}>
+          {/*<ItemGrid xs={12} sm={6} md={3}>
             <StatsCard
               icon={InfoOutline}
               iconColor="red"
@@ -253,7 +343,7 @@ class Dashboard extends React.Component {
               statIcon={LocalOffer}
               statText="Tracked from Github"
             />
-          </ItemGrid>
+          </ItemGrid>*/}
         </Grid>
         {/*<Grid container>
           <ItemGrid xs={12} sm={12} md={6}>
@@ -277,7 +367,7 @@ class Dashboard extends React.Component {
           </ItemGrid>
         </Grid>*/}
         <Grid container>
-          <ItemGrid xs={12} sm={4} md={6}>
+          <ItemGrid xs={12} sm={12} md={6}>
             <RegularCard
               cardTitle="Bank Status"
               cardSubtitle="Limits"
@@ -286,7 +376,18 @@ class Dashboard extends React.Component {
           </ItemGrid>
           <ItemGrid xs={12} sm={12} md={6}>
             <RegularCard
-              cardTitle="Payments"
+              cardTitle="Expirations"
+              cardSubtitle={
+                "Letter Of Credits Expiring in the next 14 days"
+              }
+              content={this.getExpiryContent()}
+                />
+          </ItemGrid>
+        </Grid>
+        <Grid container>
+          {<ItemGrid xs={12} sm={12} md={6}>
+            <RegularCard
+              cardTitle="Payments this month"
               cardSubtitle={
                 
                   "Month : " + month[this.today.getMonth()+1] + '          Total : ' +
@@ -294,7 +395,17 @@ class Dashboard extends React.Component {
                 
               }
               content={monthContent}
-                />
+            />
+          </ItemGrid>}
+
+          <ItemGrid xs={12} sm={6} md={6}>
+            <RegularCard
+              cardTitle="Payments"
+              cardSubtitle={
+                " Payments for the next 30 days"        
+              }
+              content={next30Content}
+            />
           </ItemGrid>
         </Grid>
       </div>
