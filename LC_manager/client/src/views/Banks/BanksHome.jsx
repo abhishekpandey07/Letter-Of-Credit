@@ -4,7 +4,8 @@ import AddIcon from '@material-ui/icons/Add'
 import {NavLink} from 'react-router-dom'
 import EJSON from 'mongodb-extended-json';
 import { RegularCard, Table, ItemGrid } from "components";
-
+import {formatAmount} from 'utils/common'
+import Edit from '@material-ui/icons/Edit'
 
 const styles = theme => ({
   button: {
@@ -53,13 +54,17 @@ class Banks extends React.Component{
       .catch(err => console.log(err));
     }
 
+    handleEdit = (key) => {
+      return 
+    }
+
     render() {
+      const bankToolIcons = [{
+        icon: Edit,
+        handle: this.handleEdit
+      }]
+
       let bankData = this.state.banks.reduce((banks,bank)=>{
-  //      console.log(getComponent(bank.LC_used))
-        /*banks.push([bank["name"],bank["branch"],bank["IFSC"],
-                            bank["LC_limit"]["numberdecimal"],
-                            bank["LC_used"]["$numberdecimal"],
-                            bank["LCs"]])*/
         const active = bank.LCs.reduce((total,lc)=>{
           if(lc.status === 'Active' || lc.status === 'Extended')
             total++;
@@ -68,8 +73,8 @@ class Banks extends React.Component{
         const limit = String(bank.LC_limit)
         const used = String(bank.LC_used)                            
         const available = String(parseFloat(limit)-parseFloat(used))
-        banks.push([ bank.name, bank.branch, bank.IFSC, String(bank.LC_limit),
-                      String(bank.LC_used), available,active])
+        banks.push([ bank.name, bank.branch, bank.IFSC, formatAmount(bank.LC_limit),
+                      formatAmount(bank.LC_used), available,active])
         return banks
 
       },[])
@@ -85,7 +90,10 @@ class Banks extends React.Component{
                 cardSubtitle="Here is a subtitle for this table"
                 content={
                   <Table
+                    enableEdit={true}
+                    iconTools = {bankToolIcons}
                     tableHeaderColor="primary"
+                    isNumericColumn={[false,false,false,true,true,true,true]}
                     tableHead={["Name", "Branch", "IFSC", "LC LIMIT", "LC Used","LC Remaining", "Active LCs"]}
                     tableData={bankData}
                     expansionHead = "Letters of Credit."

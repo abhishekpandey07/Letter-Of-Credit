@@ -8,7 +8,7 @@ import { NavLink } from "react-router-dom";
 import { RegularCard, Table, ItemGrid } from "components";
 import axios from 'axios'
 import PageTable from 'components/Table/PaginationTable'
-
+import {formatAmount} from 'utils/common'
 
 class ProjectHome extends React.Component{
     constructor(props){
@@ -50,8 +50,7 @@ class ProjectHome extends React.Component{
     render() {
       let projectData = this.state.projects.reduce((projects,project)=>{
         var supplier = project.suppliers.length > 0 ? project.suppliers[0].name: 'No Suppliers Registered';
-        projects.push([ project.name, project.location, String(project.value), project.manager,
-                      supplier])
+        projects.push([ project.name, project.location, formatAmount(project.value), project.manager])
         return projects
 
       },[])
@@ -66,16 +65,10 @@ class ProjectHome extends React.Component{
               cardSubtitle="List of All Projects"
               content={
                 <PageTable
+                  enableEdit={true}
                   tableHeaderColor="primary"
-                  tableHead={["Name", "Location", "Value", "Manager", "Suppliers"]}
-                  /*tableData={[
-                    ["Dakota Rice", "Niger", "Oud-Turnhout", "$36,738"],
-                    ["Minerva Hooper", "Curaçao", "Sinaai-Waas", "$23,789"],
-                    ["Sage Rodriguez", "Netherlands", "Baileux", "$56,142"],
-                    ["Philip Chaney", "Korea, South", "Overland Park", "$38,735"],
-                    ["Doris Greene", "Malawi", "Feldkirchen in Kärnten", "$63,542"],
-                    ["Mason Porter", "Chile", "Gloucester", "$78,615"]
-                  ]}*/
+                  isNumericColumn={[false,false,true,true]}
+                  tableHead={["Name", "Location", "Value", "Manager"]}
                   tableData={projectData}
                 />
               }

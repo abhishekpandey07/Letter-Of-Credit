@@ -6,14 +6,39 @@ import {
   TableRow,
   TableBody,
   TableCell,
+  Tooltip,
+  IconButton
 } from "material-ui";
 
 import PropTypes from "prop-types";
-
+//import { Edit, Close, Check, Add, FileUpload } from "@material-ui/icons";
 import tableStyle from "assets/jss/material-dashboard-react/tableStyle";
+
+// const icons = {
+//   "edit": Edit,
+//   "add": Add,
+//   "upload": FileUpload,
+//   "check": Check, 
+//   "close": Close
+// }
+
+
+
+
+const CustomTableCell = withStyles(theme => ({
+  head: {
+    backgroundColor: theme.palette.common.black,
+    color: theme.palette.common.white,
+  },
+  body: {
+    fontSize: 14,
+  },
+}))(TableCell);
+
 
 function CustomTable({ ...props }) {
   const { classes, tableHead, tableData, tableHeaderColor } = props;
+   var icon;
    return (
     <div className={classes.tableResponsive}>
       <Table className={classes.table}>
@@ -23,10 +48,11 @@ function CustomTable({ ...props }) {
               {tableHead.map((prop, key) => {
                 return (
                   <TableCell
-                    className={classes.tableCell + " " + classes.tableHeadCell}
+                    className={classes.tableHeadCell}
                     key={key}
+                    numeric={props.isNumericColumn[key]}
                   >
-                    {prop}
+                    <b>{prop}</b>
                   </TableCell>
                 );
               })}  
@@ -39,11 +65,39 @@ function CustomTable({ ...props }) {
               <TableRow key={key}>
                 {prop.map((prop, key) => {
                   return (
-                    <TableCell className={classes.tableCell} key={key}>
+                    <CustomTableCell className={classes.tableCell} key={key}
+                      numeric={props.isNumericColumn[key]}>
                       {prop}
-                    </TableCell>
+                    </CustomTableCell>
                   );
                 })}
+                {
+                  props.enableEdit ? 
+                  <TableCell className={classes.tableActions}>
+                    {props.iconTools.map((prop,key2)=>{
+                      return(
+                        <Tooltip
+                          id="tooltip-top"
+                          title="Edit"
+                          placement="top"
+                          classes={{ tooltip: classes.tooltip }}
+                        >
+                        <IconButton
+                          aria-label="Edit"
+                          className={classes.tableActionButton}
+                          onClick={prop.handle(key)}
+                        >
+                          <prop.icon
+                            className={
+                              classes.tableActionButtonIcon + " " + classes.edit
+                            }
+                          />
+                        </IconButton>
+                      </Tooltip>)
+                      })}
+                  </TableCell>:
+                  <div/>
+                }
               </TableRow>
             );
           })}

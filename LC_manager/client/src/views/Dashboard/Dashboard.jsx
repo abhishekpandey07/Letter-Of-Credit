@@ -36,7 +36,7 @@ import Typography from '@material-ui/core/Typography'
 import CircularProgress from '@material-ui/core/CircularProgress';
 import dashboardStyle from "assets/jss/material-dashboard-react/dashboardStyle";
 import EJSON from 'mongodb-extended-json'
-import {formatDate} from 'utils/common'
+import {formatDate, formatAmount} from 'utils/common'
 
 
 const month = {
@@ -158,9 +158,9 @@ class Dashboard extends React.Component {
     .then(res => {this.setState({next30:res})})
     .catch(error => {console.log(error)})        
 
-    this.callWeekApi()
-    .then(res => {this.setState({thisWeek:res})})
-    .catch(error => {console.log(error)})    
+    // this.callWeekApi()
+    // .then(res => {this.setState({thisWeek:res})})
+    // .catch(error => {console.log(error)})    
 
     this.callBankApi()
     .then(res => {this.setState({bank: res, })})
@@ -204,9 +204,12 @@ class Dashboard extends React.Component {
       const monthTableData = this.state.monthData.reduce((data,prop,key) => {
         if((prop._id.month===(this.today.getMonth()+1))){
           const tableData = prop.LC.map((lc,index) => {
+            // use this to show paid done Icon
             const paid = lc.payment.payed_amt > 0 ? 'PAYED' : 'NOT PAYED'
+            
             const date = formatDate(new Date(lc.payment.due_DT))
-            const row = [prop._id.issuer,lc.supplier[0],lc.LC_no,date,String(lc.payment.due_amt).toLocaleString(), paid]
+
+            const row = [prop._id.issuer,lc.supplier[0],lc.LC_no,date,formatAmount(lc.payment.due_amt)]
             data.push(row) 
             })
           this.totalDue += parseFloat(prop.amount)
@@ -214,15 +217,15 @@ class Dashboard extends React.Component {
         }
         return data
       },[])
-      console.log('Total Due : ' + this.totalDue)
       monthContent = (
         <div>
           <Typography variant='subheading' align='center' padding='10'>
             Total Amount Due : {this.totalDue}
           </Typography>
           <Table
+          isNumericColumn={[false,false,false,false,true]}
             headerColor='orange'
-            tableHead = {['Issuer','Supplier', 'LC No.', 'Due Date' ,'Due Amount','Status']}
+            tableHead = {['Issuer','Supplier', 'LC No.', 'Due Date' ,'Due Amount']}
             tableData = {monthTableData}
           />
         </div>
@@ -243,9 +246,9 @@ class Dashboard extends React.Component {
         },0)                            
         const limit = String(bank.LC_limit)
         const used = String(bank.LC_used)                            
-        const available = String(parseFloat(limit)-parseFloat(used))
-        banks.push([ bank.name,String(bank.LC_limit),
-                      String(bank.LC_used), available,active])
+        const available = formatAmount(parseFloat(limit)-parseFloat(used))
+        banks.push([ bank.name,formatAmount(bank.LC_limit),
+                      formatAmount(bank.LC_used), available,active])
         return banks
 
       },[])
@@ -253,6 +256,7 @@ class Dashboard extends React.Component {
       bankContent = (
         <Table
           tableHeaderColor="primary"
+          isNumericColumn={[false,true,true,true,false]}
           tableHead={["Name", "Limit", "Utilized","Remaining", "Active LCs"]}
           tableData={bankData}
         />
@@ -268,13 +272,14 @@ class Dashboard extends React.Component {
       expContent = this.state.expiryData.reduce((acc,prop,key) => {
         const expDT = formatDate(new Date(prop.expDT))
         acc.push([prop.issuer,prop.supplier,prop.project,
-                  String(prop.amount),String(prop.unUtilized),expDT])
+                  formatAmount(prop.amount),formatAmount(prop.unUtilized),expDT])
         return acc
       },[])
     }
     return (
       <Table
-        tableHead={'orange'}
+        isNumericColumn={[false,false,false,true,true,true]}
+        tableHeaderColor="primary"
         tableHead={['Issuer', 'Supplier', 'Project', 'Amount' , 'Un-Utilized', 'Expiry Date']}
         tableData={expContent? expContent : [[]]}
       />
@@ -287,15 +292,16 @@ class Dashboard extends React.Component {
       console.log('expiry Data : ' + this.state.next30)
       next30Content = this.state.next30.reduce((acc,prop,key) => {
         const dueDT = formatDate(new Date(prop.dueDT))
-        acc.push([prop.issuer,prop.LC_no,prop.supplier,prop.project,
-                  dueDT, String(prop.amount)])
+        acc.push([prop.issuer,prop.LC_no,prop.supplier,
+                  dueDT, formatAmount(prop.amount)])
         return acc
       },[])
     }
     return (
       <PageTable
-        tableHead={'orange'}
-        tableHead={['Issuer', 'LC Number', 'Supplier', 'Project', 'Due Date','Due Amount']}
+        isNumericColumn={[false,false,false,false,true]}
+        tableHeaderColor="primary"
+        tableHead={['Issuer', 'LC Number', 'Supplier', 'Due Date','Due Amount']}
         tableData={next30Content? next30Content : [[]]}
       />
     )
@@ -307,12 +313,12 @@ class Dashboard extends React.Component {
     const monthContent = this.getMonthContent()
     const bankContent = this.getBankContent()
     const next30Content = this.getNext30Content()
-    var weekDueCount = this.state.thisWeek ? (this.state.thisWeek.length > 0 ? this.state.thisWeek[0].count : 0) : 0
-    var weekDueAmount = this.state.thisWeek ? (this.state.thisWeek.length > 0 ? String(this.state.thisWeek[0].amount) : 0) : 0
+    // var weekDueCount = this.state.thisWeek ? (this.state.thisWeek.length > 0 ? this.state.thisWeek[0].count : 0) : 0
+    // var weekDueAmount = this.state.thisWeek ? (this.state.thisWeek.length > 0 ? String(this.state.thisWeek[0].amount) : 0) : 0
 
     return (
       <div>
-        <Grid container>
+        {/*<Grid container>
           <ItemGrid xs={12} sm={6} md={3}>
             <StatsCard
               icon={InfoOutline}
@@ -329,7 +335,7 @@ class Dashboard extends React.Component {
               icon={Store}
               iconColor="green"
               title="Payments this Week"
-              description={ "Rs. " + weekDueAmount}
+              description={ "Rs. " + formatAmount(weekDueAmount)}
               statIcon={DateRange}
               statText="Last 24 Hours"
             />
@@ -343,7 +349,7 @@ class Dashboard extends React.Component {
               statIcon={LocalOffer}
               statText="Tracked from Github"
             />
-          </ItemGrid>*/}
+          </ItemGrid>
         </Grid>
         {/*<Grid container>
           <ItemGrid xs={12} sm={12} md={6}>
@@ -369,10 +375,15 @@ class Dashboard extends React.Component {
         <Grid container>
           <ItemGrid xs={12} sm={12} md={6}>
             <RegularCard
-              cardTitle="Bank Status"
-              cardSubtitle="Limits"
-              content={bankContent}
-                />
+              cardTitle="Payments this month"
+              cardSubtitle={
+                
+                  "Month : " + month[this.today.getMonth()+1] + '          Total : ' +
+                  this.totalDue + '          Count : ' + this.totalCount
+                
+              }
+              content={monthContent}
+            />
           </ItemGrid>
           <ItemGrid xs={12} sm={12} md={6}>
             <RegularCard
@@ -385,19 +396,13 @@ class Dashboard extends React.Component {
           </ItemGrid>
         </Grid>
         <Grid container>
-          {<ItemGrid xs={12} sm={12} md={6}>
+          <ItemGrid xs={12} sm={12} md={6}>
             <RegularCard
-              cardTitle="Payments this month"
-              cardSubtitle={
-                
-                  "Month : " + month[this.today.getMonth()+1] + '          Total : ' +
-                  this.totalDue + '          Count : ' + this.totalCount
-                
-              }
-              content={monthContent}
-            />
-          </ItemGrid>}
-
+              cardTitle="Bank Status"
+              cardSubtitle="Limits"
+              content={bankContent}
+                />
+          </ItemGrid>
           <ItemGrid xs={12} sm={6} md={6}>
             <RegularCard
               cardTitle="Payments"

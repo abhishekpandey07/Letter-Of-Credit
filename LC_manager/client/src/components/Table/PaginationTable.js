@@ -9,11 +9,14 @@ import TableFooter from '@material-ui/core/TableFooter';
 import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import IconButton from '@material-ui/core/IconButton';
+import Tooltip from '@material-ui/core/Tooltip'
 import FirstPageIcon from '@material-ui/icons/FirstPage';
 import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 import tableStyle from "assets/jss/material-dashboard-react/tableStyle";
+import { Edit, Close, Check } from "@material-ui/icons";
+
 
 const actionsStyles = theme => ({
   root: {
@@ -118,7 +121,26 @@ class CustomPaginationActionsTable extends React.Component {
     const { classes, tableHead, tableData, tableHeaderColor } = this.props;
     const { rowsPerPage, page } = this.state;
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, tableData.length - page * rowsPerPage);
-
+    const editTool = <TableCell className={classes.tableActions}>
+                <Tooltip
+                  id="tooltip-top"
+                  title="Edit Task"
+                  placement="top"
+                  classes={{ tooltip: classes.tooltip }}
+                >
+                  <IconButton
+                    aria-label="Edit"
+                    className={classes.tableActionButton}
+                    onClick={this.props.handleEdit}
+                  >
+                    <Edit
+                      className={
+                        classes.tableActionButtonIcon + " " + classes.edit
+                      }
+                    />
+                  </IconButton>
+                </Tooltip>
+              </TableCell>
     return (
         <div className={classes.tableResponsive}>
           <Table className={classes.table}>
@@ -128,10 +150,11 @@ class CustomPaginationActionsTable extends React.Component {
               {tableHead.map((prop, key) => {
                 return (
                   <TableCell
-                    className={classes.tableCell + " " + classes.tableHeadCell}
+                    className={classes.tableHeadCell}
                     key={key}
+                    numeric={this.props.isNumericColumn[key]}
                   >
-                    {prop}
+                    <b>{prop}</b>
                   </TableCell>
                 );
               })}  
@@ -144,11 +167,13 @@ class CustomPaginationActionsTable extends React.Component {
                   <TableRow key={n.id}>
                     {n.map((prop, key) => {
                       return (
-                        <TableCell className={classes.tableCell} key={key}>
+                        <TableCell className={classes.tableCell} key={key}
+                          numeric={this.props.isNumericColumn[key]}>
                           {prop}
                         </TableCell>
                         );
                   })}
+                  {this.props.enableEdit? editTool:<div/>}
                   </TableRow>
                 );
               })}

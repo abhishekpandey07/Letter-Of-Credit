@@ -59,6 +59,7 @@ import SnackbarContent from "./Snackbar/SnackbarContent.jsx";
 // #############################
 
 import Table from "./Table/Table.jsx";
+import PageTable from './Table/PaginationTable'
 // ##############################
 // // // Tasks
 // #############################
@@ -87,7 +88,7 @@ import LCPanel from './LCs/LCExpansionPanel'
 
 export {
   LCPanel,
-  BanksTable,
+  PageTable,
   // Cards
   ChartCard,
   ProfileCard,

@@ -4,16 +4,16 @@ const formatDate = (date) => {
   return (elem[2] + ' ' + elem[1] + "'" + elem[3].slice(2))
 }
 // later
-/*const formatAmount = (amount) => {
-	var ret = String(amount)
-	var numbers = []
-	for(i = 0 , i < ret.length , i++){
-		(ret.length -1 - i > 3 ) ? 
-	}
-
-
-	return String(amount).toLocaleString()
-}*/
+const formatAmount = (amount) => {
+	var x = String(amount)
+	var lastThree = x.substring(x.length-3);
+	var otherNumbers = x.substring(0,x.length-3);
+	if(otherNumbers != '')
+	    lastThree = ',' + lastThree;
+	var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+	return res
+}
 export {
 	formatDate,
+	formatAmount
 }

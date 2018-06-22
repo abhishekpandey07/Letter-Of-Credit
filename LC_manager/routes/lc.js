@@ -479,7 +479,7 @@ router.put('/:id/addExtension', function(req, res) {
 
 
 
-router.put('/:id/addDueDetails', function(req, res) {
+router.put('/:id/addNewCycle', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     console.log('Adding new Installment now.');
@@ -487,7 +487,7 @@ router.put('/:id/addDueDetails', function(req, res) {
     var details = {
 	due_DT: req.body.due_DT,
 	due_amt: req.body.due_amt,
-	//payed_amt: req.body.payed_amt // remember to make it default to 0 in form
+	LB_pay_ref: req.body.LB_pay_ref
     }
 
     LC.payment.DT_amt.push(details);

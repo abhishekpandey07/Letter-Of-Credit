@@ -6,7 +6,7 @@ import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import {Table} from "components"
+import {Table,PageTable} from "components"
 import
 { Grid, Button,
   TextField, Input, InputLabel, FormControl} from '@material-ui/core'
@@ -176,6 +176,7 @@ class SupplierPanel extends React.Component {
               <Grid item xs={12}>
                 <div>
                 <Table
+                  isNumericColumn={[false,false,false]}
                   tableHead = {["Bank","Branch","IFSC"]}
                   tableData = {Data.BanksData}
                 />
@@ -236,6 +237,7 @@ class SupplierPanel extends React.Component {
               <Grid item>
                 <div>
                 <Table
+                  isNumericColumn={[false,false]}
                   tableHead = {["Projects"]}
                   tableData = {ActiveProjects}
                 />
@@ -271,7 +273,9 @@ class SupplierPanel extends React.Component {
                 </Grid>
             <Grid item xs={12} sm={12} md={4} >
               <Grid item>
-                <Table
+                <PageTable
+                  tableHeaderColor="primary"
+                  isNumericColumn={[false,true,false]}
                   tableHead = {["LC Number","Amount", "status"]}
                   tableData = {Data.LCData}
                 />

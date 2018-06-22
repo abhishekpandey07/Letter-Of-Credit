@@ -7,7 +7,14 @@ import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import AddIcon from '@material-ui/icons/Add';
+import Edit from '@material-ui/icons/Edit';
+import FileUpload from '@material-ui/icons/FileUpload'
+import IconButton from '@material-ui/core/IconButton'
+import TableCell from '@material-ui/core/Table'
+import Tooltip from '@material-ui/core/Tooltip'
 import {Table} from "components"
+
 import
 { Grid, Button,
   TextField, Input, InputLabel, FormControl} from '@material-ui/core'
@@ -16,23 +23,23 @@ import axios from 'axios'
 import InputAdornment from '@material-ui/core/InputAdornment';
 import FileIOButton from 'components/FileIOButtons/FileIOButton'
 import EJSON from 'mongodb-extended-json'
-import {formatDate} from 'utils/common'
+import {formatDate, formatAmount} from 'utils/common'
 
 const styles = theme => ({
   root: {
     width: '100%',
   },
   heading: {
-    fontSize: theme.typography.pxToRem(15),
+    fontSize: theme.typography.pxToRem(13),
     flexBasis: '20.00%',
     flexShrink: 0,
   },
   secondaryHeading: {
-    fontSize: theme.typography.pxToRem(15),
+    fontSize: theme.typography.pxToRem(10),
     color: theme.palette.text.secondary,
   },
   content: {
-    fontSize: theme.typography.pxToRem(15),
+    fontSize: theme.typography.pxToRem(8),
     flexBasis: '33.33%',
     flexShrink: 0,
   },
@@ -43,6 +50,9 @@ const styles = theme => ({
 
   input:{
     display:'none',
+  },
+  tableInput:{
+    width: 200
   }
 });
 
@@ -95,11 +105,12 @@ class LCPanel extends React.Component {
                  })
   }
 
-  handlePaymentSubmit = (event) => {
+  handlePaymentSubmit = key => (event) => {
+    const pay_ref = document.getElementById('Pay_ref: ' + key).value
     const payload = {
-      payment : this.state.payed_amt,
-      pay_ref: this.state.pay_ref,
-      index: this.state.index,
+      payment : this.props.LC.payment.DT_amt[key].due_amt,
+      pay_ref: pay_ref,
+      index: key,
       _method: 'PUT'
     }
     const url = 'LCs/'+this.props.LC._id+
@@ -124,13 +135,15 @@ class LCPanel extends React.Component {
   }
 
   handleCycleSubmit = (event) => {
+    const LB_pay_ref = document.getElementById('LB_pay_ref').value
     const payload = {
       due_DT : this.state.due_DT,
       due_amt: this.state.due_amt,
+      LB_pay_ref: LB_pay_ref,
       _method: 'PUT'
     }
     const url = 'LCs/'+this.props.LC._id+
-                    '/addDueDetails'
+                    '/addNewCycle'
     axios.post(url,payload)
     .then((response) =>{
       this.handleCycle()
@@ -234,21 +247,30 @@ class LCPanel extends React.Component {
   render() {
     const { classes ,LC} = this.props;
     const { expanded } = this.state;
-    
-    console.log(this.state)
     var disableCloseButton = false
     if(this.state.closed){
        disableCloseButton = (this.state.closed === states.completed)? false: true
-       console.log(disableCloseButton)
     }
+    
+    const paymentIconTools = [
+      {
+        icon: AddIcon,
+        handle: this.handlePaymentClick
+      },
+      {
+        icon: Edit,
+        handle : this.handlePaymentClick
+      },
+      {
+        icon : FileUpload,
+        handle: this.handlePaymentClick
+      }
+    ]
+
     const paymentData = LC.payment.DT_amt.reduce((array,item,index) => {
       if(item.due_DT){
         const due = formatDate(new Date(item.due_DT))
-        const ref = item.pay_ref ? item.pay_ref:
-                    <Button variant='contained' size='small'
-                      onClick={this.handlePaymentClick(index)}>
-                      Add Pay
-                    </Button>      
+        const ref = item.pay_ref ? item.pay_ref: "SADFSAF"
 
         const rec = <FileIOButton id={LC._id}
                       name='receipt' index={index}
@@ -259,14 +281,14 @@ class LCPanel extends React.Component {
                       onSubmit = {this.onDocumentSubmit}
                       exists = {item.acc.rec}/>
 
-        array.push([due,String(item.due_amt),String(item.payed_amt),ref,rec,accep])
+        array.push([due,formatAmount(item.due_amt),ref])//,rec,accep])
         return array
       }
 
       return array
     },[])
 
-    paymentData.push([<Typography variant='subheading'>Total</Typography>,String(LC.payment.total_due),String(LC.payment.total_payed)])
+    paymentData.push(['Total',formatAmount(LC.payment.total_due)])
 
     const extensionData = LC.dates.reduce((array,item,index) => {
       var id = index === 0? 'Original': 'Extended'
@@ -287,6 +309,7 @@ class LCPanel extends React.Component {
       return array
     },[])
 
+    
        
 
     return (
@@ -305,8 +328,10 @@ class LCPanel extends React.Component {
             <Grid item xs={12} sm={6}>
               <Grid item>
                 <Table
-                  tableHead = {['Due Date', 'Due Amount','Payed', 'Payment Ref.',
-                                'Material Receipt',"Acceptance"]}
+                  iconTools={paymentIconTools}
+                  enableEdit={false}
+                  isNumericColumn={[false,true,true,true,true]}
+                  tableHead = {['Due Date', 'Due Amount', 'Bank Payment LB Ref.']}
                   tableData = {paymentData}
                 />
               </Grid>
@@ -314,7 +339,7 @@ class LCPanel extends React.Component {
                   {(this.state.payment && !this.state.edit)?
                           <div>
                           <Grid>
-                            <Grid item xs={6} sm={3}>
+                            {/*<Grid item xs={6} sm={3}>
                               <FormControl className={classes.margin} margin='normal'>
                                 <InputLabel htmlFor="adornment-amount">Payment Amount</InputLabel>
                                 <Input
@@ -325,9 +350,8 @@ class LCPanel extends React.Component {
                                   startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                                 />
                               </FormControl>
-                              </Grid>
+                              </Grid>*/}
                               <Grid item xs={6} sm={3}>
-                              <FormControl fullWidth={true} margin='normal'>
                                 <TextField
                                   required
                                   id="pay ref"
@@ -338,8 +362,9 @@ class LCPanel extends React.Component {
                                   InputLabelProps={{
                                     shrink: true,
                                   }}
+                                  margin='normal'
+                                  fullWidth={true}
                               />
-                              </FormControl> 
                             </Grid>
                             </Grid>
                               <Button color="primary" size='small'
@@ -364,9 +389,8 @@ class LCPanel extends React.Component {
                                   onChange = {this.handleValueChange('due_DT')}
                                   InputLabelProps={{
                                     shrink: true,
-
                                   }}
-                                  margin = {'inherit'}
+                                  margin = 'normal'
                               /> </FormControl>
                             </Grid>
                             <Grid item xs={6} sm={3}>
@@ -380,12 +404,25 @@ class LCPanel extends React.Component {
                                   startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                                 />
                               </FormControl>
-                              </Grid>
-                              <Button color="primary" size='small'
+                            </Grid>
+                            <Grid item xs={6} sm={3}>
+                                <TextField
+                                  required
+                                  id="LB_pay_ref"
+                                  label="Bank LB_pay_ref"
+                                  type="text"
+                                  InputLabelProps={{
+                                    shrink: true,
+                                  }}
+                                  margin='normal'
+                                  fullWidth={true}
+                              />
+                            </Grid>
+                            <Button color="primary" size='small'
                                 variant='outlined' className={classes.button}
                                 onClick={this.handleCycleSubmit}>
                                 submit
-                              </Button>
+                            </Button>
                           </div>
                               : 
                               this.state.edit ?
@@ -442,6 +479,7 @@ class LCPanel extends React.Component {
             <Grid item xs={12} sm={6} spacing={12}>
                 <Grid item>
                 <Table
+                  isNumericColumn={['false,false,false,false,false']}
                   tableHead = {['Type','Opening Date', 'Expirty Date',
                                 'Application', 'Bank Charges']}
                   tableData = {extensionData}

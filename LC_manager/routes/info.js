@@ -344,26 +344,29 @@ router.route('/30days').get(function (req,res) {
       } 
     },
     {
+      $unwind : "$payment.DT_amt"
+    },
+    /*{
       $addFields:{
         dueDetails: {$arrayElemAt : ["$payment.DT_amt", -1 ]}
       }
-    },
-    {
-      $sort : {"dueDetails.due_DT": 1}
-    },
+    },*/
     {
       $match : {
-        "dueDetails.due_DT" : {$gte : today , $lte : next14}
+        "payment.DT_amt.due_DT" : {$gte : today , $lte : next14}
       }
     },
     {
+      $sort : {"payment.DT_amt.due_DT": 1}
+    },
+    {
       $project : {
-        dueDT: "$dueDetails.due_DT",
-        amount : "$dueDetails.due_amt",
+        dueDT: "$payment.DT_amt.due_DT",
+        amount : "$payment.DT_amt.due_amt",
         supplier: "$supplierData.name",
         LC_no : 1,
         issuer : "$issuerData.name",
-        project : "$projectData.name"
+        project : "$projectData.name",
       }
     }
   ]).exec(function (error,info) {

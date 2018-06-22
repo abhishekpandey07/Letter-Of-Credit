@@ -7,7 +7,7 @@ var LC_Payment_Schema = new mongoose.Schema({
 	due_DT : { type : Date },
 	due_amt : { type : mongoose.Schema.Types.Decimal128, default: 0},
 	payed_amt : { type : mongoose.Schema.Types.Decimal128, default: 0},
-    pay_ref: {type: String},
+    LB_pay_ref: {type: String},
     rec: {name: String, rec: { type: Boolean, default: false}}, // material receipt
     acc: {name: String, rec: { type: Boolean, default: false}}, // bank acceptance
     }],

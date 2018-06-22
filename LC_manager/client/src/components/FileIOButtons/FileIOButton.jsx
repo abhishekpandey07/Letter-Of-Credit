@@ -4,6 +4,7 @@ import FileDownload from '@material-ui/icons/FileDownload'
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
 import Files from 'react-files'
 
 const styles = theme => ({
@@ -93,9 +94,9 @@ class FileIOButton extends React.Component {
 			    		accepts={['image/png','.pdf','.txt','.xlsx']}
 			    		clickable
 			    		>
-				    	<Button variant='contained'>
-				    		Upload <FileUpload/>
-						</Button>
+				    	<IconButton variant='contained' className={classes.button}>
+				    		<FileUpload />
+						</IconButton>
 			    	</Files>
 			    </div>
 			)
