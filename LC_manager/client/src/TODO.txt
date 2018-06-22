@@ -26,6 +26,8 @@ done    Format Amount
                            Acceptance letter + Charges
                            Bank Debit Advice + Charges
 
+            
+
 
 
 

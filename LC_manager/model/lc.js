@@ -4,12 +4,18 @@ var ObjectID = mongoose.Schema.Types.ObjectId;
 
 var LC_Payment_Schema = new mongoose.Schema({
     DT_amt: [{
-	due_DT : { type : Date },
-	due_amt : { type : mongoose.Schema.Types.Decimal128, default: 0},
+	due_DT: Date,
+	due_amt: { type : mongoose.Schema.Types.Decimal128, default: 0},
 	payed_amt : { type : mongoose.Schema.Types.Decimal128, default: 0},
-    LB_pay_ref: {type: String},
-    rec: {name: String, rec: { type: Boolean, default: false}}, // material receipt
-    acc: {name: String, rec: { type: Boolean, default: false}}, // bank acceptance
+    LB_pay_ref: String,
+    acc: { type : mongoose.Schema.Types.Decimal128, default: 0},
+    bill_com: { type : mongoose.Schema.Types.Decimal128, default: 0},
+    post: { type : mongoose.Schema.Types.Decimal128, default: 0},
+    GST: { type : mongoose.Schema.Types.Decimal128, default: 0},
+    documents: {
+        rec: {name: String, rec: { type: Boolean, default: false}}, 
+        acc: {name: String, rec: { type: Boolean, default: false}},
+        }
     }],
     total_due: { type : mongoose.Schema.Types.Decimal128,  default: 0 },
     total_payed: { type : mongoose.Schema.Types.Decimal128, default: 0 }
@@ -32,6 +38,10 @@ var LCSchema = new mongoose.Schema({
     	expDT : { type : Date, required : true, },
         bc: {name: String, rec: { type: Boolean, default: false}}, // bank charges document
         app: {name: String, rec: { type: Boolean, default: false}}, // application document
+        open : mongoose.Schema.Types.Decimal128,
+        post : mongoose.Schema.Types.Decimal128,
+        amend : mongoose.Schema.Types.Decimal128,
+        GST : mongoose.Schema.Types.Decimal128
     }],
     LC_no : { type : String, required : true },
     FDR_no: { type : String, },
@@ -40,15 +50,6 @@ var LCSchema = new mongoose.Schema({
     m_cl_DT : { type : Date },
     amount : { type : mongoose.Schema.Types.Decimal128, required : true },
     payment: LC_Payment_Schema,
-    ex_cha : { charges : { opening : mongoose.Schema.Types.Decimal128,                // miscellaneous charges
-			  amendment : mongoose.Schema.Types.Decimal128,
-			  bill_of_ex_acc : mongoose.Schema.Types.Decimal128,
-			  postal : mongoose.Schema.Types.Decimal128,
-			  GST : mongoose.Schema.Types.Decimal128,
-			  disbursement : mongoose.Schema.Types.Decimal128
-			},
-	       total : mongoose.Schema.Types.Decimal128
-	     },
     status : {type: String, enum: ['Active', 'Expired', 'InValid', 'Extended']} //may add these later 'Completed', 'Closed']},
     //lock: {type: Boolean, deafault: false}
 

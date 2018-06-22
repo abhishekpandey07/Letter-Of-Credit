@@ -14,7 +14,7 @@ import IconButton from '@material-ui/core/IconButton'
 import TableCell from '@material-ui/core/Table'
 import Tooltip from '@material-ui/core/Tooltip'
 import {Table} from "components"
-
+import classNames from 'classnames'
 import
 { Grid, Button,
   TextField, Input, InputLabel, FormControl} from '@material-ui/core'
@@ -48,12 +48,22 @@ const styles = theme => ({
     margin: theme.spacing.unit,
   },
 
-  input:{
-    display:'none',
+  textField: {
+    marginLeft: theme.spacing.unit,
+    marginRight: theme.spacing.unit,
+    width:200,
+    flexBasis: '50%',
+    flexShrink:0,
   },
-  tableInput:{
-    width: 200
-  }
+  margin: {
+    margin: theme.spacing.unit,
+  },
+  withoutLabel: {
+    marginTop: theme.spacing.unit * 3,
+  },
+  textField1: {
+    flexBasis: 200,
+  },
 });
 
 const states = {notCompleted: 0 , completed: 1, closed: 2}
@@ -336,148 +346,126 @@ class LCPanel extends React.Component {
                 />
               </Grid>
                 
-                  {(this.state.payment && !this.state.edit)?
-                          <div>
-                          <Grid>
-                            {/*<Grid item xs={6} sm={3}>
-                              <FormControl className={classes.margin} margin='normal'>
-                                <InputLabel htmlFor="adornment-amount">Payment Amount</InputLabel>
-                                <Input
-                                  id="adornment-margin-amount"
-                                  type="number"
-                                  value={this.state.m_amt}
-                                  onChange={this.handleValueChange('payed_amt')}
-                                  startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
-                                />
-                              </FormControl>
-                              </Grid>*/}
-                              <Grid item xs={6} sm={3}>
-                                <TextField
-                                  required
-                                  id="pay ref"
-                                  label="Payment ref."
-                                  type="text"
-                                  value = {this.state.pay_ref}
-                                  onChange = {this.handleValueChange('pay_ref')}
-                                  InputLabelProps={{
-                                    shrink: true,
-                                  }}
-                                  margin='normal'
-                                  fullWidth={true}
-                              />
-                            </Grid>
-                            </Grid>
-                              <Button color="primary" size='small'
-                                variant='outlined' className={classes.button}
-                                onClick={this.handlePaymentSubmit}>
-                                submit
-                              </Button>
-                            </div>
-                              : 
-                              (this.state.newCycle && !this.state.edit) ?
-
-                          <div>
-                            <Grid item xs={6} sm={3}>
-                            <FormControl fullWidth={true} margin='normal'>
-                                <TextField
-                                  required
-                                  id="due_date"
-                                  label="Due Date"
-                                  type="date"
-                                  defaultValue = "2018-02-07"
-                                  value = {this.state.due_DT}
-                                  onChange = {this.handleValueChange('due_DT')}
-                                  InputLabelProps={{
-                                    shrink: true,
-                                  }}
-                                  margin = 'normal'
-                              /> </FormControl>
-                            </Grid>
-                            <Grid item xs={6} sm={3}>
-                              <FormControl className={classes.margin} margin='normal'>
-                                <InputLabel htmlFor="adornment-amount">Due Amount</InputLabel>
-                                <Input
-                                  id="adornment-due-amount"
-                                  type="number"
-                                  value={this.state.due_amt}
-                                  onChange={this.handleValueChange('due_amt')}
-                                  startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
-                                />
-                              </FormControl>
-                            </Grid>
-                            <Grid item xs={6} sm={3}>
-                                <TextField
-                                  required
-                                  id="LB_pay_ref"
-                                  label="Bank LB_pay_ref"
-                                  type="text"
-                                  InputLabelProps={{
-                                    shrink: true,
-                                  }}
-                                  margin='normal'
-                                  fullWidth={true}
-                              />
-                            </Grid>
-                            <Button color="primary" size='small'
-                                variant='outlined' className={classes.button}
-                                onClick={this.handleCycleSubmit}>
-                                submit
-                            </Button>
-                          </div>
-                              : 
-                              this.state.edit ?
-                                <div>
-                            <Grid item xs={12} sm={4}>
-                            <FormControl fullWidth={true} margin='normal'>
-                                <TextField
-                                  required
-                                  id="LC_no"
-                                  label="LC Number"
-                                  type="text"
-                                  defaultValue = {LC.LC_no}
-                                  InputLabelProps={{
-                                    shrink: true,
-                                  }}
-                              /> </FormControl>
-                            </Grid>
-                            <Grid item xs={12} sm={4}>
-                            <FormControl fullWidth={true} margin='normal'>
-                                <TextField
-                                  required
-                                  id="FDR_no"
-                                  label="FDR Number"
-                                  type="text"
-                                  defaultValue = {LC.FDR_no}
-                                  InputLabelProps={{
-                                    shrink: true,
-                                  }}
-                              /> </FormControl>
-                            </Grid>
-                            <Grid item xs={12} sm={4}>
-                              <FormControl className={classes.margin} margin='normal'>
-                                <InputLabel htmlFor="amount"> Amount</InputLabel>
-                                <Input
-                                  id="amount"
-                                  type="number"
-                                  defaultValue = {String(LC.amount)}
-                                  startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
-                                />
-                              </FormControl>
-                              </Grid>
-                              <Button color="primary" size='small'
-                                variant='outlined' className={classes.button}
-                                onClick={this.handleEditSubmit}>
-                                submit
-                              </Button>
-                          </div>
-
-                              : <Button mini variant='contained' className={classes.button}
-                                  onClick={this.handleCycle}>Create New Cycle</Button>
-                        }
+              {(this.state.newCycle && !this.state.edit) ?
+                <div>
+                <Grid container>
+                  <Grid item xs={12} sm={4}>
+                      <TextField
+                        required
+                        id="LB_pay_ref"
+                        label="Bank LB_pay_ref"
+                        type="text"
+                        className={classes.textField}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        margin='normal'
+                        fullWidth={true}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                      <TextField
+                        required
+                        id="due_DT"
+                        label="Due Date"
+                        type="date"
+                        className={classes.textField}
+                        margin='normal'
+                        fullWidth={true}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                    />
+                  </Grid>
+                </Grid>
+                <Grid container spacing={8}>
+                  <Grid item xs={6} sm={3} md={3}>
+                    <FormControl margin='normal' fullWidth>
+                      <InputLabel htmlFor="due_amt">Due Amount</InputLabel>
+                      <Input
+                        id="due_amt"
+                        type="number"
+                        defaultValue={0}
+                        className={classes.textField}
+                        startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6} sm={3} md={3}>
+                    <FormControl margin='normal' fullWidth>
+                      <InputLabel htmlFor="acc-charge">Acceptance Charge</InputLabel>
+                      <Input
+                        id="acc_c"
+                        type="number"
+                        defaultValue={0}
+                        className={classes.textField}
+                        startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                      />
+                    </FormControl>
+                  </Grid>
+                </Grid>
+                  <div>
+                    <Button color="primary" size='small'
+                        variant='outlined' className={classes.button}
+                        onClick={this.handleCycleSubmit}>
+                        submit
+                    </Button>
+                  </div>
+                
+              </div>
+                    : 
+                    this.state.edit ?
+                  <div>
+                  <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth={true} margin='normal'>
+                      <TextField
+                        required
+                        id="LC_no"
+                        label="LC Number"
+                        type="text"
+                        defaultValue = {LC.LC_no}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                    /> </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth={true} margin='normal'>
+                      <TextField
+                        required
+                        id="FDR_no"
+                        label="FDR Number"
+                        type="text"
+                        defaultValue = {LC.FDR_no}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                    /> </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <FormControl className={classes.margin} margin='normal'>
+                      <InputLabel htmlFor="amount"> Amount</InputLabel>
+                      <Input
+                        id="amount"
+                        type="number"
+                        defaultValue = {String(LC.amount)}
+                        startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                      />
+                    </FormControl>
+                    </Grid>
+                    <Button color="primary" size='small'
+                      variant='outlined' className={classes.button}
+                      onClick={this.handleEditSubmit}>
+                      submit
+                    </Button>
+                </div>
+                    : <Button mini variant='contained' className={classes.button}
+                        onClick={this.handleCycle}>Create New Cycle</Button>
+              }
                 
             </Grid>
             <Grid item xs={12} sm={6} spacing={12}>
-                <Grid item>
+                <Grid item xs={12}>
                 <Table
                   isNumericColumn={['false,false,false,false,false']}
                   tableHead = {['Type','Opening Date', 'Expirty Date',
