@@ -53,8 +53,8 @@ const tableStyle = theme => ({
   },
   tableCell: {
     ...defaultFont,
-    lineHeight: "1.42857143",
-    padding: "12px 8px",
+    lineHeight: "1",
+    padding: "6px 6px",
     verticalAlign: "middle",
     fontSize: 10
   },

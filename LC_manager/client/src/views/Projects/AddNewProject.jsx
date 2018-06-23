@@ -29,28 +29,37 @@ const styles = theme =>{
   }
 }
 
+const status = {
+  running: 'running',
+  completed: 'completed',
+  arbitrated: 'arbitrated'
+}
+
 class NewProjectForm extends React.Component{
   constructor(props){
     super(props);
-    this.state = {
+    this.state ={
+      WO_no: '',
+      WO_date: '', 
+      client: '',
       name: '',
       location: '',
+      startDT: '',
+      stipEndDT: '',
+      expcEndDT: '',
       value: '',
-      manager: ''
-      }
-
-      
+      variation: '',
+      finalBill: '',
+      managerName: '',
+      managerContact: '',
+      arbLoc: '',
+      arbId: '',
+      status : '',
+    }
   }
-  
-  /*callProjectsApi = async () => {
-     const response = await fetch('/projects');
-     const body = await response.json();
-     if (response.status !== 200) throw Error(body.message);
-     return EJSON.parse(body);
-   };*/
 
   handleChange = name => event => {
-    this.setState({ [name]: event.target.value.toUpperCase() });
+    this.setState({ [name]: event.target.value});
     console.log(this.state)
   };
   
@@ -68,85 +77,256 @@ class NewProjectForm extends React.Component{
    })
      .catch(function(error){
        console.log(error);
-       //Perform action based on error
      });
   }
 
   render () {
-    //console.log(this.ProjectsList)
-    //console.log(this.issuerList)
     const {classes} = this.props
+    var options = [<option value=''/>]
+
+    for(var key in status){
+      if(status.hasOwnProperty(key)){
+        options.push(<option key={status[key]} value={status[key]}>{status[key]}</option>)
+      }
+    }
     return (
       <div>
       <form>
         <Grid container>
-          <ItemGrid xs={12} sm={12} md={12}>
+          <ItemGrid xs={12} sm={8} md={8}>
             <RegularCard
               cardTitle="Register New Project"
               cardSubtitle="Enter Project Details"
               content={
                 <div>
                   <Grid container>
-                    <ItemGrid xs={6} sm={3} md={3}>
-                      <CustomInput
-                          labelText="Project Name"
-                          id="Project Name"
-                          value={this.state.name}
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="WorkOrder Number"
+                          id="WO_no"
+                          fullWidth
+                          required
+                          onChange={this.handleChange('WO_no')}
+                          type='text'
+                          margin='normal'
+                        />
+                    </ItemGrid>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="WorkOrder Date"
+                          id="WO_DT"
+                          fullWidth
+                          required
+                          onChange={this.handleChange('WO_DT')}
+                          type='date'
+                          margin='normal'
+                          InputLabelProps={{
+                            shrink:true
+                          }}
+                        />
+                    </ItemGrid>
+                  </Grid>
+                  <Grid container>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Client Name"
+                          id="client"
+                          fullWidth
+                          required
+                          onChange={this.handleChange('client')}
+                          type='text'
+                          margin='normal'
+                        />
+                    </ItemGrid>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Project Name"
+                          id="name"
+                          fullWidth
+                          required
                           onChange={this.handleChange('name')}
-                          formControlProps={{
-                            fullWidth: true
-                          }}
-                          inputProps ={{
-                            required: true,
-                            onChange: this.handleChange('name')
-                          }}
+                          type='text'
+                          margin='normal'
                         />
                     </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
-                      <CustomInput
-                          labelText="Location"
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Project Location"
                           id="location"
-                          value={this.state.location}
+                          fullWidth
+                          required
                           onChange={this.handleChange('location')}
-                          formControlProps={{
-                            fullWidth: true
-                          }}
-                          inputProps ={{
-                            required: true,
-                            onChange: this.handleChange('location')
-                          }}
-                          
+                          type='text'
+                          margin='normal'
                         />
                     </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
-                      <CustomInput
-                          labelText="manager"
-                          id="manager Name"
-                          value={this.state.manager}
-                          onChange={this.handleChange('manager')}
-                          formControlProps={{
-                            fullWidth: true
-                          }}
-                          inputProps ={{
-                            required: true,
-                            onChange: this.handleChange('manager')
-                          }}
-                          
-                        />
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
+                  </Grid>
+                  <Grid container>
+                    <ItemGrid xs={12} sm={3} md={3}>
                       <FormControl fullWidth className={classes.margin} margin='normal'>
-                        <InputLabel htmlFor="adornment-amount">Value</InputLabel>
+                        <InputLabel htmlFor="awardedValue">Awarded Value</InputLabel>
                         <Input
-                          id="adornment-amount"
-                          value={this.state.value}
+                          id="awardedValue"
+                          deafultValue={0}
                           type="number"
                           onChange={this.handleChange('value')}
                           startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                         />
                       </FormControl>
                     </ItemGrid>
-                    </Grid>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <FormControl fullWidth className={classes.margin} margin='normal'>
+                        <InputLabel htmlFor="variation">Variations</InputLabel>
+                        <Input
+                          id="variation"
+                          deafultValue={0}
+                          type="number"
+                          onChange={this.handleChange('variation')}
+                          startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                        />
+                      </FormControl>
+                    </ItemGrid>
+                  </Grid>
+                  <Grid container>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Start Date"
+                          id="startDT"
+                          fullWidth
+                          required
+                          onChange={this.handleChange('startDT')}
+                          type='date'
+                          margin='normal'
+                          InputLabelProps={{
+                            shrink:true
+                          }}
+                        />
+                    </ItemGrid>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Stipulated End Date"
+                          id="stipEndDT"
+                          fullWidth
+                          required
+                          onChange={this.handleChange('stipEndDT')}
+                          type='date'
+                          margin='normal'
+                          InputLabelProps={{
+                            shrink:true
+                          }}
+                        />
+                    </ItemGrid>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Expected/Actual End Date"
+                          id="expcEndDT"
+                          fullWidth
+                          required
+                          onChange={this.handleChange('expcEndDT')}
+                          type='date'
+                          margin='normal'
+                          InputLabelProps={{
+                            shrink:true
+                          }}
+                        />
+                    </ItemGrid>
+                  </Grid>
+                  <Grid container>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Manager Name"
+                          id="managerName"
+                          fullWidth
+                          required
+                          onChange={this.handleChange('managerName')}
+                          type='text'
+                          margin='normal'
+                        />
+                    </ItemGrid>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Manager Cotnact"
+                          id="managerContact"
+                          fullWidth
+                          required
+                          onChange={this.handleChange('managerContact')}
+                          type='text'
+                          margin='normal'
+                        />
+                    </ItemGrid>
+                    <ItemGrid xs={12} sm={3} md={3}>
+                      <TextField
+                          label="Status"
+                          fullWidth
+                          select
+                          required
+                          margin='normal'
+                          onChange={this.handleChange('status')}
+                          SelectProps={{
+                            native:true
+                          }}
+                        >
+                        {options}
+                        </TextField>
+                    </ItemGrid>
+                  </Grid>
+                  {
+                    this.state.status === status.completed ?
+
+                    <Grid container>
+                      <ItemGrid xs={12} sm={3} md={3}>
+                        <FormControl fullWidth className={classes.margin} margin='normal'>
+                          <InputLabel htmlFor="finalBill">Final Bill Value</InputLabel>
+                          <Input
+                            id="finalBill"
+                            defaultValue={0}
+                            type="number"
+                            onChange={this.handleChange('finalBill')}
+                            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                          />
+                        </FormControl>
+                      </ItemGrid>
+                      </Grid> :
+                       this.state.status === status.arbitrated ? 
+                        <Grid container>
+                          <ItemGrid xs={12} sm={3} md={3}>
+                            <FormControl fullWidth className={classes.margin} margin='normal'>
+                              <InputLabel htmlFor="finalBill">Final Bill Value</InputLabel>
+                              <Input
+                                id="finalBill"
+                                defaultValue={0}
+                                type="number"
+                                onChange={this.handleChange('finalBill')}
+                                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                              />
+                            </FormControl>
+                          </ItemGrid>
+                          <ItemGrid xs={12} sm={3} md={3}>
+                            <TextField
+                              label="Arbitration Location"
+                              id="arbLoc"
+                              fullWidth
+                              required
+                              onChange={this.handleChange('arbLoc')}
+                              type='text'
+                              margin='normal'
+                            />
+                          </ItemGrid>
+                          <ItemGrid xs={12} sm={3} md={3}>
+                            <TextField
+                              label="Arbitration ID"
+                              id="arbId"
+                              fullWidth
+                              required
+                              onChange={this.handleChange('arbId')}
+                              type='text'
+                              margin='normal'
+                            />
+                          </ItemGrid>
+                        </Grid>
+                      :
+                      <div/>
+                  } 
                 </div>  
                 }
                footer={<div>

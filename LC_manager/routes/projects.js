@@ -7,6 +7,7 @@ const express = require('express'),
 // creating database variable
 projectsDB = mongoose.model('projects');
 
+
 router.use(bodyParser.urlencoded({extended:true}));
 router.use(methodOverride(function(req,res){
     if (req.body && typeof req.body === 'object' && '_method' in req.body) {
@@ -48,17 +49,26 @@ router.route('/')
     });
 router.route('/').post(function(req,res){
 	// receiving post forms to create a database entry
-	var name = req.body.name;
-	var location = req.body.location;
-	var value = req.body.value;
-	var manager = req.body.manager;
+	var project = {
+		WO_no: req.body.WO_no,
+		WO_DT: req.body.WO_DT,
+		name: req.body.name,
+		client: req.body.client,  
+		location: req.body.location, 
+		startDT: req.body.startDT, 
+		stipEndDT: req.body.stipEndDT,
+		expcEndDT: req.body.expcEndDT,
+		value: req.body.value,
+		variation: req.body.variation,
+		finalBill: req.body.finalBill,
+		status: req.body.status,
+		arbLoc: req.body.arbLoc,
+		arbId: req.body.arbId,
+		managerName: req.body.manager,
+		managerContact: req.body.contact,
+	}
 	// create database entry
-	projectsDB.create({
-	    name : name,
-	    location : location,
-	    value : value,
-	    manager: manager
-	}, function(error,project){
+	projectsDB.create(project, function(error,project){
 
 	    if (error) {
 		console.log('Error creating new project entry');
@@ -145,18 +155,27 @@ router.get('/:id/edit', function(req, res){
 });
 
 router.put('/:id/edit', function(req, res){
-    var name = req.body.name;
-    var location = req.body.branch;
-    var value = req.body.value;
-    var manager = req.body.manager;
+    // maybe able to edit the project object and send it directly.
+    var project = res.locals.project
+	project.WO_no = req.body.WO_no
+	project.WO_DT = req.body.WO_DT
+	project.name = req.body.name
+	project.client = req.body.client
+	project.location = req.body.location
+	project.startDT = req.body.startDT
+	project.stipEndDT = req.body.stipEndDT
+	project.expcEndDT = req.body.expcEndDT
+	project.value = req.body.value
+	project.variation = req.body.variation
+	project.finalBill = req.body.finalBill
+	project.status = req.body.status
+	project.managerName = req.body.manager
+	project.managerContact = req.body.contact
+	project.arbLoc = req.body.arbLoc
+	project.arbId = req.body.arbId
+	
 
-    projectsDB.findById(res.locals.id, function(err, project){
-	project.update({
-	    name: name,
-	    location: location,
-	    value: value,
-	    manager: manager
-	}, function(error,projectID){
+    project.save(function(error,projectID){
 	    if(error) {
 		console.log('Value could not be updated');
 		return console.error(error);
@@ -173,7 +192,6 @@ router.put('/:id/edit', function(req, res){
 	    }
 	    
 	});
-    });
 });
 
 router.delete('/:id/edit', function(req,res){
