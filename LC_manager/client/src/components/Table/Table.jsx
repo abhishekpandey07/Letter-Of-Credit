@@ -13,7 +13,7 @@ import {
 import PropTypes from "prop-types";
 //import { Edit, Close, Check, Add, FileUpload } from "@material-ui/icons";
 import tableStyle from "assets/jss/material-dashboard-react/tableStyle";
-
+import classNames from 'classnames'
 // const icons = {
 //   "edit": Edit,
 //   "add": Add,
@@ -60,15 +60,24 @@ function CustomTable({ ...props }) {
           </TableHead>
         ) : null}
         <TableBody>
-          {tableData.map((prop, key) => {
+          {tableData.map((prop1, key) => {
             return (
-              <TableRow key={key}>
-                {prop.map((prop, key) => {
+              <TableRow key={key} hover={props.icon}>
+                {prop1.map((prop, key) => {
                   return (
+                    (props.icon) ? 
+                    (key==(prop1.length-1) && props.icon==true) ?
+                    <TableCell className={classes.tableActions} key={key}
+                      numeric={props.isNumericColumn[key]}>
+                      {prop}
+                    </TableCell> :
                     <CustomTableCell className={classes.tableCell} key={key}
                       numeric={props.isNumericColumn[key]}>
                       {prop}
                     </CustomTableCell>
+                    :
+                    <div/>
+
                   );
                 })}
                 {

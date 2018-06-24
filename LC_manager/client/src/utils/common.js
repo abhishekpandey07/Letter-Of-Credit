@@ -13,7 +13,12 @@ const formatAmount = (amount) => {
 	var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
 	return res
 }
+
+const roundAmount = (amount) => {
+	return String(Number(Math.round(amount + 'e2') + 'e-2'))
+}
 export {
 	formatDate,
-	formatAmount
+	formatAmount,
+	roundAmount
 }

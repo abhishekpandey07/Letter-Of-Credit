@@ -1,22 +1,50 @@
 const mongoose = require('mongoose')
 const supplierBankSchema = require('./supplier')
-var ObjectID = mongoose.Schema.Types.ObjectId;
+const ObjectID = mongoose.Schema.Types.ObjectId;
+
+const CycleSchema = new mongoose.Schema({
+    due_DT: Date,
+    due_amt: { type : mongoose.Schema.Types.Decimal128, default: 0},
+    payed: Boolean,
+    LB_pay_ref: String,
+    acc : {
+        acc: {
+            type: mongoose.Schema.Types.Decimal128,
+            required: true,
+            default: 0
+        },
+        GST: {
+            type: mongoose.Schema.Types.Decimal128,
+            required: true,
+            default: 0
+        },
+        TID: {
+            type: String,
+            default: ''
+        } //transactionID for the acceptance
+    },
+    pay : {
+        bill_com: { type : mongoose.Schema.Types.Decimal128, default: 0},
+        post: { type : mongoose.Schema.Types.Decimal128, default: 0},
+        GST : { type : mongoose.Schema.Types.Decimal128, default: 0},
+        TID: {
+            type: String,
+            default: ''
+        } //transactionID for the payment
+    },
+    documents: {
+        rec: {name: String, rec: { type: Boolean, default: false}}, // receipt
+        acc: {name: String, rec: { type: Boolean, default: false}}, // acceptance
+        boe: {name: String, rec: { type: Boolean, default: false}}, // bill of exchange
+    }
+});
+
 
 var LC_Payment_Schema = new mongoose.Schema({
-    DT_amt: [{
-	due_DT: Date,
-	due_amt: { type : mongoose.Schema.Types.Decimal128, default: 0},
-	payed_amt : { type : mongoose.Schema.Types.Decimal128, default: 0},
-    LB_pay_ref: String,
-    acc: { type : mongoose.Schema.Types.Decimal128, default: 0},
-    bill_com: { type : mongoose.Schema.Types.Decimal128, default: 0},
-    post: { type : mongoose.Schema.Types.Decimal128, default: 0},
-    GST: { type : mongoose.Schema.Types.Decimal128, default: 0},
-    documents: {
-        rec: {name: String, rec: { type: Boolean, default: false}}, 
-        acc: {name: String, rec: { type: Boolean, default: false}},
-        }
-    }],
+    cycles: {
+        type: [CycleSchema],
+        default: []
+    },
     total_due: { type : mongoose.Schema.Types.Decimal128,  default: 0 },
     total_payed: { type : mongoose.Schema.Types.Decimal128, default: 0 }
 });
@@ -38,10 +66,30 @@ var LCSchema = new mongoose.Schema({
     	expDT : { type : Date, required : true, },
         bc: {name: String, rec: { type: Boolean, default: false}}, // bank charges document
         app: {name: String, rec: { type: Boolean, default: false}}, // application document
-        open : mongoose.Schema.Types.Decimal128,
-        post : mongoose.Schema.Types.Decimal128,
-        amend : mongoose.Schema.Types.Decimal128,
-        GST : mongoose.Schema.Types.Decimal128
+        open : {
+            type: mongoose.Schema.Types.Decimal128,
+            required: true,
+            default: 0
+        },
+        post : {
+            type: mongoose.Schema.Types.Decimal128,
+            required: true,
+            default: 0
+        },
+        amend : {
+            type: mongoose.Schema.Types.Decimal128,
+            required: true,
+            default: 0
+        },
+        GST : {
+            type: mongoose.Schema.Types.Decimal128,
+            required: true,
+            default: 0
+        },
+        TID : {
+            type: String,
+            default: ''
+        } //transactionID for the LC opening/extension
     }],
     LC_no : { type : String, required : true },
     FDR_no: { type : String, },

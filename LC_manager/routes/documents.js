@@ -78,7 +78,7 @@ router.route('/:id').post(function(req, res) {
     var name = req.fields.name;
     
     var index = parseFloat(req.fields.index);
-    var DueDate = LC.payment.DT_amt[index].due_DT
+    var DueDate = LC.payment.cycles[index].due_DT
     
     var filepath = sName +'/' + LC.LC_no +'/' + name +'/';
     var filename = getDateString(DueDate) + '.' + file.name.split('.')[1]
@@ -89,13 +89,18 @@ router.route('/:id').post(function(req, res) {
     
     switch(name){
         case "receipt": {            
-            LC.payment.DT_amt[index].rec.name = filepath + filename;
-            LC.payment.DT_amt[index].rec.rec = true;
+            LC.payment.cycles[index].documents.rec.name = filepath + filename;
+            LC.payment.cycles[index].documents.rec.rec = true;
             break;
         }
         case "acceptance": {
-            LC.payment.DT_amt[index].acc.name = filepath + filename;
-            LC.payment.DT_amt[index].acc.rec = true;
+            LC.payment.cycles[index].documents.acc.name = filepath + filename;
+            LC.payment.cycles[index].documents.acc.rec = true;
+            break;   
+        }
+        case "bill_of_material": {
+            LC.payment.cycles[index].documents.boe.name = filepath + filename;
+            LC.payment.cycles[index].documents.boe.rec = true;
             break;   
         }
         case "bankCharges": {
@@ -165,21 +170,30 @@ router.route('/:id/:index/:name').get(function(req,res){
       console.log('reaching switch')
       switch(name){
             case 'receipt':{
-                  if(LC.payment.DT_amt[index].rec.rec)
-                        filepath = LC.payment.DT_amt[index].rec.name
+                  if(LC.payment.cycles[index].documents.rec.rec)
+                        filepath = LC.payment.cycles[index].documents.rec.name
                   else
                         error=true
 
                   break;
             }
             case 'acceptance':{
-                  if(LC.payment.DT_amt[index].acc.rec)
-                        filepath = LC.payment.DT_amt[index].acc.name
+                  if(LC.payment.cycles[index].documents.acc.rec)
+                        filepath = LC.payment.cycles[index].documents.acc.name
                   else
                         error=true
 
                   break;
             }
+
+            case 'bill_of_material':{
+                  if(LC.payment.cycles[index].documents.boe.rec)
+                    filepath = LC.payment.cycles[index].documents.boe.rec
+                  else
+                      error = true
+
+                  break;
+            }   
 
             case 'bankCharges': {
                   if(LC.dates[index].bc.rec)

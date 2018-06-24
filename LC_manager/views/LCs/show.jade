@@ -6,7 +6,7 @@ block content
     p issuer: #{LC.issuer.name}
     p amount: #{LC.amount}
     p Payments:
-        -each date in LC.payment.DT_amt
+        -each date in LC.payment.cycles
             p Due_DT: #{date.due_DT}
             p Due_amt: #{date.due_amt}
             p Payed_amt: #{date.payed_amt}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Grid, InputLabel} from "@material-ui/core";
+import { Grid, InputLabel, Divider, withStyles} from "@material-ui/core";
 import Input from '@material-ui/core/Input';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
@@ -7,8 +7,11 @@ import Select from '@material-ui/core/Select';
 import EJSON from 'mongodb-extended-json';
 import TextField from '@material-ui/core/TextField';
 import InputAdornment from '@material-ui/core/InputAdornment';
+import Typography from '@material-ui/core/Typography'
 import axios from 'axios'
-
+import moment from 'moment'
+import lcFormStyles from 'assets/jss/material-dashboard-react/lcFormStyles.jsx'
+import {roundAmount} from 'utils/common'
 import {
   //ProfileCard,
   RegularCard,
@@ -30,18 +33,10 @@ class NewLCForm extends React.Component{
       FDR_no: '',
       FDR_DT: '',
       m_amt: 0,
-      m_cl_DT: '',
       amount: 0,
-      /*due_DT: '',
-      due_amt: 0,
-      payed_amt: 0,
-      pay_ref: '',
-      opening: 0,
-      amendment: 0,
-      boea: 0,
-      postal: 0,
+      open: 0,
+      post: 200,
       GST: 0,
-      disbursement:0,*/
       suppliersList: [],
       issuerList: [],
     }
@@ -62,7 +57,43 @@ class NewLCForm extends React.Component{
    };
 
   handleChange = name => event => {
-    this.setState({ [name]: event.target.value });
+    switch(name){
+      case "amount":{
+        var m_amt = Math.round(event.target.value*0.15)
+        var open = Math.round(event.target.value*0.0045)
+        var GST = roundAmount(open*0.18)
+        this.setState({
+          [name]: event.target.value,
+          open: open,
+          GST: GST,
+          m_amt: m_amt
+             });
+        break;
+       }
+      case 'openDT':{
+        var openDT = moment(event.target.value)
+        console.log(openDT)
+        var expDT = openDT.add(90,'day')
+        console.log(expDT.format('YYYY-MM-DD'))
+        this.setState({
+          [name]: event.target.value,
+          expDT: expDT.format('YYYY-MM-DD')
+             });
+        break;
+      }
+      case 'open':{
+        var GST = roundAmount(event.target.value*0.18,2)
+        this.setState({
+          [name]: event.target.value,
+          GST: GST
+        })
+        break;
+      }
+      default:{
+        this.setState({ [name]: event.target.value})
+      }
+    }
+
     console.log(this.state)
   };
 
@@ -102,7 +133,7 @@ class NewLCForm extends React.Component{
   }
 
   render () {
-
+    const {classes} = this.props
     var suppliersList = this.state.suppliersList.map(prop => {
       return(
         <option value={prop._id} >
@@ -146,9 +177,10 @@ class NewLCForm extends React.Component{
               cardSubtitle="Enter LC Details"
               content={
                 <div>
+                <Typography variant='subheading' className={classes.formHeading}>Issuer and Supplier Details</Typography> 
                   <Grid container>
-                    <ItemGrid xs={12} sm={12} md={3}>
-                       <FormControl fullWidth={true}>
+                    <ItemGrid xs={12} sm={12} md={2}>
+                       <FormControl fullWidth={true} margin='normal'>
                         <InputLabel htmlFor="issuer"> Issuer Bank</InputLabel>
                         <Select
                           required
@@ -165,7 +197,7 @@ class NewLCForm extends React.Component{
                     </ItemGrid>
                     <ItemGrid xs={12} sm={12} md={3}>
                       <div>
-                       <FormControl fullWidth={true}>
+                       <FormControl fullWidth={true} margin='normal'>
                         <InputLabel htmlFor="Supplier">Supplier</InputLabel>
                         <Select
                           native
@@ -181,8 +213,8 @@ class NewLCForm extends React.Component{
                       </FormControl>
                       </div>
                     </ItemGrid>
-                    <ItemGrid xs={12} sm={12} md={3}>
-                       <FormControl fullWidth={true}>
+                    <ItemGrid xs={12} sm={12} md={2}>
+                       <FormControl fullWidth={true} margin='normal'>
                         <InputLabel htmlFor="supBank"> Supplier's Bank</InputLabel>
                         <Select
                           required
@@ -199,8 +231,8 @@ class NewLCForm extends React.Component{
                         </Select>
                       </FormControl>
                     </ItemGrid>
-                    <ItemGrid xs={12} sm={12} md={3}>
-                       <FormControl fullWidth={true}>
+                    <ItemGrid xs={12} sm={12} md={4}>
+                       <FormControl fullWidth={true} margin='normal'>
                         <InputLabel htmlFor="project">Project</InputLabel>
                         <Select
                           required
@@ -219,7 +251,11 @@ class NewLCForm extends React.Component{
                       </FormControl>
                     </ItemGrid>
                     </Grid>
-                    <Grid container>
+                    <Divider style={{margin:'20px'}}/>
+                    <Typography variant='subheading' className={classes.formHeading}>
+                      Letter of Credit Details
+                    </Typography>
+                    <Grid container padding={true}>
                     <ItemGrid xs={6} sm={3} md={3}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
@@ -230,17 +266,7 @@ class NewLCForm extends React.Component{
                           />
                       </FormControl>
                     </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth={true} margin='normal'>
-                        <TextField
-                            required
-                            label="FDR number"
-                            id="FDR_NO"
-                            onChange={this.handleChange('FDR_no')}
-                          />
-                      </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
+                    <ItemGrid xs={6} sm={2} md={2}>
                       <FormControl fullWidth margin='normal'>
                         <InputLabel htmlFor="adornment-amount">Amount</InputLabel>
                         <Input
@@ -252,19 +278,7 @@ class NewLCForm extends React.Component{
                         />
                       </FormControl>
                     </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth margin='normal'>
-                          <InputLabel htmlFor="adornment-amount">Margin Amount ({Math.round(this.state.amount*0.15)})</InputLabel>
-                          <Input
-                            id="adornment-margin-amount"
-                            type="number"
-                            value={this.state.m_amt}
-                            onChange={this.handleChange('m_amt')}
-                            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
-                          />
-                        </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
+                    <ItemGrid xs={6} sm={2} md={2}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
                           required
@@ -281,7 +295,7 @@ class NewLCForm extends React.Component{
                       <FormHelperText> Please put LC opening Date.</FormHelperText>
                      </FormControl> 
                     </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
+                    <ItemGrid xs={6} sm={2} md={2}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
                           required
@@ -299,7 +313,31 @@ class NewLCForm extends React.Component{
                       <FormHelperText> Please put LC expiry Date.</FormHelperText>
                      </FormControl> 
                     </ItemGrid>
+                    </Grid>
+                    <Grid container>
                     <ItemGrid xs={6} sm={3} md={3}>
+                      <FormControl fullWidth={true} margin='normal'>
+                        <TextField
+                            required
+                            label="FDR number"
+                            id="FDR_NO"
+                            onChange={this.handleChange('FDR_no')}
+                          />
+                      </FormControl>
+                    </ItemGrid>
+                    <ItemGrid xs={6} sm={2} md={2}>
+                      <FormControl fullWidth margin='normal'>
+                          <InputLabel htmlFor="adornment-amount">Margin Amount ({Math.round(this.state.amount*0.15)})</InputLabel>
+                          <Input
+                            id="adornment-margin-amount"
+                            type="number"
+                            value={this.state.m_amt}
+                            onChange={this.handleChange('m_amt')}
+                            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                          />
+                        </FormControl>
+                    </ItemGrid>
+                    <ItemGrid xs={6} sm={2} md={2}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
                           required
@@ -313,95 +351,64 @@ class NewLCForm extends React.Component{
                             shrink: true,
 
                           }}
-                          
                       />
 
                       <FormHelperText> Please put FDR Date.</FormHelperText>
                      </FormControl> 
                     </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth={true} margin='normal'>
-                        <TextField
-                          id="m_cl_DT"
-                          label="Margin Clear Date"
-                          type="date"
-                          defaultValue = "2018-02-07"
-                          value = {this.state.m_cl_DT}
-                          onChange = {this.handleChange('m_cl_DT')}
-                          InputLabelProps={{
-                            shrink: true,
-
-                          }}
-                          
-                      />
-                      <FormHelperText> Please put Margin Clearance Date.</FormHelperText>
-                     </FormControl> 
-                    </ItemGrid>
                   </Grid>
-                  {/*<Grid container padding={true}>
-                    <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth={true} margin='normal'>
-                        <TextField
-                          required
-                          id="m_cl_DT"
-                          label="Installment Due Date"
-                          type="date"
-                          defaultValue = "2018-02-07"
-                          value = {this.state.due_DT}
-                          onChange = {this.handleChange('due_DT')}
-                          InputLabelProps={{
-                            shrink: true,
-
-                          }}                       
-                      />
-                      <FormHelperText> Please put First Installment due date.</FormHelperText>
-                     </FormControl> 
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
+                  <Divider style={{margin:'20px'}}/>
+                    <Typography variant='subheading' className={classes.formHeading}>
+                      Additional Charges
+                    </Typography>
+                  <Grid container padding={true}>
+                    <ItemGrid xs={12} sm={2} md={2}>
                       <FormControl fullWidth  margin='normal'>
-                          <InputLabel htmlFor="adornment-amount">Installment Amount</InputLabel>
+                          <InputLabel htmlFor="open">Opening Charges</InputLabel>
                           <Input
                             required
-                            id="adornment-due-amount"
+                            id="open"
                             type="number"
-                            value={this.state.due_amt}
-                            onChange={this.handleChange('due_amt')}
+                            value={this.state.open}
+                            onChange={this.handleChange('open')}
                             startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                           />
                         </FormControl>
                     </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
+                    <ItemGrid xs={12} sm={2} md={2}>
                       <FormControl fullWidth  margin='normal'>
-                          <InputLabel htmlFor="adornment-amount">Payed Amount</InputLabel>
+                          <InputLabel htmlFor="post">Posting Charges</InputLabel>
                           <Input
-                            id="adornment-payed-amount"
+                            required
+                            id="post"
                             type="number"
-                            value={this.state.payed_amt}
-                            onChange={this.handleChange('payed_amt')}
+                            value={this.state.post}
+                            onChange={this.handleChange('post')}
                             startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                           />
                         </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={3} md={3}>
-                      <FormControl fullWidth={true} margin='normal'>
-                        <TextField
-                          id="pay_ref"
-                          label="Payment Ref."
-                          type="text"
-                          value = {this.state.pay_ref}
-                          onChange = {this.handleChange('pay_ref')}
-                          InputLabelProps={{
-                            shrink: true,
-                          }}
-                          
-                      />
-                     </FormControl> 
-                    </ItemGrid>
-                  </Grid>*/}  
+                      </ItemGrid>
+                      <ItemGrid xs={12} sm={2} md={2}>
+                      <FormControl fullWidth  margin='normal'>
+                          <InputLabel htmlFor="post">GST Charges</InputLabel>
+                          <Input
+                            required
+                            id="GST"
+                            type="number"
+                            value={this.state.GST}
+                            onChange={this.handleChange('GST')}
+                            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                          />
+                          </FormControl>
+                      </ItemGrid>
+                      <ItemGrid xs={12} sm={2} md={2}>
+                        <Typography variant='subheading'>Total : {roundAmount(parseFloat(this.state.open) +
+                                                    parseFloat(this.state.post) + parseFloat(this.state.GST))}</Typography>
+                      </ItemGrid>
+                  </Grid>
                 </div>  
                 }
                 footer={
-                  
                   <div>
                       <Button id='submit' color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
                   </div>
@@ -414,4 +421,4 @@ class NewLCForm extends React.Component{
   }
 }
 
-export default NewLCForm;
+export default withStyles(lcFormStyles)(NewLCForm);

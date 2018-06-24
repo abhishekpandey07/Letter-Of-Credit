@@ -9,6 +9,8 @@ import Divider from '@material-ui/core/Divider'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import AddIcon from '@material-ui/icons/Add';
 import Edit from '@material-ui/icons/Edit';
+import InfoOutline from '@material-ui/icons/InfoOutline'
+import {InsertDriveFile} from '@material-ui/icons'
 import FileUpload from '@material-ui/icons/FileUpload'
 import IconButton from '@material-ui/core/IconButton'
 import TableCell from '@material-ui/core/Table'
@@ -18,12 +20,15 @@ import classNames from 'classnames'
 import
 { Grid, Button,
   TextField, Input, InputLabel, FormControl} from '@material-ui/core'
+import Select from '@material-ui/core/Select'
+import ItemGrid from 'components'
 import red from '@material-ui/core/colors/red'
 import axios from 'axios'
 import InputAdornment from '@material-ui/core/InputAdornment';
 import FileIOButton from 'components/FileIOButtons/FileIOButton'
 import EJSON from 'mongodb-extended-json'
-import {formatDate, formatAmount} from 'utils/common'
+import {roundAmount, formatDate, formatAmount} from 'utils/common'
+import moment from 'moment'
 
 const styles = theme => ({
   root: {
@@ -52,11 +57,16 @@ const styles = theme => ({
     marginLeft: theme.spacing.unit,
     marginRight: theme.spacing.unit,
     width:200,
-    flexBasis: '50%',
+    flexBasis: '33.33%',
     flexShrink:0,
   },
   margin: {
     margin: theme.spacing.unit,
+    marginLeft: theme.spacing.unit,
+    marginRight: theme.spacing.unit,
+    flexBasis:'33.33%',
+    flexShrink: 0
+
   },
   withoutLabel: {
     marginTop: theme.spacing.unit * 3,
@@ -64,29 +74,111 @@ const styles = theme => ({
   textField1: {
     flexBasis: 200,
   },
+  grid:{
+    padding: "0 15px !important"
+  },
+  tableActionButton: {
+    width: "27px",
+    height: "27px"
+  },
+  tableActionButtonIcon: {
+    width: "17px",
+    height: "17px"
+  },
+  edit: {
+    backgroundColor: "transparent",
+    //color: primaryColor,
+    boxShadow: "none"
+  },
 });
 
 const states = {notCompleted: 0 , completed: 1, closed: 2}
-
+const cycleSwitch = {
+  newCycle: 0,
+  cycleEdit: 1,
+  cyclePayCheck: 2,
+  edit: 3,
+  none: 4,
+  cycleFiles: 5,
+}
+const extensionSwitch = {
+  newExtension: 0,
+  editExtension: 1,
+  none: 2,
+  extensionFiles: 3,
+}
 class LCPanel extends React.Component {
   constructor(props){
     super(props)
     this.state ={
-      payment: null,
-      index: null,
-      extension: false,
-      newCycle: false, // state variable for adding new LC Cycles
-      expanded: null,
-      payed_amt: 0,
+      // cycle states
+      cycleIndex: null,
+      cycleContent: cycleSwitch.none,
+      cycleFile: null,
+      //new cycle states
       pay_ref: '',
-      openDT: '',
-      expDT:'',
       due_DT: '',
       due_amt: 0,
-      refFile: '',
+      acc: 0,
+      cycleGST: 0,
+      cycleTID: '',
+      payTID: '',
+      payPost: 89,
+      payBC: 0,
+      payGST: 0,
+      // extension states
+      extIndex:null,
+      extensionContent: extensionSwitch.none,
+      extensionFile: '',
+      expanded: null,
+      // new extension
+      openDT: '',
+      expDT:'',
+      amend:0,
+      open:0,
+      post:200,
+      GST:0,
+      TID: '',
+      //other states
       closed: states.notCompleted,
-      edit: false,
+      refFile: ''
     }
+    console.log(this.props.LC)
+  }
+
+  resetState = () => {
+    this.setState({
+      // cycle states
+      cycleIndex: null,
+      cycleContent: cycleSwitch.none,
+      cycleFile: '',
+      //new cycle states
+      pay_ref: '',
+      due_DT: '',
+      due_amt: 0,
+      acc: 0,
+      cycleGST: 0,
+      cycleTID: '',
+      payTID: '',
+      payPost: 89,
+      payBC: 0,
+      payGST: 0,
+      // extension states
+      extIndex:null,
+      extensionContent: extensionSwitch.none,
+      extensionFile: '',
+      expanded: null,
+      // new extension
+      openDT: '',
+      expDT:'',
+      amend:0,
+      open:0,
+      post:200,
+      GST:0,
+      //other states
+      closed: states.notCompleted,
+      refFile: ''
+    })
   }
 
   handlePanelChange = panel => (event, expanded) => {
@@ -102,85 +194,907 @@ class LCPanel extends React.Component {
 
 
   handleValueChange = name => event => {
-    this.setState({[name]:event.target.value});
-  }
-
-  // Payment Handles
-
-  handlePaymentClick = (index) => (event) => {
-    
-    this.setState({payment: (index===this.state.index?
-                    !this.state.payment: true),
-                   index: index
-                 })
-  }
-
-  handlePaymentSubmit = key => (event) => {
-    const pay_ref = document.getElementById('Pay_ref: ' + key).value
-    const payload = {
-      payment : this.props.LC.payment.DT_amt[key].due_amt,
-      pay_ref: pay_ref,
-      index: key,
-      _method: 'PUT'
+    switch(name){
+      case 'due_amt':{
+        var acc = Math.round(event.target.value*0.0035)
+        var cycleGST = Math.round(acc*.18)
+        this.setState({
+          [name]: event.target.value,
+          cycleGST: cycleGST,
+          acc: acc, 
+        })
+        break;
+      }
+      case 'amend':{
+        var amend = parseFloat(event.target.value)
+        var GST = roundAmount((parseFloat(this.state.open) + amend)*0.18)
+        this.setState({
+          [name]: event.target.value,
+          GST: GST
+        })
+        break;
+      }
+      case 'open':{
+        var open = parseFloat(event.target.value)
+        var GST = roundAmount((parseFloat(this.state.amend) + open)*0.18)
+        this.setState({
+          [name]: event.target.value,
+          GST: GST
+        })
+        break;
+      }
+      case 'openDT':{
+        var openDT = moment(event.target.value)
+        console.log(openDT)
+        var expDT = openDT.add(90,'day')
+        console.log(expDT.format('YYYY-MM-DD'))
+        this.setState({
+          [name]: event.target.value,
+          expDT: expDT.format('YYYY-MM-DD')
+             });
+        break;
+      }
+      case 'payBC':{
+        var GST = Math.round(event.target.value*0.18)
+        this.setState({
+          [name]: event.target.value,
+          payGST: GST
+             });
+        break; 
+      }
+      default: this.setState({[name]:event.target.value});
     }
-    const url = 'LCs/'+this.props.LC._id+
-                    '/addPayment'
-    axios.post(url,payload)
-    .then((response) =>{
-      this.setState({
-        payment: null,
-        payed_amt: 0,
-        pay_ref: ''
-      })
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
-    }).then((error) => {
-      console.log(error)
-    })
+    console.log(this.state)
+  }
+
+  // generators
+  generateToolTipIcons = (iconsObject,index) => {
+    const {classes} = this.props;
+    return iconsObject.reduce((acc,prop,key) => {
+               acc.push(
+               <Tooltip
+                  id="tooltip-top"
+                  title={prop.tip}
+                  placement="top"
+                  classes={{ tooltip: classes.tooltip }}
+                >
+                <IconButton
+                  aria-label={prop.id}
+                  className={classes.tableActionButton}
+                  onClick={prop.handle(index)}
+                >
+                  <prop.icon
+                    className={
+                      classes.tableActionButtonIcon + " " + classes.edit
+                    }
+                  />
+                </IconButton>
+              </Tooltip>
+               )
+              return acc
+        },[]);
+  
+  }
+  
+  generatePaymentData = () => {
+    const {LC} = this.props
+    const paymentIconTools = [
+      {
+        icon: InfoOutline,
+        handle: this.handleCyclePaymentClick,
+        tip: 'Enter Transaction ID',
+        id:'Info'
+      },
+      {
+        icon: Edit,
+        handle : this.handleCycleEditClick,
+        tip: 'Edit',
+        id: 'Edit'
+      },
+      {
+        icon: InsertDriveFile,
+        handle: this.handleCycleFilesClick,
+        tip: 'Files',
+        id:'Files'
+      }
+    ]
+
+    const paymentData = LC.payment.cycles.reduce((array,item,index) => {
+      if(item.due_DT){
+        const due = formatDate(new Date(item.due_DT))
+        const ref = item.LB_pay_ref ? item.LB_pay_ref: "SADFSAF"
+
+        const charges = (parseFloat(item.acc.acc) +
+                        parseFloat(item.acc.GST) +
+                        parseFloat(item.pay.bill_com) +
+                        parseFloat(item.pay.post) +
+                        parseFloat(item.pay.GST))
+
+        /*const rec = <FileIOButton id={LC._id}
+                      name='receipt' index={index}
+                      onSubmit = {this.onDocumentSubmit}
+                      exists = {item.rec.rec}/>
+        const accep = <FileIOButton id={LC._id}
+                      name='acceptance' index={index}
+                      onSubmit = {this.onDocumentSubmit}
+                      exists = {item.acc.rec}/>*/
+
+        const Icons = this.generateToolTipIcons(paymentIconTools,index)
+        console.log(Icons)
+
+        array.push([due,formatAmount(item.due_amt),ref,charges,Icons])//,rec,accep])
+        return array
+      }
+
+      return array
+    },[])
+
+    paymentData.push(['Total',formatAmount(LC.payment.total_due)])
+    return paymentData
+  }
+
+  // generate Extension Table Data
+
+  generateExtensionData = () =>{
+    const {LC} = this.props;
+    const extensionIconTools = [
+      {
+        icon: Edit,
+        handle : this.handleExtensionEditClick,
+        tip: 'Edit',
+        id: 'Edit'
+      },
+      {
+        icon: InsertDriveFile,
+        handle: this.handleExtensionFilesCLick,
+        tip: 'Files',
+        id:'Files'
+      }
+    ]
+
+    const extensionData = LC.dates.reduce((array,item,index) => {
+      var id = index === 0? 'Original': 'Extended'
+
+      /*const bc = <FileIOButton id={LC._id}
+                  name='bankCharges' index={index}
+                  onSubmit = {this.onDocumentSubmit}
+                  exists = {item.documents.bc.rec}/>
+
+      const app = <FileIOButton id={LC._id}
+                  name='application' index={index}
+                  onSubmit = {this.onDocumentSubmit}
+                  exists = {item.documents.app.rec}/>*/
+      const icons = this.generateToolTipIcons(extensionIconTools,index)
+      const charges = ( parseFloat(item.post) + 
+                        parseFloat(item.open) +
+                        parseFloat(item.amend) +
+                        parseFloat(item.GST))
+      const open = formatDate(new Date(item.openDT))
+      const exp = formatDate(new Date(item.expDT))
+      array.push([id,open,exp,charges,icons])//,app, bc])
+      return array
+    },[])
+
+    return extensionData
+  }
+
+  generateCycleCreationForm = () => {
+    const {classes} = this.props;
+    const form = 
+    <div> 
+    <Grid container>
+      <Grid item className={classes.grid} xs={12} sm={4}>
+          <TextField
+            required
+            id="LB_pay_ref"
+            label="Bank LB_pay_ref"
+            type="text"
+            value={this.state.pay_ref}
+            className={classes.textField}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            margin='normal'
+            fullWidth={true}
+            onChange={this.handleValueChange('pay_ref')}
+        />
+      </Grid>
+      <Grid item className={classes.grid} xs={12} sm={4}>
+          <TextField
+            required
+            id="due_DT"
+            label="Due Date"
+            type="date"
+            className={classes.textField}
+            value={String(this.state.due_DT).slice(0,10)}
+            onChange={this.handleValueChange('due_DT')}
+            margin='normal'
+            fullWidth={true}
+            InputLabelProps={{
+              shrink: true,
+            }}
+        />
+      </Grid>
+      <Grid item className={classes.grid} xs={12} sm={4}>
+          <TextField
+            required
+            id="cycleTID"
+            label="Transaction ID"
+            type="text"
+            className={classes.textField}
+            value={this.state.cycleTID}
+            onChange={this.handleValueChange('cycleTID')}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            margin='normal'
+            fullWidth={true}
+        />
+      </Grid>
+    </Grid>
+    <Grid container >
+      <Grid item className={classes.grid} xs={12} sm={4}>
+        <FormControl margin='normal' fullWidth>
+          <InputLabel htmlFor="due_amt">Due Amount</InputLabel>
+          <Input
+            id="due_amt"
+            type="number"
+            value={this.state.due_amt}
+            onChange={this.handleValueChange('due_amt')}
+            className={classes.textField}
+            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+          />
+        </FormControl>
+      </Grid>
+      <Grid item className={classes.grid} xs={12} sm={4} md={4}>
+        <FormControl margin='normal' fullWidth>
+          <InputLabel htmlFor="acc-charge">Acceptance Charge</InputLabel>
+          <Input
+            id="acc"
+            type="number"
+            value={this.state.acc}
+            onChange={this.handleValueChange('acc')}
+            className={classes.textField}
+            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+          />
+        </FormControl>
+      </Grid>
+      <Grid item className={classes.grid} xs={12} sm={4} md={4}>
+        <FormControl margin='normal' fullWidth>
+          <InputLabel htmlFor="acc-charge">GST</InputLabel>
+          <Input
+            id="cycleGST"
+            type="number"
+            value={this.state.cycleGST}
+            onChange={this.handleValueChange('cycleGST')}
+            className={classes.textField}
+            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+          />
+        </FormControl>
+      </Grid>
+    </Grid>
+  </div>
+    return form
+  }
+
+  generateCyclePaymentForm = (index) => {
+    const {classes} = this.props;
+    const form = 
+        <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <TextField
+              id='payTID'
+              required
+              margin='normal'
+              fullWidth
+              label='Payment Transaction ID'
+              value={this.state.payTID}
+              onChange={this.handleValueChange('payTID')}
+              InputLabelProps={{
+                shrink:true
+              }}
+            />
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <FormControl margin='normal' fullWidth>
+              <InputLabel htmlFor="bill_com">Bill Commission</InputLabel>
+              <Input
+                id="bill_com"
+                type="number"
+                value={this.state.cycleBC}
+                onChange={this.handleValueChange('cycleBC')}
+                className={classes.textField}
+                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+              />
+            </FormControl>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <FormControl margin='normal' fullWidth>
+              <InputLabel htmlFor="cyclePost">Posting Charges</InputLabel>
+              <Input
+                id="cyclePost"
+                type="number"
+                value={this.state.cyclePost}
+                onChange={this.handleValueChange('cyclePost')}
+                className={classes.textField}
+                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+              />
+            </FormControl>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <FormControl margin='normal' fullWidth>
+              <InputLabel htmlFor="payGST">GST charges</InputLabel>
+              <Input
+                id="payGST"
+                type="number"
+                value={this.state.payGST}
+                onChange={this.handleValueChange('payGST')}
+                className={classes.textField}
+                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+              />
+            </FormControl>
+          </Grid>
+        </Grid>
+      return form
+  }
+  // Returns a form to edit the whole Cycle
+
+  generateCycleEditForm = (index) => {
+    const creationDetails = this.generateCycleCreationForm()
+    const paymentDetails = this.generateCyclePaymentForm()
+    const {classes} = this.props;
+    const form = 
+      <div>
+        {creationDetails}
+        <Divider style={{margin:'10px'}}/>
+        <Typography variant='body1'>
+          Payment Details
+        </Typography>
+        {paymentDetails}
+        <Button color="primary" size='small'
+          variant='outlined' className={classes.button}
+          onClick={this.handleCycleEditSubmit}>
+          submit
+        </Button>
+      </div>
+    return form
+  }
+
+////function to update payment details.
+  generateCyclePaymentform = () => {
+    const cyclePaymentForm = this.generateCyclePaymentForm()
+    const {classes} = this.props
+    const form = 
+    <div>
+        <Typography variant='body1'>
+          Payment Details
+        </Typography>
+        {cyclePaymentForm}
+        <Button color="primary" size='small'
+          variant='outlined' className={classes.button}
+          onClick={this.handleCyclePaymentSubmit}>
+          submit
+        </Button>
+      </div>
+    return form
+
+  }
+
+// LC edit form
+  generateLCEditForm = () => {
+    const {classes, LC} = this.props
+    const form = 
+      <div>
+      <Grid container>
+        <Grid item className={classes.grid} xs={12} sm={4}>
+        <FormControl fullWidth={true} margin='normal'>
+            <TextField
+              required
+              id="LC_no"
+              label="LC Number"
+              type="text"
+              defaultValue = {LC.LC_no}
+              className={classes.textField}
+              InputLabelProps={{
+                shrink: true,
+              }}
+          /> </FormControl>
+        </Grid>
+        <Grid item className={classes.grid} xs={12} sm={4}>
+        <FormControl fullWidth={true} margin='normal'>
+            <TextField
+              required
+              id="FDR_no"
+              label="FDR Number"
+              type="text"
+              defaultValue = {LC.FDR_no}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              className={classes.textField}
+          /> </FormControl>
+        </Grid>
+        <Grid item className={classes.grid} xs={12} sm={4}>
+          <FormControl margin='normal'>
+            <InputLabel htmlFor="amount"> Amount</InputLabel>
+            <Input
+              id="amount"
+              type="number"
+              defaultValue = {String(LC.amount)}
+              startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+            />
+          </FormControl>
+        </Grid>
+      </Grid>
+      <Button color="primary" size='small'
+        variant='outlined' className={classes.button}
+        onClick={this.handleEditSubmit}>
+        submit
+      </Button>
+      </div>    
+
+    return form
+  }
+
+  // generate Cycle Files form 
+
+  generateCycleFilesForm = (index) => {
+    const cycleFiles = [
+      {
+        name: 'Bill of Material',
+        value: 'bill_of_material',
+        abbrev: 'boe'
+      },
+      {
+        name: "Bank's Acceptance Letter",
+        value: 'acceptance',
+        abbrev: 'acc'
+      },
+      {
+        name: 'Material Receipt Nature? (MRN)',
+        value: 'receipt',
+        abbrev: 'rec'
+      }
+    ]
+
+    const {classes, LC} = this.props;
+    const document = this.state.cycleFile?
+              LC.payment.cycles[index].documents[this.state.cycleFile.abbrev] :
+              null
+    console.log(document)
+    const form = 
+      <div>
+      <Grid container>
+        <Grid item className={classes.grid} xs={12} sm={4}>
+          <FormControl fullWidth={true} margin='normal'>
+            <InputLabel htmlFor="cycleFileSelect"> File</InputLabel>
+            <Select
+              required
+              native
+              onChange={this.handleValueChange('cycleFile')}
+              inputProps={{
+                name: 'cycleFile',
+                id: 'cycleFileSelect'
+              }}
+            >
+              {cycleFiles.reduce((acc,prop,key) => {
+                acc.push(<option value={prop}>{prop.name}</option>)
+                return acc
+              },[<option/>])}
+            </Select>
+          </FormControl>
+        </Grid>
+      </Grid>
+      {
+        document ?
+        document.rec ?
+        <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <Typography variant='body2'>
+              <b>Uploaded! Click to download.</b>
+            </Typography>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <FileIOButton id={LC._id}
+              name={this.state.cycleFile.value} index={index}
+              onSubmit = {this.onDocumentSubmit}
+              exists = {document.rec}/>
+          </Grid>
+        </Grid>
+        :
+        <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={8}>
+            <Typography variant='body2'>
+              <b>Not Uploaded! Select or Drag and drop to upload</b>
+            </Typography>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <FileIOButton id={LC._id}
+              name={this.state.cycleFile.value} index={index}
+              onSubmit = {this.onDocumentSubmit}
+              exists = {false}/>
+          </Grid>
+        </Grid>
+        :
+        this.state.cycleFile?
+        <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <Typography variant='body2'>
+              <b>Not Uploaded! Select or Drag and drop to upload</b>
+            </Typography>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <FileIOButton id={LC._id}
+              name={this.state.cycleFile.value} index={index}
+              onSubmit = {this.onDocumentSubmit}
+              exists = {false}/>
+          </Grid>
+        </Grid>
+        : <div/>
+      }
+    </div>
+
+    return form
+  }
+
+
+
+  // generate Extension Form 
+
+  generateExtensionForm = () => {
+    const {classes} = this.props
+    const form = 
+      <div>
+        <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <TextField
+              required
+              id="openDT"
+              label="Opening Date"
+              type="date"
+              value = {this.state.openDT}
+              onChange = {this.handleValueChange('openDT')}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              margin='normal'
+              fullWidth
+              className={classes.textField}
+            />
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <TextField
+              required
+              margin='normal'
+              fullWidth
+              id="expDT"
+              label="Expiry Date"
+              type="date"
+              value = {this.state.expDT}
+              onChange = {this.handleValueChange('expDT')}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              className={classes.textField}
+              />
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+              <TextField
+                required
+                id="TID"
+                label="Transaction ID"
+                type="text"
+                value={this.state.TID}
+                onChange={this.handleValueChange('TID')}
+                className={classes.textField}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                margin='normal'
+                fullWidth={true}
+            />
+          </Grid>
+        </Grid>
+        <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={4} md={4}>
+            <FormControl margin='normal' fullWidth>
+              <InputLabel htmlFor="open">Open</InputLabel>
+              <Input
+                id="open"
+                type="number"
+                value={this.state.open}
+                onChange={this.handleValueChange('open')}
+                className={classes.textField}
+                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+              />
+            </FormControl>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4} md={4}>
+            <FormControl margin='normal' fullWidth>
+              <InputLabel htmlFor="amend">Amend</InputLabel>
+              <Input
+                id="amend"
+                type="number"
+                value={this.state.amend}
+                onChange={this.handleValueChange('amend')}
+                className={classes.textField}
+                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+              />
+            </FormControl>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4} md={4}>
+            <FormControl margin='normal' fullWidth>
+              <InputLabel htmlFor="GST">GST</InputLabel>
+              <Input
+                id="GST"
+                type="number"
+                value={this.state.GST}
+                onChange={this.handleValueChange('GST')}
+                className={classes.textField}
+                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+              />
+            </FormControl>
+          </Grid>
+        </Grid>
+        <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={4} md={4}>
+            <FormControl margin='normal' fullWidth>
+              <InputLabel htmlFor="post">Posting Charges</InputLabel>
+              <Input
+                id="post"
+                type="number"
+                value={this.state.post}
+                onChange={this.handleValueChange('post')}
+                className={classes.textField}
+                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+              />
+            </FormControl>
+          </Grid>
+        </Grid>
+        
+      </div>
+
+    return form;
+  }
+
+  //// Handle Cycle Content Switch
+
+  cycleContentSwitch = () => {
+    const newCycleForm = this.generateCycleCreationForm();
+    const paymentCheckForm = this.generateCyclePaymentForm();
+    const cycleEditForm = this.generateCycleEditForm();
+    const LCEditForm = this.generateLCEditForm();
+    
+    const {classes} = this.props;
+    switch(this.state.cycleContent){
+      case cycleSwitch.newCycle:{
+        return (
+            <div>
+            {newCycleForm}
+              <Button color="primary" size='small'
+                variant='outlined' className={classes.button}
+                onClick={this.handleCycleSubmit}>
+                submit
+              </Button>
+            </div>
+          )
+      }
+      case cycleSwitch.cycleEdit: {
+        return cycleEditForm
+      }
+      case cycleSwitch.cyclePayCheck: {
+        return paymentCheckForm;
+      }
+      case cycleSwitch.edit: {
+        return LCEditForm;
+      }
+      case cycleSwitch.cycleFiles: {
+        return this.generateCycleFilesForm(this.state.cycleIndex);
+      }
+      case cycleSwitch.none:{
+        return <Button mini variant='contained' className={classes.button}
+                        onClick={this.handleCycle}>Create New Cycle</Button>        
+      }
+    }
+  }
+
+  /// Switch for handling extension side content
+  extensionContentSwitch = () => {
+    const extensionForm = this.generateExtensionForm();
+    const {classes} = this.props;
+
+    switch(this.state.extensionContent){
+      case extensionSwitch.newExtension:{
+        return (
+            <div>
+            {extensionForm}
+              <Button color="primary" size='small'
+                variant='outlined' className={classes.button}
+                onClick={this.handleExtensionSubmit}>
+                submit
+              </Button>
+            </div>
+          )
+      }
+      case extensionSwitch.editExtension: {
+        return (
+            <div>
+            {extensionForm}
+              <Button color="primary" size='small'
+                variant='outlined' className={classes.button}
+                onClick={this.handleEditExtensionSubmit}>
+                submit
+              </Button>
+            </div>
+          )
+      }
+      case extensionSwitch.none:{
+        return <Button size='small' variant='contained' className={classes.button}
+                          onClick={this.handleExtensionClick}>Add Ext.</Button>        
+      }
+    } 
   }
 
   // Cycle Handles
 
   handleCycle = (event) => {
-    this.setState({newCycle: !this.state.newCycle}) 
+    this.setState({cycleContent:cycleSwitch.newCycle})
+  }
+
+  handleCycleEditClick = (cycleIndex) => (event) => {
+    console.log(cycleIndex)
+    const cycle = this.props.LC.payment.cycles[cycleIndex]
+    this.setState({cycleContent: (cycleIndex===this.state.cycleIndex?
+                    this.state.cycleContent === cycleSwitch.cycleEdit?
+                    cycleSwitch.none: cycleSwitch.cycleEdit: cycleSwitch.cycleEdit),
+                   cycleIndex: cycleIndex,
+                   due_DT: cycle.due_DT,
+                   due_amt: cycle.due_amt,
+                   acc: cycle.acc.acc,
+                   cycleGST: cycle.acc.GST,
+                   cycleTID: cycle.acc.TID,
+                   payTID: cycle.pay.TID,
+                   payPost: cycle.pay.post,
+                   payBC: cycle.pay.bill_com,
+                   payGST: cycle.pay.GST,
+                   pay_ref: cycle.LB_pay_ref,
+                 })
+  }
+
+  handleCyclePaymentClick = (cycleIndex) => (event) => {
+    console.log(cycleIndex)
+    const cycle = this.props.LC.payment.cycles[cycleIndex]
+    this.setState({cycleContent: (cycleIndex===this.state.cycleIndex?
+                    this.state.cycleContent === cycleSwitch.cyclePayCheck?
+                    cycleSwitch.none: cycleSwitch.cyclePayCheck: cycleSwitch.cyclePayCheck),
+                   cycleIndex: cycleIndex,
+                   payTID: cycle.pay.TID,
+                   payPost: cycle.pay.post,
+                   payBC: cycle.pay.bill_com,
+                   payGST: cycle.pay.GST,
+                 })
+  }
+
+  handleCycleFilesClick = (cycleIndex) => (event) => {
+    this.setState({cycleContent: (cycleIndex===this.state.cycleIndex)?
+                    (this.state.cycleContent === cycleSwitch.cycleFiles)?
+                    cycleSwitch.none: cycleSwitch.cycleFiles: cycleSwitch.cycleFiles,
+                    cycleIndex: cycleIndex})
   }
 
   handleCycleSubmit = (event) => {
     const LB_pay_ref = document.getElementById('LB_pay_ref').value
+    const cycleTID = document.getElementById('cycleTID').value
     const payload = {
       due_DT : this.state.due_DT,
       due_amt: this.state.due_amt,
       LB_pay_ref: LB_pay_ref,
+      acc: this.state.acc,
+      GST: this.state.cycleGST,
+      TID: cycleTID,
       _method: 'PUT'
     }
     const url = 'LCs/'+this.props.LC._id+
                     '/addNewCycle'
     axios.post(url,payload)
     .then((response) =>{
-      this.handleCycle()
-      this.setState({
-        due_DT: '',
-        due_amt:0
-      })
+      this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
   }
+
+  handleCycleEditSubmit = (event) => {
+
+    const payload = {
+      _method: 'PUT',
+      due_DT: this.state.due_DT,
+      due_amt: this.state.due_amt,       
+      acc: this.state.acc,
+      accGST: this.state.cycleGST,
+      accTID: this.state.cycleTID,
+      payTID: this.state.payTID,
+      payPost: this.state.payPost,
+      payBC: this.state.payBC,
+      payGST: this.state.payGST,
+      LB_pay_ref: this.state.pay_ref,
+      index: this.state.cycleIndex
+    }
+    const url = 'LCs/'+this.props.LC._id+
+                    '/editCycle'
+    axios.post(url,payload)
+    .then((response) =>{
+      this.resetState()
+      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+    }).then((error) => {
+      console.log(error)
+    })
+  }
+
+  handleCyclePaymentSubmit = (event) => {
+
+    const payload = {
+      _method: 'PUT',
+      payTID: this.state.payTID,
+      payPost: this.state.payPost,
+      payBC: this.state.payBC,
+      payGST: this.state.payGST,
+      index: this.state.cycleIndex
+    }
+    const url = 'LCs/'+this.props.LC._id+
+                    '/checkCyclePayment'
+    axios.post(url,payload)
+    .then((response) =>{
+      this.resetState()
+      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+    }).then((error) => {
+      console.log(error)
+    })
+  }
+
   // Extension Handles
 
   handleExtensionClick = (event) => {
-    this.setState({extension: !this.state.extension})
+    this.setState({extensionContent: extensionSwitch.newExtension})
+  }
+
+  handleExtensionEditClick = (extensionIndex) => (event) => {
+    const extension = this.props.LC.dates[extensionIndex]
+
+    this.setState({extensionContent: (extensionIndex===this.state.extensionIndex?
+          this.state.extensionContent === extensionSwitch.editExtension?
+          extensionSwitch.none: extensionSwitch.editExtension: extensionSwitch.editExtension),
+          extensionIndex: extensionIndex,
+          openDT: String(extension.openDT).slice(0,10),
+          expDT: String(extension.expDT).slice(0,10),
+          amend: extension.amend,
+          open: extension.open,
+          post: extension.post,
+          GST: extension.GST,
+          TID: extension.TID
+         })
+  }
+
+  handleExtensionFilesCLick = (index) => (event) => {
+    this.setState({ extensionContent :
+                    (this.state.extensionContent===extensionSwitch.extensionFiles)?
+                      extensionSwitch.none : extensionSwitch.extensionFiles})
   }
 
   handleExtensionSubmit = (event) => {
     var payload = {
       _method : 'PUT',
       openDT: this.state.openDT,
-      expDT: this.state.expDT
+      expDT: this.state.expDT,
+      amend: this.state.amend,
+      open: this.state.open,
+      post: this.state.post,
+      GST: this.state.GST
     }
 
     const url = 'LCs/'+this.props.LC._id+
-                    '/addExtension'
+                    '/addOrEditExtension'
     axios.post(url,payload)
     .then((response) =>{
       this.handleExtensionClick()
@@ -191,10 +1105,35 @@ class LCPanel extends React.Component {
 
   }
 
-  handleEditClick = (event) => {
-    this.setState({
-      edit: !this.state.edit
+  handleEditExtensionSubmit = (event) => {
+    var payload = {
+      _method : 'PUT',
+      openDT: this.state.openDT,
+      expDT: this.state.expDT,
+      amend: this.state.amend,
+      open: this.state.open,
+      post: this.state.post,
+      GST: this.state.GST,
+      TID: this.state.TID,
+      index: this.state.extensionIndex
+    }
+
+    const url = 'LCs/'+this.props.LC._id+
+                    '/addOrEditExtension'
+    axios.post(url,payload)
+    .then((response) =>{
+      this.resetState()
+      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+    }).then((error) => {
+      console.log(error)
     })
+
+  }
+
+  handleEditClick = (event) => {
+    this.setState({ cycleContent :
+                    (this.state.cycleContent===cycleSwitch.edit)?
+                      cycleSwitch.none : cycleSwitch.edit})
   }
 
   handleEditSubmit = (event) => {
@@ -207,11 +1146,9 @@ class LCPanel extends React.Component {
       _method: 'PUT'
     }
 
-    console.log(payload)
-
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
-      this.handleEditClick()
+      this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
@@ -262,65 +1199,11 @@ class LCPanel extends React.Component {
        disableCloseButton = (this.state.closed === states.completed)? false: true
     }
     
-    const paymentIconTools = [
-      {
-        icon: AddIcon,
-        handle: this.handlePaymentClick
-      },
-      {
-        icon: Edit,
-        handle : this.handlePaymentClick
-      },
-      {
-        icon : FileUpload,
-        handle: this.handlePaymentClick
-      }
-    ]
-
-    const paymentData = LC.payment.DT_amt.reduce((array,item,index) => {
-      if(item.due_DT){
-        const due = formatDate(new Date(item.due_DT))
-        const ref = item.pay_ref ? item.pay_ref: "SADFSAF"
-
-        const rec = <FileIOButton id={LC._id}
-                      name='receipt' index={index}
-                      onSubmit = {this.onDocumentSubmit}
-                      exists = {item.rec.rec}/>
-        const accep = <FileIOButton id={LC._id}
-                      name='acceptance' index={index}
-                      onSubmit = {this.onDocumentSubmit}
-                      exists = {item.acc.rec}/>
-
-        array.push([due,formatAmount(item.due_amt),ref])//,rec,accep])
-        return array
-      }
-
-      return array
-    },[])
-
-    paymentData.push(['Total',formatAmount(LC.payment.total_due)])
-
-    const extensionData = LC.dates.reduce((array,item,index) => {
-      var id = index === 0? 'Original': 'Extended'
-
-      const bc = <FileIOButton id={LC._id}
-                  name='bankCharges' index={index}
-                  onSubmit = {this.onDocumentSubmit}
-                  exists = {item.bc.rec}/>
-
-      const app = <FileIOButton id={LC._id}
-                  name='application' index={index}
-                  onSubmit = {this.onDocumentSubmit}
-                  exists = {item.app.rec}/>
-      
-      const open = formatDate(new Date(item.openDT))
-      const exp = formatDate(new Date(item.expDT))
-      array.push([id,open,exp,app, bc])
-      return array
-    },[])
-
-    
-       
+   const paymentData = this.generatePaymentData()
+   const extensionData = this.generateExtensionData()
+   var cycleEditForm = null;
+   if(this.state.cycleEdit)    
+    cycleEditForm = this.generateCycleEditForm()
 
     return (
     <div>
@@ -335,187 +1218,30 @@ class LCPanel extends React.Component {
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
             <Grid container spacing={32}>
-            <Grid item xs={12} sm={6}>
-              <Grid item>
+            <Grid item className={classes.grid} xs={12} sm={6}>
+              <Grid item className={classes.grid}>
                 <Table
-                  iconTools={paymentIconTools}
-                  enableEdit={false}
                   isNumericColumn={[false,true,true,true,true]}
-                  tableHead = {['Due Date', 'Due Amount', 'Bank Payment LB Ref.']}
+                  tableHead = {['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
                   tableData = {paymentData}
+                  icon={true}
                 />
               </Grid>
-                
-              {(this.state.newCycle && !this.state.edit) ?
-                <div>
-                <Grid container>
-                  <Grid item xs={12} sm={4}>
-                      <TextField
-                        required
-                        id="LB_pay_ref"
-                        label="Bank LB_pay_ref"
-                        type="text"
-                        className={classes.textField}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                        margin='normal'
-                        fullWidth={true}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                      <TextField
-                        required
-                        id="due_DT"
-                        label="Due Date"
-                        type="date"
-                        className={classes.textField}
-                        margin='normal'
-                        fullWidth={true}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                    />
-                  </Grid>
-                </Grid>
-                <Grid container spacing={8}>
-                  <Grid item xs={6} sm={3} md={3}>
-                    <FormControl margin='normal' fullWidth>
-                      <InputLabel htmlFor="due_amt">Due Amount</InputLabel>
-                      <Input
-                        id="due_amt"
-                        type="number"
-                        defaultValue={0}
-                        className={classes.textField}
-                        startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
-                      />
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={6} sm={3} md={3}>
-                    <FormControl margin='normal' fullWidth>
-                      <InputLabel htmlFor="acc-charge">Acceptance Charge</InputLabel>
-                      <Input
-                        id="acc_c"
-                        type="number"
-                        defaultValue={0}
-                        className={classes.textField}
-                        startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
-                      />
-                    </FormControl>
-                  </Grid>
-                </Grid>
-                  <div>
-                    <Button color="primary" size='small'
-                        variant='outlined' className={classes.button}
-                        onClick={this.handleCycleSubmit}>
-                        submit
-                    </Button>
-                  </div>
-                
-              </div>
-                    : 
-                    this.state.edit ?
-                  <div>
-                  <Grid item xs={12} sm={4}>
-                  <FormControl fullWidth={true} margin='normal'>
-                      <TextField
-                        required
-                        id="LC_no"
-                        label="LC Number"
-                        type="text"
-                        defaultValue = {LC.LC_no}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                    /> </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                  <FormControl fullWidth={true} margin='normal'>
-                      <TextField
-                        required
-                        id="FDR_no"
-                        label="FDR Number"
-                        type="text"
-                        defaultValue = {LC.FDR_no}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                    /> </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <FormControl className={classes.margin} margin='normal'>
-                      <InputLabel htmlFor="amount"> Amount</InputLabel>
-                      <Input
-                        id="amount"
-                        type="number"
-                        defaultValue = {String(LC.amount)}
-                        startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
-                      />
-                    </FormControl>
-                    </Grid>
-                    <Button color="primary" size='small'
-                      variant='outlined' className={classes.button}
-                      onClick={this.handleEditSubmit}>
-                      submit
-                    </Button>
-                </div>
-                    : <Button mini variant='contained' className={classes.button}
-                        onClick={this.handleCycle}>Create New Cycle</Button>
-              }
-                
+              {this.cycleContentSwitch()}                
             </Grid>
-            <Grid item xs={12} sm={6} spacing={12}>
-                <Grid item xs={12}>
-                <Table
-                  isNumericColumn={['false,false,false,false,false']}
-                  tableHead = {['Type','Opening Date', 'Expirty Date',
-                                'Application', 'Bank Charges']}
-                  tableData = {extensionData}
-                />
+            <Grid item className={classes.grid} xs={12} sm={6}>
+                <Grid item className={classes.grid} xs={12}>
+                  <Table
+                    icon={true}
+                    isNumericColumn={['false,false,false,false,false']}
+                    tableHead = {['Type','Opening Date', 'Expirty Date',
+                                  'Bank Charges']}
+                    tableData = {extensionData}
+                  />
                 </Grid>
-                <div top-margin='15px'>
-                  <Grid item xs={12} sm={3} spacing='24'>
-                    {this.state.extension && !this.state.edit ?
-
-                          <div>
-                            <FormControl fullWidth={true} margin='normal'>
-                                <TextField
-                                  required
-                                  id="openDT"
-                                  label="Opening Date"
-                                  type="date"
-                                  defaultValue = "2018-02-07"
-                                  value = {this.state.openDT}
-                                  onChange = {this.handleValueChange('openDT')}
-                                  InputLabelProps={{
-                                    shrink: true,
-
-                                  }}
-                                  margin = {'inherit'}
-                              /> </FormControl>
-                            <FormControl fullWidth={true} margin='normal'>
-                                <TextField
-                                  required
-                                  id="expDT"
-                                  label="Expiry Date"
-                                  type="date"
-                                  value = {this.state.expDT}
-                                  onChange = {this.handleValueChange('expDT')}
-                                  InputLabelProps={{
-                                    shrink: true,
-                                  }}
-                              /> </FormControl>  <Button color="primary" size='small'
-                                variant='outlined' className={classes.button}
-                                onClick={this.handleExtensionSubmit}>
-                                submit
-                              </Button>
-                          </div>
-                              : <Button mini variant='contained' className={classes.button}
-                                  onClick={this.handleExtensionClick}>Add Extension</Button>}
-                </Grid>
-                </div>
-              </Grid>
-            <Grid item xs={12} sm={12}>
+                {this.extensionContentSwitch()}
+            </Grid>
+            <Grid item className={classes.grid} xs={12} sm={12}>
               <Button mini variant='contained' className={classes.button}
                 onClick={this.handleEditClick}>Edit</Button>
               <Button mini variant='contained' className={classes.button}

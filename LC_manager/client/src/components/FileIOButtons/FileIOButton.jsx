@@ -4,7 +4,6 @@ import FileDownload from '@material-ui/icons/FileDownload'
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
 import Files from 'react-files'
 
 const styles = theme => ({
@@ -28,6 +27,7 @@ class FileIOButton extends React.Component {
 			submitted: props.exists
 		}			
 		this.name = props.name
+		console.log(this.name)
 		this.id = props.id
 		this.index = props.index
 	}
@@ -50,11 +50,12 @@ class FileIOButton extends React.Component {
 			body: this.data
 		}).then(response => {
 			this.setState({submitted : true})
-			this.props.onSubmit(response.json())
+			this.props.onSubmit(response.json().data)
 		}).catch(error => console.log(error))
 	}
 
 	handleDownload = (event) => {
+		console.log('handleDownlaod : name: '+ this.name)
 		const url = '/documents/' + this.id
 					+ '/' + String(this.index)
 					+ '/' + this.name		
@@ -94,9 +95,9 @@ class FileIOButton extends React.Component {
 			    		accepts={['image/png','.pdf','.txt','.xlsx']}
 			    		clickable
 			    		>
-				    	<IconButton variant='contained' className={classes.button}>
+				    	<Button variant='contained' className={classes.button}>
 				    		<FileUpload />
-						</IconButton>
+						</Button>
 			    	</Files>
 			    </div>
 			)

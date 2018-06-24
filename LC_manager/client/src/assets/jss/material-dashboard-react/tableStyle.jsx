@@ -48,15 +48,15 @@ const tableStyle = theme => ({
     ...defaultFont,
     fontSize: 14,
     lineHeight: "1.42857143",
-    padding: "12px 8px",
+    padding: "12px 8px",  
     verticalAlign: "middle",
   },
   tableCell: {
     ...defaultFont,
-    lineHeight: "1",
-    padding: "6px 6px",
+    padding: "0px 20px",
+    height: '10px',
     verticalAlign: "middle",
-    fontSize: 10
+    fontSize: 10,
   },
   tableResponsive: {
     width: "100%",

@@ -45,7 +45,7 @@ router.route('/')
             },
             {
               $addFields: {
-                dueDate : {$arrayElemAt : ["$payment.DT_amt", -1 ]}
+                dueDate : {$arrayElemAt : ["$payment.cycles", -1 ]}
               }
             },
             {
@@ -87,7 +87,7 @@ router.route('/cycle').get(function(req,res){
   LCDB.aggregate([
       {
         $project: {
-          dueDetails : "$payment.DT_amt"
+          dueDetails : "$payment.cycles"
         }
       },
       {
@@ -154,7 +154,7 @@ router.route('/thisWeek').get(function(req,res){
     },
     {
       $addFields : {
-        dueDetails : {$arrayElemAt : ["$payment.DT_amt", -1 ]}
+        dueDetails : {$arrayElemAt : ["$payment.cycles", -1 ]}
       }
     },
     {
@@ -206,18 +206,16 @@ router.route('/month').get(function(req,res){
       }
     },
     {
-      $addFields : {
-        dueDetails : {$arrayElemAt : ["$payment.DT_amt", -1 ]},
-      }
+      $unwind : "$payment.cycles"
     },
     {
-      $sort : {"dueDetails.due_DT" : 1}
+      $sort : {"payment.cycles.due_DT": 1}
     },
     {
       $group: {
-        _id : { issuer : "$issuingBank.name" ,month : {$month: "$dueDetails.due_DT"}, year : {$year : "$dueDetails.due_DT"} },
-        amount : {$sum: "$dueDetails.due_amt"},
-        LC : {$push : {supplier : "$supplierd.name", LC_no: "$LC_no", payment : "$dueDetails", issuer : "$issuingBank.name"}},
+        _id : { issuer : "$issuingBank.name" ,month : {$month: "$payment.cycles.due_DT"}, year : {$year : "$payment.cycles.due_DT"} },
+        amount : {$sum: "$payment.cycles.due_amt"},
+        LC : {$push : {supplier : "$supplierd.name", LC_no: "$LC_no", payment : "$payment.cycles", issuer : "$issuingBank.name"}},
         count : {$sum : 1}
       }
     },
@@ -344,25 +342,25 @@ router.route('/30days').get(function (req,res) {
       } 
     },
     {
-      $unwind : "$payment.DT_amt"
+      $unwind : "$payment.cycles"
     },
     /*{
       $addFields:{
-        dueDetails: {$arrayElemAt : ["$payment.DT_amt", -1 ]}
+        dueDetails: {$arrayElemAt : ["$payment.cycles", -1 ]}
       }
     },*/
     {
       $match : {
-        "payment.DT_amt.due_DT" : {$gte : today , $lte : next14}
+        "payment.cycles.due_DT" : {$gte : today , $lte : next14}
       }
     },
     {
-      $sort : {"payment.DT_amt.due_DT": 1}
+      $sort : {"payment.cycles.due_DT": 1}
     },
     {
       $project : {
-        dueDT: "$payment.DT_amt.due_DT",
-        amount : "$payment.DT_amt.due_amt",
+        dueDT: "$payment.cycles.due_DT",
+        amount : "$payment.cycles.due_amt",
         supplier: "$supplierData.name",
         LC_no : 1,
         issuer : "$issuerData.name",

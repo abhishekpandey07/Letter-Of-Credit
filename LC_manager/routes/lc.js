@@ -74,7 +74,11 @@ router.route('/').post(function(req,res){
     var supplier = req.body.supplier;
     var dates = [{
 	openDT: req.body.openDT,
-	expDT: req.body.expDT
+	expDT: req.body.expDT,
+    open: req.body.open, 
+    amend: 0,
+    post: req.body.post,
+    GST: req.body.GST,
     }];
 
     var LC_no = req.body.LC_no;
@@ -83,17 +87,15 @@ router.route('/').post(function(req,res){
     var m_amt = req.body.m_amt;
     var amount = req.body.amount;
 
+    // following won't be present at the time of creation
     var payment = {
-	DT_amt: [{
-	    due_DT: req.body.due_DT,
-	    due_amt: req.body.due_amt,
-	    payed_amt: req.body.payed_amt // assuming 0 payed when creating LC.
-	}],
-	total_due : req.body.due_amt, // assuming total due is equal to current due
-	total_payed: req.body.payed_amt,
-    pay_ref: req.body.pay_ref
+	   cycles: [],
+	   total_due : 0, // assuming total due is equal to current due
+	   total_payed: 0,
     }
 
+    // following have been reorganized in the structure.
+    /*
     var charges = {
 	opening: req.body.opening,
 	amendment: req.body.amendment,
@@ -101,7 +103,7 @@ router.route('/').post(function(req,res){
 	postal: req.body.postal,
 	GST: req.body.GST,
 	disbursement: req.body.disbursement
-    }
+    }*/
 
     // creating the entry
     LCDB.create({
@@ -113,12 +115,10 @@ router.route('/').post(function(req,res){
 	FDR_DT: FDR_DT,
 	m_amt: m_amt,
 	amount: amount,
-	payment: payment,
-	charges: charges,
 	status: 'Active',
     project: req.body.project,
-    supBank: req.body.supBank
-	
+    supBank: req.body.supBank,
+    payment: payment
     }, function(error,LC){
 	if(error){
 	    console.error(error)
@@ -450,13 +450,32 @@ router.put('/:id/addExtension', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC;
-    
-    var extension = {
-	openDT : req.body.openDT,
-	expDT : req.body.expDT
+
+    const index = req.body.index ? req.body.index: null
+    if(index){
+        extension = LC.dates[index]
+        extension.openDT = req.body.openDT,
+        extension.expDT= req.body.expDT,
+        extension.open= req.body.open,
+        extension.post= req.body.post,
+        extension.amend= req.body.amend,
+        extension.GST= req.body.GST,
+        extension.TID= req.body.TID
+    } else {
+        var extension = {
+            openDT : req.body.openDT,
+            expDT : req.body.expDT,
+            open : req.body.open,
+            post: req.body.post,
+            amend: req.body.amed,
+            GST: req.body.GST,
+            TID: req.body.TID,  
+        }
+
+        LC.dates.push(extension)
+        LC.status = 'Extended'
     }
-    LC.dates.push(extension);
-    LC.status = 'Extended';
+    
     LC.save(function (err, LCID) {
         if (err) {
             res.send("There was a problem updating the information to the database: " + err);
@@ -479,18 +498,27 @@ router.put('/:id/addExtension', function(req, res) {
 
 
 
+
+
 router.put('/:id/addNewCycle', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     console.log('Adding new Installment now.');
+    console.log(req.body)
+    
     var LC = res.locals.LC;
     var details = {
-	due_DT: req.body.due_DT,
-	due_amt: req.body.due_amt,
-	LB_pay_ref: req.body.LB_pay_ref
+    	due_DT: req.body.due_DT,
+    	due_amt: req.body.due_amt,
+    	LB_pay_ref: req.body.LB_pay_ref,
+        acc: {
+            acc: req.body.acc,
+            GST: req.body.GST,
+            TID: req.body.TID   
+        }
     }
 
-    LC.payment.DT_amt.push(details);
+    LC.payment.cycles.push(details);
 
     var total_due = parseFloat(LC.payment.total_due);
     var due_amt = parseFloat(req.body.due_amt);
@@ -524,13 +552,121 @@ router.put('/:id/addNewCycle', function(req, res) {
     });
 });
 
+router.put('/:id/editCycle', function(req, res) {
+    // Get our REST or form values. These rely on the "name" attributes
+    //find the document by ID
+    console.log('Adding new Installment now.');
+    var LC = res.locals.LC;
+
+    const idx = parseFloat(req.body.index)
+    
+    // old cycle
+    var cycle = LC.payment.cycles[idx]
+    //old due amount
+    var old_due_amt = parseFloat(cycle.due_amt)
+
+
+    var total_due = parseFloat(LC.payment.total_due);
+    var due_amt = parseFloat(req.body.due_amt);
+
+    total_due = total_due - old_due_amt + due_amt;
+    LC.payment.total_due = total_due;
+
+    console.log('LC payment total_due: ' + LC.payment.total_due)
+
+
+    //updating cycle
+    cycle.due_DT = req.body.due_DT,
+    cycle.due_amt = req.body.due_amt,
+    cycle.LB_pay_ref = req.body.LB_pay_ref,
+    cycle.acc = {
+            acc: req.body.acc,
+            GST: req.body.accGST,
+            TID: req.body.accTID   
+        }
+    cycle.pay = {
+            bill_com: req.body.payBC,
+            post: req.body.payPost,
+            GST: req.body.payGST,
+            TID: req.body.payTID
+        }
+    
+
+
+    // saving the update cycle
+    LC.payment.cycles[idx] = cycle;
+    
+    LC.save(function (err, LCID) {
+        if (err) {
+            res.send("There was a problem updating the information to the database: " + err);
+        } 
+        else {
+            //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+        console.log('Cycle Details Updated: '+ cycle)
+            res.format({
+                /*html: function(){
+                    res.redirect("/LCs/" + LC._id);
+                },*/
+                //JSON responds showing the updated values
+                json: function(){
+                    res.json(JSON.stringify(LC));
+                }
+            });
+            
+        }
+    });
+});
+
+router.put('/:id/checkCyclePayment', function(req, res) {
+    // Get our REST or form values. These rely on the "name" attributes
+    //find the document by ID
+    console.log('Updating Payment details now.');
+    var LC = res.locals.LC;
+
+    const idx = parseFloat(req.body.index)
+    
+    // old cycle
+    var cycle = LC.payment.cycles[idx]
+
+    //updating payment details
+    cycle.pay = {
+            bill_com: req.body.payBC,
+            post: req.body.payPost,
+            GST: req.body.payGST,
+            TID: req.body.payTID
+        }
+
+    // saving the update cycle
+    LC.payment.cycles[idx] = cycle;
+    
+    LC.save(function (err, LCID) {
+        if (err) {
+            res.send("There was a problem updating the information to the database: " + err);
+        } 
+        else {
+            //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+        console.log('Cycle Details Updated: '+ cycle.pay)
+            res.format({
+                /*html: function(){
+                    res.redirect("/LCs/" + LC._id);
+                },*/
+                //JSON responds showing the updated values
+                json: function(){
+                    res.json(JSON.stringify(LC));
+                }
+            });
+            
+        }
+    });
+});
+
 router.put('/:id/addPayment', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC; // is this pass by reference?
     var payment = parseFloat(req.body.payment);
     var pay_ref = req.body.pay_ref;
-    var payArray = LC.payment.DT_amt; // is this pass by reference?
+    var payArray = LC.payment.cycles; // is this pass by reference?
     console.log(req.body)
     var index = parseFloat(req.body.index)
     
@@ -544,7 +680,7 @@ router.put('/:id/addPayment', function(req, res) {
     lastInstallment['pay_ref'] = pay_ref;
 
     payArray[index] = lastInstallment;
-    LC.payment.DT_amt = payArray;
+    LC.payment.cycles = payArray;
 
     
     var total_payed = parseFloat(LC.payment.total_payed);
@@ -601,13 +737,13 @@ router.route('/:id/addDocument').post(function(req, res) {
             newpath = __dirname + '/' +'../DATA_FILES/'+res.locals.id
                             + '/receipt.' + file.name.split('.')[1]
             
-            LC.payment.DT_amt[index].rec.name = newpath;
-            LC.payment.DT_amt[index].rec.rec = true;
+            LC.payment.cycles[index].rec.name = newpath;
+            LC.payment.cycles[index].rec.rec = true;
             break;
         }
         case "acceptance": {
-            LC.payment.DT_amt[index].acc.name = newpath;
-            LC.payment.DT_amt[index].acc.rec = true;
+            LC.payment.cycles[index].acc.name = newpath;
+            LC.payment.cycles[index].acc.rec = true;
             break;   
         }
         case "bankCharges": {

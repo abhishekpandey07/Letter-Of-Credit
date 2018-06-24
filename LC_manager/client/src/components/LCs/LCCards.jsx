@@ -58,7 +58,7 @@ class LCCard extends React.Component {
             title={
               <Typography variant='title'>{title}</Typography>
             }
-            subheader={"Payment due on : " + LC.payment.DT_amt[LC.payment.DT_amt.length -1 ].due_DT.slice(0,10)}
+            subheader={"Payment due on : " + LC.payment.cycles[LC.payment.cycles.length -1 ].due_DT.slice(0,10)}
           />
           <CardContent>
               Issuing Bank : {LC.issuer.name + '\n'}

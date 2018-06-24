@@ -66,6 +66,8 @@ class ProjectHome extends React.Component{
               content={
                 <PageTable
                   enableEdit={true}
+                  editHandler={this.editHandler}
+                  enableEDit
                   tableHeaderColor="primary"
                   isNumericColumn={[false,false,true,true]}
                   tableHead={["Name", "Location", "Value", "Manager"]}
