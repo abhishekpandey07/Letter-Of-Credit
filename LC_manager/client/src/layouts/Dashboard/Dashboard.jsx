@@ -101,21 +101,21 @@ class DashLayout extends React.Component {
               [classes['contentShift-left']]: this.state.permOpen,
             })} ref='mainPanel'
           >
-        <div className={classes.mainPanel}>
-          {/*<Header
-            routes={dashboardRoutes}
-            {...rest}
-          />*/}
-          {/* On the /maps route we want the map to be on full screen - this is not possible if the content and conatiner classes are present because they have some paddings which would make the map smaller */}
-          {this.getRoute() ? (
-            <div className={classes.content}>
-              <div className={classes.container}>{switchRoutes}</div>
-            </div>
-          ) : (
-            <div className={classes.map}>{switchRoutes}</div>
-          )}
-          {this.getRoute() ? <Footer /> : null}
-        </div>
+          <div className={classes.mainPanel}>
+            {/*<Header
+              routes={dashboardRoutes}
+              {...rest}
+            />*/}
+            {/* On the /maps route we want the map to be on full screen - this is not possible if the content and conatiner classes are present because they have some paddings which would make the map smaller */}
+            {this.getRoute() ? (
+              <div className={classes.content}>
+                <div className={classes.container}>{switchRoutes}</div>
+              </div>
+            ) : (
+              <div className={classes.map}>{switchRoutes}</div>
+            )}
+            {this.getRoute() ? <Footer /> : null}
+          </div>
         </div>
       </div>
     );

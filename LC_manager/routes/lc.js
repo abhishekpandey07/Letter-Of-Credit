@@ -5,6 +5,7 @@ const express = require('express'),
       methodOverride = require('method-override'),
       bankMethods = require('./helpers/nativeBanks'),
       supplierMethods = require('./helpers/Suppliers'),
+      LCMethods = require('./helpers/lc'),
       formidable = require('express-formidable'),
       fs = require('fs'),
       mv = require('mv'),
@@ -150,18 +151,16 @@ router.route('/').post(function(req,res){
     		    }else {
     			// add LC to bank 
     			
-    			bankMethods.addBankLC(bank, LC, function(error,bank){
-    			    if (error) {
-    				res.status = error.status;
-    				res.send(error);
-    			    }
-    			    else {
-    				console.log('LC successfully added to : '+ bank.name);
-    			    }
-    			});
-    		    }
-
-
+        			bankMethods.addBankLC(bank, LC, function(error,bank){
+        			    if (error) {
+        				res.status = error.status;
+        				res.send(error);
+        			    }
+        			    else {
+        				console.log('LC successfully added to : '+ bank.name);
+        			    }
+        			});
+    		    }      
     		}
 	    });
 
@@ -446,13 +445,15 @@ router.put('/:id/addCharges', function(req, res) {
 });
 
 //PUT to update a bank by ID
-router.put('/:id/addExtension', function(req, res) {
+router.put('/:id/addOrEditExtension', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC;
-
-    const index = req.body.index ? req.body.index: null
-    if(index){
+    console.log(req.body)
+    const index = (req.body.index === undefined)? null : parseFloat(req.body.index)
+    console.log(index)
+    if(index != null){
+        console.log('editing Extension')
         extension = LC.dates[index]
         extension.openDT = req.body.openDT,
         extension.expDT= req.body.expDT,
@@ -462,6 +463,7 @@ router.put('/:id/addExtension', function(req, res) {
         extension.GST= req.body.GST,
         extension.TID= req.body.TID
     } else {
+        console.log('creating extension')
         var extension = {
             openDT : req.body.openDT,
             expDT : req.body.expDT,
@@ -505,17 +507,18 @@ router.put('/:id/addNewCycle', function(req, res) {
     //find the document by ID
     console.log('Adding new Installment now.');
     console.log(req.body)
-    
+    try{
     var LC = res.locals.LC;
     var details = {
     	due_DT: req.body.due_DT,
     	due_amt: req.body.due_amt,
-    	LB_pay_ref: req.body.LB_pay_ref,
+    	LB_pay_ref: req.body.LB_pay_ref? req.body.LB_pay_ref:'',
         acc: {
             acc: req.body.acc,
             GST: req.body.GST,
-            TID: req.body.TID   
-        }
+            TID: req.body.TID? req.body.TID : ''   
+        },
+        payed: false
     }
 
     LC.payment.cycles.push(details);
@@ -525,12 +528,14 @@ router.put('/:id/addNewCycle', function(req, res) {
     //var total_payed = parseFloat(LC.payment.total_payed);
     //var payed_amt = parseFloat(req.body.payed_amt);
 
-    total_due += due_amt;
+    total_due = isNaN(total_due) ? LCMethods.updateTotal(LC) : total_due + due_amt;
     //total_payed += payed_amt;
     
     LC.payment.total_due = total_due;
     //LC.payment.total_payed = total_payed;
-    
+    }catch(error){
+        console.log(error)
+    }
     LC.save(function (err, LCID) {
         if (err) {
             res.send("There was a problem updating the information to the database: " + err);
@@ -562,16 +567,6 @@ router.put('/:id/editCycle', function(req, res) {
     
     // old cycle
     var cycle = LC.payment.cycles[idx]
-    //old due amount
-    var old_due_amt = parseFloat(cycle.due_amt)
-
-
-    var total_due = parseFloat(LC.payment.total_due);
-    var due_amt = parseFloat(req.body.due_amt);
-
-    total_due = total_due - old_due_amt + due_amt;
-    LC.payment.total_due = total_due;
-
     console.log('LC payment total_due: ' + LC.payment.total_due)
 
 
@@ -590,12 +585,16 @@ router.put('/:id/editCycle', function(req, res) {
             GST: req.body.payGST,
             TID: req.body.payTID
         }
-    
-
 
     // saving the update cycle
     LC.payment.cycles[idx] = cycle;
-    
+
+    var total_due = LCMethods.updateTotal(LC)
+
+    console.log(total_due)
+
+    LC.payment.total_due = total_due;
+    console.log(LC.payment.total_due)
     LC.save(function (err, LCID) {
         if (err) {
             res.send("There was a problem updating the information to the database: " + err);
@@ -935,6 +934,71 @@ router.delete('/:id/edit', function (req, res){
 		}
 	    });
 	}
+    });
+});
+
+//PUT to update a bank by ID
+router.delete('/:id/deleteExtension', function(req, res) {
+    // Get our REST or form values. These rely on the "name" attributes
+    //find the document by ID
+    var LC = res.locals.LC;
+    console.log(req.body)
+    const index = (req.body.index === undefined)? null : parseFloat(req.body.index)
+    console.log(index)
+    
+    LC.dates.splice(index,1)
+
+    LC.save(function (err, LCID) {
+        if (err) {
+            res.send("There was a problem updating the information to the database: " + err);
+        } 
+        else {
+            //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            res.format({
+                /*html: function(){
+                    res.redirect("/LCs/" + LC._id);
+                },*/
+                //JSON responds showing the updated values
+                json: function(){
+                    res.json(JSON.stringify(LC));
+                }
+            });
+            
+        }
+    });
+});
+
+//PUT to update a bank by ID
+router.delete('/:id/deleteCycle', function(req, res) {
+    // Get our REST or form values. These rely on the "name" attributes
+    //find the document by ID
+    var LC = res.locals.LC;
+    console.log(req.body)
+    const index = (req.body.index === undefined)? null : parseFloat(req.body.index)
+    console.log(index)
+    
+    LC.payment.cycles.splice(index,1)
+    
+    var total_due = LCMethods.updateTotal(LC)
+    LC.total_due = total_due
+    console.log(LC.total_due)
+    LC.save(function (err, LCID) {
+        if (err) {
+            res.send("There was a problem updating the information to the database: " + err);
+        } 
+        else {
+            //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            res.format({
+                /*html: function(){
+                    res.redirect("/LCs/" + LC._id);
+                },*/
+                //JSON responds showing the updated values
+                json: function(){
+                    res.json(JSON.stringify(LC));
+                }
+            });
+            
+        }
     });
 });
 

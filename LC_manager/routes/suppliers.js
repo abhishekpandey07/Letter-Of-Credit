@@ -81,7 +81,7 @@ router.route('/').post(function(req,res){
     }, function(error,supplier){
 	if(error){
 	    console.error(error)
-	    res.send('An error occured. Could not create the new supplier.')
+	    return res.end('An error occured. Could not create the new supplier.')
 	}else{
 
         projectDB.findById(project, function(error, project){
@@ -92,8 +92,8 @@ router.route('/').post(function(req,res){
             } else {
                 projectMethods.addSupplier(project, supplier, function(error,project){
                     if (error) {
-                    res.status = error.status;
-                    res.send(error);
+                        res.status = error.status;
+                        return res.end(error);
                     }
                     else {
                     console.log('supplier successfully added to : '+ project.name);
@@ -102,8 +102,6 @@ router.route('/').post(function(req,res){
                 }
             }
         );
-
-
 	    // supplier created
 	    console.log('POST creating new supplier : '+ supplier);
 	    res.format({

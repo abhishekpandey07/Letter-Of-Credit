@@ -82,8 +82,8 @@ class FileIOButton extends React.Component {
 
 		if(this.state.submitted){
 			return(
-				(<Button size='small' className={classes.button} variant='contained'
-						onClick={this.handleDownload}><FileDownload/></Button>)
+				(<Button size='medium' className={classes.button} variant='outlined'
+						onClick={this.handleDownload}>Download<FileDownload/></Button>)
 				)
 
 		}
@@ -95,8 +95,8 @@ class FileIOButton extends React.Component {
 			    		accepts={['image/png','.pdf','.txt','.xlsx']}
 			    		clickable
 			    		>
-				    	<Button variant='contained' className={classes.button}>
-				    		<FileUpload />
+				    	<Button variant='outlined' className={classes.button} size='medium'>
+				    		Upload <FileUpload />
 						</Button>
 			    	</Files>
 			    </div>
@@ -104,7 +104,7 @@ class FileIOButton extends React.Component {
 		}
 		else {
 			return (
-				(<Button size='small' className={classes.button} variant='contained'
+				(<Button size='medium' className={classes.button} variant='outlined'
 						onClick={this.handleSubmit}>Submit {this.filename}</Button>)
 			)
 		}

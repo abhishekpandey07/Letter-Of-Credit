@@ -5,7 +5,10 @@ const ObjectID = mongoose.Schema.Types.ObjectId;
 const CycleSchema = new mongoose.Schema({
     due_DT: Date,
     due_amt: { type : mongoose.Schema.Types.Decimal128, default: 0},
-    payed: Boolean,
+    payed: {
+        type: Boolean,
+        default: false
+    },
     LB_pay_ref: String,
     acc : {
         acc: {

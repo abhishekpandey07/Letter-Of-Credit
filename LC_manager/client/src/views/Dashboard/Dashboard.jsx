@@ -270,6 +270,7 @@ class Dashboard extends React.Component {
     if(this.state.expiryData){
       console.log('expiry Data : ' + this.state.expiryData)
       expContent = this.state.expiryData.reduce((acc,prop,key) => {
+        console.log(prop)
         const expDT = formatDate(new Date(prop.expDT))
         acc.push([prop.issuer,prop.supplier,prop.project,
                   formatAmount(prop.amount),formatAmount(prop.unUtilized),expDT])
@@ -277,7 +278,7 @@ class Dashboard extends React.Component {
       },[])
     }
     return (
-      <Table
+      <PageTable
         isNumericColumn={[false,false,false,true,true,true]}
         tableHeaderColor="primary"
         tableHead={['Issuer', 'Supplier', 'Project', 'Amount' , 'Un-Utilized', 'Expiry Date']}

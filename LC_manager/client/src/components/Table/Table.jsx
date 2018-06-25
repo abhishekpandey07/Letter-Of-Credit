@@ -76,7 +76,10 @@ function CustomTable({ ...props }) {
                       {prop}
                     </CustomTableCell>
                     :
-                    <div/>
+                    <CustomTableCell className={classes.tableCell} key={key}
+                      numeric={props.isNumericColumn[key]}>
+                      {prop}
+                    </CustomTableCell>
 
                   );
                 })}

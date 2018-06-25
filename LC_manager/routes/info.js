@@ -25,7 +25,6 @@ router.route('/')
       .get(function(req,res){
         const curMonth = (new Date).getMonth()
         console.log('current month : '+ curMonth)
-        try{
         LCDB.aggregate([
             {
               $lookup : {
@@ -78,9 +77,7 @@ router.route('/')
             console.log(JSON.stringify(dueThisMonth))
           }
         })
-      }catch(error){
-        console.log(error)
-      } 
+      
       })
 
 router.route('/cycle').get(function(req,res){
@@ -279,7 +276,7 @@ router.route('/LC/expiring').get(function (req,res) {
       }
     },
     {
-      $sort : {"date": 1}
+      $sort : {"date.expDT": 1}
     },
     {
       $match : {

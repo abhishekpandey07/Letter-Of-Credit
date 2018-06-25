@@ -69,6 +69,7 @@ router.param('id', function(req,res,next,id){
 router.route('/:id').post(function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+    try{
     var LC = res.locals.LC;
 
     var sName = LC.supplier.name
@@ -78,10 +79,18 @@ router.route('/:id').post(function(req, res) {
     var name = req.fields.name;
     
     var index = parseFloat(req.fields.index);
-    var DueDate = LC.payment.cycles[index].due_DT
-    
-    var filepath = sName +'/' + LC.LC_no +'/' + name +'/';
-    var filename = getDateString(DueDate) + '.' + file.name.split('.')[1]
+    var folder = null;
+    var date = new Date(Date.now());
+    if(name === 'receipt' || name === 'acceptance' || name==='bill_of_material'){
+      var date = LC.payment.cycles[index].due_DT
+      var folder = 'cycleDocuments/'
+    } else{
+      var date = LC.dates[index].openDT
+      var folder = 'open_ext_documents/'
+    }
+
+    var filepath = sName +'/' + LC.LC_no +'/' + name +'/' + folder;
+    var filename = getDateString(date) + '.' + file.name.split('.')[1]
 
    
     var newpath = baseDirectory + '/' +filepath + filename
@@ -157,6 +166,9 @@ router.route('/:id').post(function(req, res) {
             
         }
     });
+  }catch(error){
+    console.log(error)
+  }
 });
 
 router.route('/:id/:index/:name').get(function(req,res){
@@ -188,7 +200,7 @@ router.route('/:id/:index/:name').get(function(req,res){
 
             case 'bill_of_material':{
                   if(LC.payment.cycles[index].documents.boe.rec)
-                    filepath = LC.payment.cycles[index].documents.boe.rec
+                    filepath = LC.payment.cycles[index].documents.boe.name
                   else
                       error = true
 
@@ -221,7 +233,7 @@ router.route('/:id/:index/:name').get(function(req,res){
       
       if(error){
             console.log('Record not yet uploaded.')
-            error = new Error('Record does not exist')
+            var error = new Error('Record does not exist')
             error.status = 404;
             return res.end(error)
       }

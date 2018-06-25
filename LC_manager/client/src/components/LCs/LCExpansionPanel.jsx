@@ -10,7 +10,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import AddIcon from '@material-ui/icons/Add';
 import Edit from '@material-ui/icons/Edit';
 import InfoOutline from '@material-ui/icons/InfoOutline'
-import {InsertDriveFile} from '@material-ui/icons'
+import {InsertDriveFile,Close} from '@material-ui/icons'
 import FileUpload from '@material-ui/icons/FileUpload'
 import IconButton from '@material-ui/core/IconButton'
 import TableCell from '@material-ui/core/Table'
@@ -32,7 +32,7 @@ import moment from 'moment'
 
 const styles = theme => ({
   root: {
-    width: '100%',
+    width: '100%'
   },
   heading: {
     fontSize: theme.typography.pxToRem(13),
@@ -127,7 +127,7 @@ class LCPanel extends React.Component {
       payBC: 0,
       payGST: 0,
       // extension states
-      extIndex:null,
+      extensionIndex:null,
       extensionContent: extensionSwitch.none,
       extensionFile: '',
       expanded: null,
@@ -143,7 +143,6 @@ class LCPanel extends React.Component {
       closed: states.notCompleted,
       refFile: ''
     }
-    console.log(this.props.LC)
   }
 
   resetState = () => {
@@ -164,10 +163,9 @@ class LCPanel extends React.Component {
       payBC: 0,
       payGST: 0,
       // extension states
-      extIndex:null,
+      extensionIndex:null,
       extensionContent: extensionSwitch.none,
       extensionFile: '',
-      expanded: null,
       // new extension
       openDT: '',
       expDT:'',
@@ -179,16 +177,12 @@ class LCPanel extends React.Component {
       closed: states.notCompleted,
       refFile: ''
     })
+    console.log(this.state.extensionContent)
   }
 
   handlePanelChange = panel => (event, expanded) => {
     this.setState({
       expanded: expanded ? panel : false,
-      newCycle: false,
-      payment: null,
-      index: null,
-      extension: false
-
     });
   };
 
@@ -248,9 +242,11 @@ class LCPanel extends React.Component {
   }
 
   // generators
-  generateToolTipIcons = (iconsObject,index) => {
+  generateToolTipIcons = (iconsObject,index,render) => {
     const {classes} = this.props;
     return iconsObject.reduce((acc,prop,key) => {
+        var shouldRender = render ? render[key] : prop.render;
+        shouldRender ?
                acc.push(
                <Tooltip
                   id="tooltip-top"
@@ -270,34 +266,45 @@ class LCPanel extends React.Component {
                   />
                 </IconButton>
               </Tooltip>
-               )
-              return acc
-        },[]);
+               ):
+               {}
+
+        return acc
+      },[]);
   
   }
   
   generatePaymentData = () => {
     const {LC} = this.props
+    
     const paymentIconTools = [
+      {
+        icon: InsertDriveFile,
+        handle: this.handleCycleFilesClick,
+        tip: 'Files',
+        id:'CycleFiles',
+      },
       {
         icon: InfoOutline,
         handle: this.handleCyclePaymentClick,
         tip: 'Enter Transaction ID',
-        id:'Info'
+        id:'Info',
+      },
+      {
+        icon: Close,
+        handle: this.handleCycleDelete,
+        tip: 'Delete',
+        id:'deleteCycle',
       },
       {
         icon: Edit,
         handle : this.handleCycleEditClick,
         tip: 'Edit',
-        id: 'Edit'
-      },
-      {
-        icon: InsertDriveFile,
-        handle: this.handleCycleFilesClick,
-        tip: 'Files',
-        id:'Files'
+        id: 'Edit',
       }
+      
     ]
+    
 
     const paymentData = LC.payment.cycles.reduce((array,item,index) => {
       if(item.due_DT){
@@ -308,24 +315,15 @@ class LCPanel extends React.Component {
                         parseFloat(item.acc.GST) +
                         parseFloat(item.pay.bill_com) +
                         parseFloat(item.pay.post) +
-                        parseFloat(item.pay.GST))
-
-        /*const rec = <FileIOButton id={LC._id}
-                      name='receipt' index={index}
-                      onSubmit = {this.onDocumentSubmit}
-                      exists = {item.rec.rec}/>
-        const accep = <FileIOButton id={LC._id}
-                      name='acceptance' index={index}
-                      onSubmit = {this.onDocumentSubmit}
-                      exists = {item.acc.rec}/>*/
-
-        const Icons = this.generateToolTipIcons(paymentIconTools,index)
-        console.log(Icons)
-
-        array.push([due,formatAmount(item.due_amt),ref,charges,Icons])//,rec,accep])
+                        parseFloat(item.pay.GST));
+        console.log(item)
+        const render = [true,item.payed==true,this.state.cycleContent === cycleSwitch.edit,
+                        this.state.cycleContent === cycleSwitch.edit]
+        const icons = this.generateToolTipIcons(paymentIconTools,index,render);
+        
+        array.push([due,formatAmount(item.due_amt),ref,charges,icons])
         return array
       }
-
       return array
     },[])
 
@@ -339,31 +337,31 @@ class LCPanel extends React.Component {
     const {LC} = this.props;
     const extensionIconTools = [
       {
+        icon: InsertDriveFile,
+        handle: this.handleExtensionFilesClick,
+        tip: 'Files',
+        id:'Files',
+        render: true
+      },
+      {
         icon: Edit,
         handle : this.handleExtensionEditClick,
         tip: 'Edit',
-        id: 'Edit'
+        id: 'Edit',
+        render : this.state.cycleContent === cycleSwitch.edit
       },
       {
-        icon: InsertDriveFile,
-        handle: this.handleExtensionFilesCLick,
-        tip: 'Files',
-        id:'Files'
+        icon: Close,
+        handle: this.handleExtensionDelete,
+        tip: 'Delete',
+        id:'deleteExtension',
+        render: this.state.cycleContent === cycleSwitch.edit
       }
     ]
 
     const extensionData = LC.dates.reduce((array,item,index) => {
       var id = index === 0? 'Original': 'Extended'
 
-      /*const bc = <FileIOButton id={LC._id}
-                  name='bankCharges' index={index}
-                  onSubmit = {this.onDocumentSubmit}
-                  exists = {item.documents.bc.rec}/>
-
-      const app = <FileIOButton id={LC._id}
-                  name='application' index={index}
-                  onSubmit = {this.onDocumentSubmit}
-                  exists = {item.documents.app.rec}/>*/
       const icons = this.generateToolTipIcons(extensionIconTools,index)
       const charges = ( parseFloat(item.post) + 
                         parseFloat(item.open) +
@@ -658,13 +656,10 @@ class LCPanel extends React.Component {
     ]
 
     const {classes, LC} = this.props;
-    const document = this.state.cycleFile?
-              LC.payment.cycles[index].documents[this.state.cycleFile.abbrev] :
-              null
-    console.log(document)
-    const form = 
-      <div>
-      <Grid container>
+    const docDet = this.state.cycleFile ? cycleFiles[this.state.cycleFile] : null
+    const document = docDet ? LC.payment.cycles[this.state.cycleIndex].documents[docDet.abbrev]: null
+
+    const selection = 
         <Grid item className={classes.grid} xs={12} sm={4}>
           <FormControl fullWidth={true} margin='normal'>
             <InputLabel htmlFor="cycleFileSelect"> File</InputLabel>
@@ -678,65 +673,163 @@ class LCPanel extends React.Component {
               }}
             >
               {cycleFiles.reduce((acc,prop,key) => {
-                acc.push(<option value={prop}>{prop.name}</option>)
+                acc.push(<option value={key}>{prop.name}</option>)
                 return acc
               },[<option/>])}
             </Select>
           </FormControl>
         </Grid>
-      </Grid>
-      {
+    const form = 
         document ?
-        document.rec ?
-        <Grid container>
-          <Grid item className={classes.grid} xs={12} sm={4}>
-            <Typography variant='body2'>
-              <b>Uploaded! Click to download.</b>
-            </Typography>
+        document.rec ?        
+        <div>
+          <Grid container>
+            {selection}
+            <Grid item className={classes.grid} xs={12} sm={5}>
+              <Typography variant='body2'>
+                <b>Uploaded! Click to download.</b>
+              </Typography>
+              <FileIOButton id={LC._id}
+                name={docDet.value} index={index}
+                onSubmit = {this.onDocumentSubmit}
+                exists = {document.rec}/>
+            </Grid>
           </Grid>
-          <Grid item className={classes.grid} xs={12} sm={4}>
-            <FileIOButton id={LC._id}
-              name={this.state.cycleFile.value} index={index}
-              onSubmit = {this.onDocumentSubmit}
-              exists = {document.rec}/>
+        </div>
+        :
+        <div>
+          <Grid container>
+            {selection}
+            <Grid item className={classes.grid} xs={12} sm={5}>
+              <Typography variant='body2'>
+                <b>Not Uploaded! Select or Drag and drop to upload</b>
+              </Typography>
+              <FileIOButton id={LC._id}
+                name={docDet.value} index={index}
+                onSubmit = {this.onDocumentSubmit}
+                exists = {false}
+                />
+            </Grid>       
           </Grid>
-        </Grid>
+        </div>
+          :
+          this.state.cycleFile?
+        <div>
+          <Grid conatiner>
+            {selection}
+            <Grid item className={classes.grid} xs={12} sm={5}>
+              <Typography variant='body2'>
+                <b>Not Uploaded! Select or Drag and drop to upload</b>
+              </Typography>
+              <FileIOButton id={LC._id}
+                name={docDet.value} index={index}
+                onSubmit = {this.onDocumentSubmit}
+                exists = {false}/>
+            </Grid>
+          </Grid>
+        </div> 
         :
         <Grid container>
-          <Grid item className={classes.grid} xs={12} sm={8}>
-            <Typography variant='body2'>
-              <b>Not Uploaded! Select or Drag and drop to upload</b>
-            </Typography>
-          </Grid>
-          <Grid item className={classes.grid} xs={12} sm={4}>
-            <FileIOButton id={LC._id}
-              name={this.state.cycleFile.value} index={index}
-              onSubmit = {this.onDocumentSubmit}
-              exists = {false}/>
-          </Grid>
+          {selection}
         </Grid>
-        :
-        this.state.cycleFile?
-        <Grid container>
-          <Grid item className={classes.grid} xs={12} sm={4}>
-            <Typography variant='body2'>
-              <b>Not Uploaded! Select or Drag and drop to upload</b>
-            </Typography>
-          </Grid>
-          <Grid item className={classes.grid} xs={12} sm={4}>
-            <FileIOButton id={LC._id}
-              name={this.state.cycleFile.value} index={index}
-              onSubmit = {this.onDocumentSubmit}
-              exists = {false}/>
-          </Grid>
-        </Grid>
-        : <div/>
-      }
-    </div>
 
     return form
   }
 
+  generateExtensionFilesForm = (index) => {
+    const extensionFiles = [
+      {
+        name: 'Application',
+        value: 'application',
+        abbrev: 'app'
+      },
+      {
+        name: "Bank Charges",
+        value: 'bankCharges',
+        abbrev: 'bc'
+      }
+    ]
+
+    const {classes, LC} = this.props;
+    const docDet = this.state.extensionFile ? extensionFiles[this.state.extensionFile] : null
+    const document = docDet ? LC.dates[this.state.extensionIndex][docDet.abbrev]: null
+
+    const selection = 
+        <Grid item className={classes.grid} xs={12} sm={4}>
+          <FormControl fullWidth={true} margin='normal'>
+            <InputLabel htmlFor="extensionFileSelect"> File</InputLabel>
+            <Select
+              required
+              native
+              onChange={this.handleValueChange('extensionFile')}
+              inputProps={{
+                name: 'extensionFile',
+                id: 'extensionFileSelect'
+              }}
+            >
+              {extensionFiles.reduce((acc,prop,key) => {
+                acc.push(<option value={key}>{prop.name}</option>)
+                return acc
+              },[<option value=''/>])}
+            </Select>
+          </FormControl>
+        </Grid>
+    const form = 
+        document ?
+        document.rec ?        
+        <div>
+          <Grid container>
+            {selection}
+            <Grid item className={classes.grid} xs={12} sm={5}>
+              <Typography variant='body2'>
+                <b>Uploaded! Click to download.</b>
+              </Typography>
+              <FileIOButton id={LC._id}
+                name={docDet.value} index={index}
+                onSubmit = {this.onDocumentSubmit}
+                exists = {document.rec}/>
+            </Grid>
+          </Grid>
+        </div>
+        :
+        <div>
+          <Grid container>
+            {selection}
+            <Grid item className={classes.grid} xs={12} sm={5}>
+              <Typography variant='body2'>
+                <b>Not Uploaded! Select or Drag and drop to upload</b>
+              </Typography>
+              <FileIOButton id={LC._id}
+                name={docDet.value} index={index}
+                onSubmit = {this.onDocumentSubmit}
+                exists = {false}
+                />
+            </Grid>       
+          </Grid>
+        </div>
+          :
+          this.state.extensionFile?
+        <div>
+          <Grid conatiner>
+            {selection}
+            <Grid item className={classes.grid} xs={12} sm={5}>
+              <Typography variant='body2'>
+                <b>Not Uploaded! Select or Drag and drop to upload</b>
+              </Typography>
+              <FileIOButton id={LC._id}
+                name={docDet.value} index={index}
+                onSubmit = {this.onDocumentSubmit}
+                exists = {false}/>
+            </Grid>
+          </Grid>
+        </div> 
+        :
+        <Grid container>
+          {selection}
+        </Grid>
+
+    return form
+  }
 
 
   // generate Extension Form 
@@ -895,7 +988,13 @@ class LCPanel extends React.Component {
         return <Button mini variant='contained' className={classes.button}
                         onClick={this.handleCycle}>Create New Cycle</Button>        
       }
+      default:{
+        return <Button mini variant='contained' className={classes.button}
+                        onClick={this.handleCycle}>Create New Cycle</Button>        
+      }
+
     }
+      
   }
 
   /// Switch for handling extension side content
@@ -928,10 +1027,18 @@ class LCPanel extends React.Component {
             </div>
           )
       }
-      case extensionSwitch.none:{
+      case extensionSwitch.extensionFiles: {
+        return this.generateExtensionFilesForm(this.state.extensionIndex)
+      }
+
+      case extensionSwitch.none: {
         return <Button size='small' variant='contained' className={classes.button}
                           onClick={this.handleExtensionClick}>Add Ext.</Button>        
       }
+
+      default:
+       return <Button size='small' variant='contained' className={classes.button}
+                          onClick={this.handleExtensionClick}>Add Ext.</Button>         
     } 
   }
 
@@ -976,10 +1083,16 @@ class LCPanel extends React.Component {
   }
 
   handleCycleFilesClick = (cycleIndex) => (event) => {
-    this.setState({cycleContent: (cycleIndex===this.state.cycleIndex)?
+    const cycleContent = (cycleIndex===this.state.cycleIndex)?
                     (this.state.cycleContent === cycleSwitch.cycleFiles)?
-                    cycleSwitch.none: cycleSwitch.cycleFiles: cycleSwitch.cycleFiles,
-                    cycleIndex: cycleIndex})
+                    cycleSwitch.none: cycleSwitch.cycleFiles: cycleSwitch.cycleFiles;
+    const cycleFile = cycleContent === cycleSwitch.none ? null : this.state.cycleFile;
+    this.setState({
+      cycleContent: cycleContent,
+      cycleFile: cycleFile,
+      cycleIndex: cycleIndex
+    }) 
+    
   }
 
   handleCycleSubmit = (event) => {
@@ -1006,7 +1119,7 @@ class LCPanel extends React.Component {
   }
 
   handleCycleEditSubmit = (event) => {
-
+    console.log(this.state.due_amt)
     const payload = {
       _method: 'PUT',
       due_DT: this.state.due_DT,
@@ -1024,6 +1137,21 @@ class LCPanel extends React.Component {
     const url = 'LCs/'+this.props.LC._id+
                     '/editCycle'
     axios.post(url,payload)
+    .then((response) =>{
+      this.resetState()
+      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+    }).then((error) => {
+      console.log(error)
+    })
+  }
+
+  handleCycleDelete = (index) => (event) => {
+    const url = '/LCs/' + this.props.LC._id +
+                    '/deleteCycle'
+    axios.post(url,{
+      _method: 'DELETE',
+      index: index
+    },{credentials: 'include'})
     .then((response) =>{
       this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
@@ -1076,11 +1204,19 @@ class LCPanel extends React.Component {
          })
   }
 
-  handleExtensionFilesCLick = (index) => (event) => {
-    this.setState({ extensionContent :
-                    (this.state.extensionContent===extensionSwitch.extensionFiles)?
-                      extensionSwitch.none : extensionSwitch.extensionFiles})
+  handleExtensionFilesClick = (extensionIndex) => (event) => {
+    const extensionContent = (extensionIndex===this.state.extensionIndex)?
+                    (this.state.extensionContent === extensionSwitch.extensionFiles)?
+                    extensionSwitch.none: extensionSwitch.extensionFiles: extensionSwitch.extensionFiles;
+    const extensionFile = extensionContent === extensionSwitch.none ? null : this.state.extensionFile;
+    this.setState({
+      extensionContent: extensionContent,
+      extensionFile: extensionFile,
+      extensionIndex: extensionIndex
+    }) 
+    
   }
+  
 
   handleExtensionSubmit = (event) => {
     var payload = {
@@ -1097,7 +1233,7 @@ class LCPanel extends React.Component {
                     '/addOrEditExtension'
     axios.post(url,payload)
     .then((response) =>{
-      this.handleExtensionClick()
+      this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
@@ -1106,6 +1242,7 @@ class LCPanel extends React.Component {
   }
 
   handleEditExtensionSubmit = (event) => {
+    console.log('in editextension submit : ' + this.state )
     var payload = {
       _method : 'PUT',
       openDT: this.state.openDT,
@@ -1118,6 +1255,7 @@ class LCPanel extends React.Component {
       index: this.state.extensionIndex
     }
 
+    console.log('Extension Edit Payload: ' + payload)
     const url = 'LCs/'+this.props.LC._id+
                     '/addOrEditExtension'
     axios.post(url,payload)
@@ -1128,6 +1266,21 @@ class LCPanel extends React.Component {
       console.log(error)
     })
 
+  }
+
+  handleExtensionDelete = (index) => (event) => {
+    const url = '/LCs/' + this.props.LC._id +
+                    '/deleteExtension'
+    axios.post(url,{
+      _method: 'DELETE',
+      index: index
+    })
+    .then((response) =>{
+      this.resetState()
+      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+    }).then((error) => {
+      console.log(error)
+    })
   }
 
   handleEditClick = (event) => {

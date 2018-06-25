@@ -8,16 +8,16 @@ const appStyle = theme => ({
   wrapper: {
     position: "relative",
     top: "0",
-    height: "100vh",
+    minHeight: "100vh",
     zIndex: 1,
-    overflow: 'hidden',
+    overflow: 'none',
   },
 
   mainPanel: {
     [theme.breakpoints.up("md")]: {
-      width: `calc(100% - ${drawerWidth}px)`
+      width: `calc(100% - ${drawerWidth}px)`,
     },
-    overflow: "auto",
+    overflow: "hidden",
     position: "relative",
     float: "right",
     ...transition,

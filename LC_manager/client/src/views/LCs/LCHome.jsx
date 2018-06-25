@@ -68,11 +68,12 @@ class LCHome extends React.Component{
           )
       }else{
         var panels = this.state.LCs.reduce((arr,prop,key) => {
-          var panel = <ListItem divider>
-                        <LCPanel LC={prop} id={key}
-                      onUpdate={this.updateLCPanel}
-                      onDelete={this.deleteLC}/>
-                      </ListItem>
+          var panel = 
+            <Grid item xs={12} sm={12} md={12}>
+                <LCPanel LC={prop} id={key}
+                onUpdate={this.updateLCPanel}
+                onDelete={this.deleteLC}/>
+            </Grid>
           arr.push(panel)
           return arr
         },[]);
@@ -85,9 +86,9 @@ class LCHome extends React.Component{
                 cardTitle="Letters of Credit"
                 cardSubtitle="Click on a panel to know more about or to update a Letter of Credit."
                 content={
-                  <List>
+                  <Grid container>
                     {panels}
-                  </List>
+                  </Grid>
               }
               footer={
                   <div>
