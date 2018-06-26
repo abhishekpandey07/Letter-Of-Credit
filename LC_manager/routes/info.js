@@ -290,7 +290,8 @@ router.route('/LC/expiring').get(function (req,res) {
         unUtilized: { $subtract : ["$amount","$payment.total_due"]},
         supplier: "$supplierData.name",
         issuer : "$issuerData.name",
-        project : "$projectData.name"
+        project : "$projectData.name",
+        LC_no : 1
       }
     }
   ]).exec(function (error,info) {

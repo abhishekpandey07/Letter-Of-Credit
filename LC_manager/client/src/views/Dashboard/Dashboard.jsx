@@ -22,7 +22,8 @@ import {
   TasksCard,
   RegularCard,
   Table,
-  ItemGrid
+  ItemGrid,
+  TimeAnalysisCard
 } from "components";
 
 import PageTable from 'components/Table/PaginationTable'
@@ -37,24 +38,13 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import dashboardStyle from "assets/jss/material-dashboard-react/dashboardStyle";
 import EJSON from 'mongodb-extended-json'
 import {formatDate, formatAmount} from 'utils/common'
+import ReactExport from 'react-data-export'
 
-
-const month = {
-  "1": "Jan",
-  "2": "Feb",
-  "3": "Mar",
-  "4": "Apr",
-  "5": "May", 
-  "6": "Jun", 
-  "7": "Jul",
-  "8": "Aug",
-  "9": "Sep",
-  "10": "Oct",
-  "11": "Nov",
-  "12": "Dec"
-}
-
-// TODO: Add a list of LC expiring in next 14 days.
+const month = [ 'Jan', 'Feb', 'Mar',
+                'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep',
+                'Oct', 'Nov', 'Dec'
+              ]
 class Dashboard extends React.Component {
   state = {
     value: 0,
@@ -65,6 +55,7 @@ class Dashboard extends React.Component {
     expiryData:null,
     next30: null,
   };
+
   handleChange = (event, value) => {
     this.setState({ value });
   };
@@ -194,47 +185,6 @@ class Dashboard extends React.Component {
     return { data: cycleTrendData, option : cycleTrendOptions}    
   }
 
-  getMonthContent(){
-    var monthContent = null
-    this.today = new Date(Date.now())
-    if(this.state.monthData){
-      
-      this.totalDue = 0
-      this.totalCount = 0
-      const monthTableData = this.state.monthData.reduce((data,prop,key) => {
-        if((prop._id.month===(this.today.getMonth()+1))){
-          const tableData = prop.LC.map((lc,index) => {
-            // use this to show paid done Icon
-            const paid = lc.payment.payed_amt > 0 ? 'PAYED' : 'NOT PAYED'
-            
-            const date = formatDate(new Date(lc.payment.due_DT))
-
-            const row = [prop._id.issuer,lc.supplier[0],lc.LC_no,date,formatAmount(lc.payment.due_amt)]
-            data.push(row) 
-            })
-          this.totalDue += parseFloat(prop.amount)
-          this.totalCount += prop.count
-        }
-        return data
-      },[])
-      monthContent = (
-        <div>
-          <Typography variant='subheading' align='center' padding='10'>
-            Total Amount Due : {this.totalDue}
-          </Typography>
-          <Table
-          isNumericColumn={[false,false,false,false,true]}
-            headerColor='orange'
-            tableHead = {['Issuer','Supplier', 'LC No.', 'Due Date' ,'Due Amount']}
-            tableData = {monthTableData}
-          />
-        </div>
-        )
-    }
-
-    return monthContent
-  }
-
   getBankContent(){
     var bankContent = null;
     if(this.state.bank){
@@ -268,9 +218,7 @@ class Dashboard extends React.Component {
   getExpiryContent(){
     var expContent = null
     if(this.state.expiryData){
-      console.log('expiry Data : ' + this.state.expiryData)
       expContent = this.state.expiryData.reduce((acc,prop,key) => {
-        console.log(prop)
         const expDT = formatDate(new Date(prop.expDT))
         acc.push([prop.issuer,prop.supplier,prop.project,
                   formatAmount(prop.amount),formatAmount(prop.unUtilized),expDT])
@@ -290,7 +238,6 @@ class Dashboard extends React.Component {
   getNext30Content(){
     var next30Content = null
     if(this.state.next30){
-      console.log('expiry Data : ' + this.state.next30)
       next30Content = this.state.next30.reduce((acc,prop,key) => {
         const dueDT = formatDate(new Date(prop.dueDT))
         acc.push([prop.issuer,prop.LC_no,prop.supplier,
@@ -308,85 +255,22 @@ class Dashboard extends React.Component {
     )
   }
 
-  render() {
+  
 
+  render() {
     const cycleTrend = this.getCycleTrendContent()
-    const monthContent = this.getMonthContent()
     const bankContent = this.getBankContent()
     const next30Content = this.getNext30Content()
-    // var weekDueCount = this.state.thisWeek ? (this.state.thisWeek.length > 0 ? this.state.thisWeek[0].count : 0) : 0
-    // var weekDueAmount = this.state.thisWeek ? (this.state.thisWeek.length > 0 ? String(this.state.thisWeek[0].amount) : 0) : 0
 
     return (
       <div>
-        {/*<Grid container>
-          <ItemGrid xs={12} sm={6} md={3}>
-            <StatsCard
-              icon={InfoOutline}
-              iconColor="orange"
-              title="Payments"
-              description={"This Week : " + weekDueCount}
-              statIcon={InfoOutline}
-              statIconColor="primary"
-              statLink={{ text: "Update Details", href: "/LCs" }}
-            />
-          </ItemGrid>
-          <ItemGrid xs={12} sm={6} md={3}>
-            <StatsCard
-              icon={Store}
-              iconColor="green"
-              title="Payments this Week"
-              description={ "Rs. " + formatAmount(weekDueAmount)}
-              statIcon={DateRange}
-              statText="Last 24 Hours"
-            />
-          </ItemGrid>
-          {/*<ItemGrid xs={12} sm={6} md={3}>
-            <StatsCard
-              icon={InfoOutline}
-              iconColor="red"
-              title="Fixed Issues"
-              description="75"
-              statIcon={LocalOffer}
-              statText="Tracked from Github"
-            />
-          </ItemGrid>
-        </Grid>
-        {/*<Grid container>
-          <ItemGrid xs={12} sm={12} md={6}>
-            <ChartCard
-              chart={
-                <ChartistGraph
-                  className="ct-chart"
-                  data={cycleTrendData}
-                  type="Bar"
-                  options={cycleTrendOptions}
-                  responsiveOptions={emailsSubscriptionChart.responsiveOptions}
-                  listener={emailsSubscriptionChart.animation}
-                />
-              }
-              chartColor="primary"
-              title="Email Subscriptions"
-              text="Last Campaign Performance"
-              statIcon={AccessTime}
-              statText="campaign sent 2 days ago"
-            />
-          </ItemGrid>
-        </Grid>*/}
         <Grid container>
-          <ItemGrid xs={12} sm={12} md={6}>
-            <RegularCard
-              cardTitle="Payments this month"
-              cardSubtitle={
-                
-                  "Month : " + month[this.today.getMonth()+1] + '          Total : ' +
-                  this.totalDue + '          Count : ' + this.totalCount
-                
-              }
-              content={monthContent}
+          <ItemGrid xs={12} sm={12} md={12}>
+            <TimeAnalysisCard
+              data={this.state.monthData}
             />
           </ItemGrid>
-          <ItemGrid xs={12} sm={12} md={6}>
+          <ItemGrid xs={12} sm={12} md={12}>
             <RegularCard
               cardTitle="Expirations"
               cardSubtitle={
@@ -397,18 +281,18 @@ class Dashboard extends React.Component {
           </ItemGrid>
         </Grid>
         <Grid container>
-          <ItemGrid xs={12} sm={12} md={6}>
+          <ItemGrid xs={12} sm={12} md={12}>
             <RegularCard
               cardTitle="Bank Status"
               cardSubtitle="Limits"
               content={bankContent}
                 />
           </ItemGrid>
-          <ItemGrid xs={12} sm={6} md={6}>
+          <ItemGrid xs={12} sm={12} md={12}>
             <RegularCard
               cardTitle="Payments"
               cardSubtitle={
-                " Payments for the next 30 days"        
+                "Payments for the next 30 days"              
               }
               content={next30Content}
             />

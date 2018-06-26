@@ -528,7 +528,7 @@ router.put('/:id/addNewCycle', function(req, res) {
     //var total_payed = parseFloat(LC.payment.total_payed);
     //var payed_amt = parseFloat(req.body.payed_amt);
 
-    total_due = isNaN(total_due) ? LCMethods.updateTotal(LC) : total_due + due_amt;
+    total_due = LCMethods.updateTotal(LC)
     //total_payed += payed_amt;
     
     LC.payment.total_due = total_due;
@@ -585,12 +585,11 @@ router.put('/:id/editCycle', function(req, res) {
             GST: req.body.payGST,
             TID: req.body.payTID
         }
-
+    
     // saving the update cycle
     LC.payment.cycles[idx] = cycle;
 
     var total_due = LCMethods.updateTotal(LC)
-
     console.log(total_due)
 
     LC.payment.total_due = total_due;

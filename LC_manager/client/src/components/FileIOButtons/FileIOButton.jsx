@@ -24,54 +24,56 @@ class FileIOButton extends React.Component {
 		super(props)
 		this.state = {
 			selected: false,
-			submitted: props.exists
 		}			
-		this.name = props.name
-		console.log(this.name)
-		this.id = props.id
-		this.index = props.index
+	}
+
+	resetState = () => {
+		this.setState({selected: false})
+		this.filename = ''
 	}
 
 	handleChange = (files) => {
-		console.log('in files: ' + JSON.stringify(files))
 		this.setState({selected:true})
 		this.data = new FormData()
 		this.data.append('file',files[0])
-		this.data.append('name',this.name)		
-		this.data.append('index',this.index)
+		this.data.append('name',this.props.name)		
+		this.data.append('index',this.props.index)
 		this.filename = files[0].name
 	}
 
-	handleSubmit = ({}) => {
-		const url = '/documents/' + this.id
+	handleSubmit = async () => {
+		const url = '/documents/' + this.props.id
 
-		fetch(url,{
+		const response = await fetch(url,{
 			method: 'POST',
 			body: this.data
-		}).then(response => {
-			this.setState({submitted : true})
-			this.props.onSubmit(response.json().data)
-		}).catch(error => console.log(error))
+		})
+		const body = await response.json();
+		console.log(body)
+		if(response.status != 200)
+			console.log(body.message)
+		else {
+			this.resetState()
+			this.props.onSubmit(body);	
+		}		
 	}
 
-	handleDownload = (event) => {
-		console.log('handleDownlaod : name: '+ this.name)
-		const url = '/documents/' + this.id
-					+ '/' + String(this.index)
-					+ '/' + this.name		
+	handleDownload = (event) => {		
+		const url = '/documents/' + this.props.id
+					+ '/' + String(this.props.index)
+					+ '/' + this.props.name		
 
 		var a = document.createElement("a");
 		fetch (url).
 		then(response => {
-			console.log(response)
 			return response.blob();
 		}).then( blob => {
 				var documentURL = window.URL.createObjectURL(blob);
-				/*a.href = documentURL
+				a.href = documentURL
 				a.download = 'download.pdf'
 				a.click()
-				window.URL.revokeObjectURL(documentURL)*/
-				window.open(documentURL)
+				window.URL.revokeObjectURL(documentURL)
+				//window.open(documentURL)
 		}).catch(error => {
 			console.log(error)
 		})
@@ -80,7 +82,7 @@ class FileIOButton extends React.Component {
 	render() {
 		var {classes} = this.props;
 
-		if(this.state.submitted){
+		if(this.props.exists ){
 			return(
 				(<Button size='medium' className={classes.button} variant='outlined'
 						onClick={this.handleDownload}>Download<FileDownload/></Button>)

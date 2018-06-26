@@ -29,7 +29,6 @@ class LCHome extends React.Component{
 
     callAllApi = async () => {
       const response = await fetch('/LCs',{credentials:'include'});
-      console.log(response)
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
       
@@ -38,7 +37,6 @@ class LCHome extends React.Component{
     };
 
     componentDidMount() {
-      console.log('async was called')
       this.callAllApi()
       .then(res => this.setState({ LCs: res }))
       .catch(err => console.log(err));
@@ -47,9 +45,7 @@ class LCHome extends React.Component{
     updateLCPanel = (key,LC) => {
       var LCs = this.state.LCs
       LCs[key] = LC;
-      console.log(LCs)
       this.setState({LCs: LCs})
-      console.log(this.state.LCs)
     }
 
     deleteLC = (id) => {

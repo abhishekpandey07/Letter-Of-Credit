@@ -83,17 +83,21 @@ router.post('/login', function(req, res, next) {
   		req.body.password
   		){
 
-  		console.log(req.body.username)
   		userDB.findOne({username:req.body.username}, function(error,user){
   			if(error) {
   				console.error(error)
   				error = new Error('User not found!')
   				error.status = 404
           res.status = 404
-  				return res.send(error)
+  				return res.end(error)
   			}
 
-  			bcrypt.compare(req.body.password,user.password, (error,same) => {
+        if(user == null){
+          res.status = 404;
+          return res.end("User doesn't exists.")
+        }
+  			
+        bcrypt.compare(req.body.password,user.password, (error,same) => {
   				if(error){
   					console.log(error)
   					res.send(error)

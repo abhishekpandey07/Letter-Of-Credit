@@ -193,7 +193,14 @@ class CustomPaginationActionsTable extends React.Component {
                   onChangePage={this.handleChangePage}
                   onChangeRowsPerPage={this.handleChangeRowsPerPage}
                   ActionsComponent={TablePaginationActionsWrapped}
+                  rowsPerPageOptions={[5,10]}
                 />
+                {this.props.download?
+                  
+                  <TableCell style={{display: "flex", border: "none",padding: "20px 0px"}}>
+                    {this.props.download}
+                  </TableCell>
+                  : <div/>}
               </TableRow>
             </TableFooter>
           </Table>

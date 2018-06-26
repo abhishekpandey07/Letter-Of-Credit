@@ -143,6 +143,7 @@ class LCPanel extends React.Component {
       closed: states.notCompleted,
       refFile: ''
     }
+    console.log(this.props.LC)
   }
 
   resetState = () => {
@@ -177,7 +178,6 @@ class LCPanel extends React.Component {
       closed: states.notCompleted,
       refFile: ''
     })
-    console.log(this.state.extensionContent)
   }
 
   handlePanelChange = panel => (event, expanded) => {
@@ -219,9 +219,7 @@ class LCPanel extends React.Component {
       }
       case 'openDT':{
         var openDT = moment(event.target.value)
-        console.log(openDT)
         var expDT = openDT.add(90,'day')
-        console.log(expDT.format('YYYY-MM-DD'))
         this.setState({
           [name]: event.target.value,
           expDT: expDT.format('YYYY-MM-DD')
@@ -238,7 +236,6 @@ class LCPanel extends React.Component {
       }
       default: this.setState({[name]:event.target.value});
     }
-    console.log(this.state)
   }
 
   // generators
@@ -301,8 +298,7 @@ class LCPanel extends React.Component {
         handle : this.handleCycleEditClick,
         tip: 'Edit',
         id: 'Edit',
-      }
-      
+      }   
     ]
     
 
@@ -316,7 +312,6 @@ class LCPanel extends React.Component {
                         parseFloat(item.pay.bill_com) +
                         parseFloat(item.pay.post) +
                         parseFloat(item.pay.GST));
-        console.log(item)
         const render = [true,item.payed==true,this.state.cycleContent === cycleSwitch.edit,
                         this.state.cycleContent === cycleSwitch.edit]
         const icons = this.generateToolTipIcons(paymentIconTools,index,render);
@@ -658,7 +653,7 @@ class LCPanel extends React.Component {
     const {classes, LC} = this.props;
     const docDet = this.state.cycleFile ? cycleFiles[this.state.cycleFile] : null
     const document = docDet ? LC.payment.cycles[this.state.cycleIndex].documents[docDet.abbrev]: null
-
+    var val = this.state.cycleFile ? cycleFiles[this.state.cycleFile].name : ''
     const selection = 
         <Grid item className={classes.grid} xs={12} sm={4}>
           <FormControl fullWidth={true} margin='normal'>
@@ -671,6 +666,7 @@ class LCPanel extends React.Component {
                 name: 'cycleFile',
                 id: 'cycleFileSelect'
               }}
+              value={val}
             >
               {cycleFiles.reduce((acc,prop,key) => {
                 acc.push(<option value={key}>{prop.name}</option>)
@@ -679,56 +675,44 @@ class LCPanel extends React.Component {
             </Select>
           </FormControl>
         </Grid>
+        
     const form = 
-        document ?
-        document.rec ?        
+        (document && document.rec)?
         <div>
           <Grid container>
             {selection}
             <Grid item className={classes.grid} xs={12} sm={5}>
               <Typography variant='body2'>
-                <b>Uploaded! Click to download.</b>
+                {
+                    document.rec == true ?
+                    <b>Uploaded! Click to download.</b> :
+                    <b>Not Uploaded! Select or Drag and drop to upload</b>    
+                }
               </Typography>
               <FileIOButton id={LC._id}
                 name={docDet.value} index={index}
                 onSubmit = {this.onDocumentSubmit}
-                exists = {document.rec}/>
+                exists = {document.rec == true}/>
             </Grid>
           </Grid>
-        </div>
+        </div>       
         :
-        <div>
-          <Grid container>
+         this.state.cycleFile ?
+         <div>
+           <Grid container>
             {selection}
-            <Grid item className={classes.grid} xs={12} sm={5}>
-              <Typography variant='body2'>
-                <b>Not Uploaded! Select or Drag and drop to upload</b>
-              </Typography>
-              <FileIOButton id={LC._id}
-                name={docDet.value} index={index}
-                onSubmit = {this.onDocumentSubmit}
-                exists = {false}
-                />
-            </Grid>       
-          </Grid>
-        </div>
-          :
-          this.state.cycleFile?
-        <div>
-          <Grid conatiner>
-            {selection}
-            <Grid item className={classes.grid} xs={12} sm={5}>
-              <Typography variant='body2'>
-                <b>Not Uploaded! Select or Drag and drop to upload</b>
-              </Typography>
-              <FileIOButton id={LC._id}
-                name={docDet.value} index={index}
-                onSubmit = {this.onDocumentSubmit}
-                exists = {false}/>
+             <Grid item className={classes.grid} xs={12} sm={5}>
+                <Typography variant='body2'>
+                  <b>Not Uploaded! Select or Drag and drop to upload</b>    
+                </Typography>
+                <FileIOButton id={LC._id}
+                  name={docDet.value} index={index}
+                  onSubmit = {this.onDocumentSubmit}
+                  exists = {false}/>
+              </Grid>
             </Grid>
-          </Grid>
-        </div> 
-        :
+          </div>
+         :
         <Grid container>
           {selection}
         </Grid>
@@ -776,7 +760,7 @@ class LCPanel extends React.Component {
         </Grid>
     const form = 
         document ?
-        document.rec ?        
+        Boolean(document.rec) == true ?        
         <div>
           <Grid container>
             {selection}
@@ -787,7 +771,7 @@ class LCPanel extends React.Component {
               <FileIOButton id={LC._id}
                 name={docDet.value} index={index}
                 onSubmit = {this.onDocumentSubmit}
-                exists = {document.rec}/>
+                exists = {true}/>
             </Grid>
           </Grid>
         </div>
@@ -1049,7 +1033,6 @@ class LCPanel extends React.Component {
   }
 
   handleCycleEditClick = (cycleIndex) => (event) => {
-    console.log(cycleIndex)
     const cycle = this.props.LC.payment.cycles[cycleIndex]
     this.setState({cycleContent: (cycleIndex===this.state.cycleIndex?
                     this.state.cycleContent === cycleSwitch.cycleEdit?
@@ -1069,7 +1052,6 @@ class LCPanel extends React.Component {
   }
 
   handleCyclePaymentClick = (cycleIndex) => (event) => {
-    console.log(cycleIndex)
     const cycle = this.props.LC.payment.cycles[cycleIndex]
     this.setState({cycleContent: (cycleIndex===this.state.cycleIndex?
                     this.state.cycleContent === cycleSwitch.cyclePayCheck?
@@ -1119,7 +1101,6 @@ class LCPanel extends React.Component {
   }
 
   handleCycleEditSubmit = (event) => {
-    console.log(this.state.due_amt)
     const payload = {
       _method: 'PUT',
       due_DT: this.state.due_DT,
@@ -1242,7 +1223,6 @@ class LCPanel extends React.Component {
   }
 
   handleEditExtensionSubmit = (event) => {
-    console.log('in editextension submit : ' + this.state )
     var payload = {
       _method : 'PUT',
       openDT: this.state.openDT,
@@ -1255,7 +1235,6 @@ class LCPanel extends React.Component {
       index: this.state.extensionIndex
     }
 
-    console.log('Extension Edit Payload: ' + payload)
     const url = 'LCs/'+this.props.LC._id+
                     '/addOrEditExtension'
     axios.post(url,payload)

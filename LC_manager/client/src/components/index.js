@@ -7,6 +7,7 @@ import ProfileCard from "./Cards/ProfileCard.jsx";
 import RegularCard from "./Cards/RegularCard.jsx";
 import StatsCard from "./Cards/StatsCard.jsx";
 import TasksCard from "./Cards/TasksCard.jsx";
+import TimeAnalysisCard from './Cards/TimeAnalysisCard'
 
 import BanksTable from './BanksTable/BanksTable'
 // ##############################
@@ -95,6 +96,7 @@ export {
   RegularCard,
   StatsCard,
   TasksCard,
+  TimeAnalysisCard,
   // CustomButtons
   Button,
   IconButton,

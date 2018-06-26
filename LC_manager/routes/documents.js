@@ -40,6 +40,7 @@ router.param('id', function(req,res,next,id){
     LCDB.findById(id)
       .populate('supplier')
       .populate('issuer')
+      .populate('project')
       .exec(function(error,LC){
           if (error){
             console.log('Error retreiving LC with ID : '+ id)
@@ -89,8 +90,8 @@ router.route('/:id').post(function(req, res) {
       var folder = 'open_ext_documents/'
     }
 
-    var filepath = sName +'/' + LC.LC_no +'/' + name +'/' + folder;
-    var filename = getDateString(date) + '.' + file.name.split('.')[1]
+    var filepath = sName + '/' + LC.LC_no + '/' + folder +'/' + name;
+    var filename = getDateString(date) + '.' + file.name.split('.').slice(-1)
 
    
     var newpath = baseDirectory + '/' +filepath + filename
@@ -137,7 +138,7 @@ router.route('/:id').post(function(req, res) {
         if (err){ 
             console.log('moving error')
             console.log(err);
-            return res.send(err)
+            return res.end(err)
         }
         //res.writeHead(200,{"Content-Type" : "text/html"});
         //res.write('File uploaded and moved to '+ newpath+"<br>");

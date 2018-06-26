@@ -3,11 +3,12 @@ CLIENT
     BUGS:
         ROUTING: Fix rendering of login page between redirects
 
-    DASsaxasdHBOARD:
+    DASHBOARD:
 done    Convert Week to Month
 done    Add routines for Listing LCs expiring in next 14 days
 done    Format Amount
         Remove Projects column from payments
+        Create a TimeAnalysisCard to show data in various forms.
 
 
 
@@ -17,22 +18,14 @@ done    Format Amount
 
             Automate Payments using due dates.
 
-            Make Panel neater.
+    done    Make Panel neater.
 
-            Replace payed_amt attribute with payed boolean.
+    done    Replace payed_amt attribute with payed boolean.
 
-            create a Documents array in payment field:
+    done    create a Documents array in payment field:
                 documents: Bill of exchange
                            Acceptance letter + Charges
-                           Bank Debit Advice + Charges
-
-            
-
-
-
-
-
-            Remove 
+                           Bank Debit Advice + Charges 
 
         Close:
     done    Fix close button.
