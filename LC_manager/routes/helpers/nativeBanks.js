@@ -88,8 +88,8 @@ function onPayment(bankID,amount,callback) {
       return callback(error,null)
     } else {
       console.log('Updating LC_used')
-      bank.LC_used = parseFloat(bank.LC_used) - amount
-      bank.save(function(error,bank){
+      bank.LC_used = parseFloat(bank.LC_used) - parseFloat(amount)
+      bank.save(function(error,bankID){
           if(error){
               console.error(error);
               return callback(error,bank)

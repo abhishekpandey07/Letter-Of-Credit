@@ -56,7 +56,7 @@ const styles = theme => ({
   textField: {
     marginLeft: theme.spacing.unit,
     marginRight: theme.spacing.unit,
-    width:200,
+    //width:100,
     flexBasis: '33.33%',
     flexShrink:0,
   },
@@ -126,6 +126,7 @@ class LCPanel extends React.Component {
       payPost: 89,
       payBC: 0,
       payGST: 0,
+      payMode:'',
       // extension states
       extensionIndex:null,
       extensionContent: extensionSwitch.none,
@@ -163,6 +164,7 @@ class LCPanel extends React.Component {
       payPost: 89,
       payBC: 0,
       payGST: 0,
+      payMode:'',
       // extension states
       extensionIndex:null,
       extensionContent: extensionSwitch.none,
@@ -312,11 +314,11 @@ class LCPanel extends React.Component {
                         parseFloat(item.pay.bill_com) +
                         parseFloat(item.pay.post) +
                         parseFloat(item.pay.GST));
-        const render = [true,item.payed==true,this.state.cycleContent === cycleSwitch.edit,
+        const render = [true,(item.pay.mode=='Not Updated' && item.payed==true),this.state.cycleContent === cycleSwitch.edit,
                         this.state.cycleContent === cycleSwitch.edit]
         const icons = this.generateToolTipIcons(paymentIconTools,index,render);
         
-        array.push([due,formatAmount(item.due_amt),ref,charges,icons])
+        array.push([due,formatAmount(item.due_amt),ref,formatAmount(charges),icons])
         return array
       }
       return array
@@ -469,8 +471,10 @@ class LCPanel extends React.Component {
   </div>
     return form
   }
-
+  
+  ////
   generateCyclePaymentForm = (index) => {
+    const paymentModes = ['Regular','Devolved']
     const {classes} = this.props;
     const form = 
         <Grid container>
@@ -487,15 +491,36 @@ class LCPanel extends React.Component {
                 shrink:true
               }}
             />
+
           </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+          <FormControl fullWidth={true} margin='normal'>
+            <InputLabel htmlFor="cycleFileSelect"> Payment Type</InputLabel>
+            <Select
+              required
+              native
+              onChange={this.handleValueChange('payMode')}
+              inputProps={{
+                name: 'Payment Type',
+                id: 'paymentType'
+              }}
+              value={this.state.payMode}
+            >
+              {paymentModes.reduce((acc,prop,key) => {
+                acc.push(<option value={prop}>{prop}</option>)
+                return acc
+              },[<option/>])}
+            </Select>
+          </FormControl>
+        </Grid>
           <Grid item className={classes.grid} xs={12} sm={4}>
             <FormControl margin='normal' fullWidth>
               <InputLabel htmlFor="bill_com">Bill Commission</InputLabel>
               <Input
                 id="bill_com"
                 type="number"
-                value={this.state.cycleBC}
-                onChange={this.handleValueChange('cycleBC')}
+                value={this.state.payBC}
+                onChange={this.handleValueChange('payBC')}
                 className={classes.textField}
                 startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
               />
@@ -503,12 +528,12 @@ class LCPanel extends React.Component {
           </Grid>
           <Grid item className={classes.grid} xs={12} sm={4}>
             <FormControl margin='normal' fullWidth>
-              <InputLabel htmlFor="cyclePost">Posting Charges</InputLabel>
+              <InputLabel htmlFor="payPost">Posting Charges</InputLabel>
               <Input
                 id="cyclePost"
                 type="number"
-                value={this.state.cyclePost}
-                onChange={this.handleValueChange('cyclePost')}
+                value={this.state.payPost}
+                onChange={this.handleValueChange('payPost')}
                 className={classes.textField}
                 startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
               />
@@ -527,6 +552,7 @@ class LCPanel extends React.Component {
               />
             </FormControl>
           </Grid>
+
         </Grid>
       return form
   }
@@ -554,7 +580,7 @@ class LCPanel extends React.Component {
   }
 
 ////function to update payment details.
-  generateCyclePaymentform = () => {
+  generateCyclePaymentSubmitForm = () => {
     const cyclePaymentForm = this.generateCyclePaymentForm()
     const {classes} = this.props
     const form = 
@@ -938,7 +964,7 @@ class LCPanel extends React.Component {
 
   cycleContentSwitch = () => {
     const newCycleForm = this.generateCycleCreationForm();
-    const paymentCheckForm = this.generateCyclePaymentForm();
+    const paymentCheckForm = this.generateCyclePaymentSubmitForm();
     const cycleEditForm = this.generateCycleEditForm();
     const LCEditForm = this.generateLCEditForm();
     
@@ -1048,6 +1074,7 @@ class LCPanel extends React.Component {
                    payBC: cycle.pay.bill_com,
                    payGST: cycle.pay.GST,
                    pay_ref: cycle.LB_pay_ref,
+                   payMode: cycle.pay.mode
                  })
   }
 
@@ -1061,6 +1088,7 @@ class LCPanel extends React.Component {
                    payPost: cycle.pay.post,
                    payBC: cycle.pay.bill_com,
                    payGST: cycle.pay.GST,
+                   payMode: cycle.pay.mode
                  })
   }
 
@@ -1113,6 +1141,7 @@ class LCPanel extends React.Component {
       payBC: this.state.payBC,
       payGST: this.state.payGST,
       LB_pay_ref: this.state.pay_ref,
+      payMode: this.state.payMode,
       index: this.state.cycleIndex
     }
     const url = 'LCs/'+this.props.LC._id+
@@ -1149,7 +1178,8 @@ class LCPanel extends React.Component {
       payPost: this.state.payPost,
       payBC: this.state.payBC,
       payGST: this.state.payGST,
-      index: this.state.cycleIndex
+      index: this.state.cycleIndex,
+      payMode: this.state.payMode
     }
     const url = 'LCs/'+this.props.LC._id+
                     '/checkCyclePayment'

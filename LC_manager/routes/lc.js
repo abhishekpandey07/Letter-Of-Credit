@@ -40,7 +40,9 @@ router.route('/')
 
     console.log('request session: ' + req.sessionID)
     console.log(req.session)
-	LCDB.find({})
+    try{
+	LCDB.find({},null,{sort:[{'LC_no':1}]})
+        .sort()
 	    .populate('supplier')
 	    .populate('issuer')
         .populate('project',['name','location'])
@@ -66,6 +68,9 @@ router.route('/')
 		});
 	    }
 	});
+    }catch(error){
+        console.log(error)
+    }
     });
 
 // post request to create a supplier entry
@@ -583,9 +588,9 @@ router.put('/:id/editCycle', function(req, res) {
             bill_com: req.body.payBC,
             post: req.body.payPost,
             GST: req.body.payGST,
-            TID: req.body.payTID
+            TID: req.body.payTID,
+            mode: req.body.payMode
         }
-    
     // saving the update cycle
     LC.payment.cycles[idx] = cycle;
 
@@ -625,13 +630,14 @@ router.put('/:id/checkCyclePayment', function(req, res) {
     
     // old cycle
     var cycle = LC.payment.cycles[idx]
-
+    console.log(req.body.payMode)
     //updating payment details
     cycle.pay = {
             bill_com: req.body.payBC,
             post: req.body.payPost,
             GST: req.body.payGST,
-            TID: req.body.payTID
+            TID: req.body.payTID,
+            mode: req.body.payMode
         }
 
     // saving the update cycle
@@ -946,6 +952,8 @@ router.delete('/:id/deleteExtension', function(req, res) {
     console.log(index)
     
     LC.dates.splice(index,1)
+
+    LC.dates.length === 1 ? LC.status='Active' : {}
 
     LC.save(function (err, LCID) {
         if (err) {

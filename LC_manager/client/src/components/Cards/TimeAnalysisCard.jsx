@@ -73,7 +73,7 @@ class TimeAnalysisCard extends React.Component {
   };  
 
   getDownloadButton(data){
-    const headers = ['Issuer','Supplier', 'LCNo', 'DueDate' ,'DueAmount'];
+    const headers = ['Issuer','Supplier', 'LCNo', 'DueDate' ,'DueAmount','Payment'];
     var workBookData = null
     var workBook = null
     if(data!= null){
@@ -83,7 +83,8 @@ class TimeAnalysisCard extends React.Component {
           Supplier: prop[1],
           LCNO : prop[2],
           DueDate: prop[3],
-          Dueamount: Number(prop[4].split(',').join(''))
+          Dueamount: Number(prop[4].split(',').join('')),
+          Payment: prop[5]
         })
         return acc;
       },[])
@@ -98,6 +99,7 @@ class TimeAnalysisCard extends React.Component {
                     <ExcelColumn label="LC no." value="LCNO"/>
                     <ExcelColumn label="Due Date" value="DueDate"/>
                     <ExcelColumn label="Due Amount" value="Dueamount"/>
+                    <ExcelColumn label="Payment Type" value="Payment"/>
                 </ExcelSheet>
             </ExcelFile>
     }
@@ -118,11 +120,11 @@ class TimeAnalysisCard extends React.Component {
         if((prop._id.month===(this.state.value + 1))){
           const tableData = prop.LC.map((lc,index) => {
             // use this to show paid done Icon
-            const paid = lc.payment.payed_amt > 0 ? 'PAYED' : 'NOT PAYED'
+            const paid = lc.payment.payed ? lc.payment.pay.mode : 'NOT PAYED'
             
             const date = formatDate(new Date(lc.payment.due_DT))
 
-            const row = [String(prop._id.issuer),lc.supplier[0],String(lc.LC_no),date,formatAmount(lc.payment.due_amt)]
+            const row = [String(prop._id.issuer),lc.supplier[0],String(lc.LC_no),date,formatAmount(lc.payment.due_amt),paid]
             data.push(row) 
             })
           this.totalDue += parseFloat(prop.amount)
@@ -137,9 +139,9 @@ class TimeAnalysisCard extends React.Component {
             Total Amount Due : Rs.{formatAmount(this.totalDue)}
           </Typography>
           <PageTable
-            isNumericColumn={[false,false,false,false,true]}
+            isNumericColumn={[false,false,false,false,true,true]}
             tableHeaderColor="primary"
-            tableHead = {['Issuer','Supplier', 'LC No.', 'Due Date' ,'Due Amount']}
+            tableHead = {['Issuer','Supplier', 'LC No.', 'Due Date' ,'Due Amount',"Payment Type"]}
             tableData = {monthTableData}
             download = {downloadButton}
           />

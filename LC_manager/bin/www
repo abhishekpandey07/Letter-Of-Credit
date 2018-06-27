@@ -89,5 +89,8 @@ function onListening() {
   debug('Listening on ' + bind);
 
   // adding cron routines
-  jobs.lcupdate()
+  jobSchedules = jobs.getJobSchedules()
+  var paymentUpdate = jobSchedules.paymentUpdate
+  console.log(paymentUpdate.nextInvocation())
+
 }

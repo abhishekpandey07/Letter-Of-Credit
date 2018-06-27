@@ -30,11 +30,11 @@ done    Format Amount
         Close:
     done    Fix close button.
 
-            Add closing routines
-                Closing Advice
-                Acknowledgment
-                Margin Clearance Date
-                Interest
+    needed      Add closing routines
+    needed      Closing Advice
+    needed      Acknowledgment
+    needed      Margin Clearance Date
+    needed      Interest
 
         EDIT:
     done    ERROR IN BANK UPDATE METHOD. lc.payment.total_payed : says payment is undefined.
@@ -67,4 +67,5 @@ OTHER
 
 ADD PURCHASE ORDER ATTRIBUTES.
 
+ADD email capabilities
 

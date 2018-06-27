@@ -74,7 +74,7 @@ class Banks extends React.Component{
         const used = String(bank.LC_used)                            
         const available = String(parseFloat(limit)-parseFloat(used))
         banks.push([ bank.name, bank.branch, bank.IFSC, formatAmount(bank.LC_limit),
-                      formatAmount(bank.LC_used), available,active])
+                      formatAmount(bank.LC_used), formatAmount(available),active])
         return banks
 
       },[])

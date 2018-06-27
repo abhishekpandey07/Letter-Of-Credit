@@ -88,12 +88,12 @@ router.post('/login', function(req, res, next) {
   				console.error(error)
   				error = new Error('User not found!')
   				error.status = 404
-          res.status = 404
+          res.status(404)
   				return res.end(error)
   			}
 
         if(user == null){
-          res.status = 404;
+          res.status(404);
           return res.end("User doesn't exists.")
         }
   			
@@ -106,7 +106,7 @@ router.post('/login', function(req, res, next) {
   				if(!same){
   					error = new Error('Incorrect Password')
   					error.status = 401
-            res.status = 401
+            res.status(401)
   					return res.send(error)
   				} else{
   					// what to do if the user exists and password matches!

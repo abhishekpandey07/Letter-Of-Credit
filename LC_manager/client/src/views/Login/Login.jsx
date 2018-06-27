@@ -60,12 +60,25 @@ class LoginPage extends React.Component {
     super(props);
     this.state = {
       authenticated: false,
+      error: false,
     }
   }
 
-  componentWillMount = () => {
-
+  checkAuthentication = async () => {
     const url = '/users/sessionAuthentication'
+    var res = await axios.get(url,{credentials: 'include'})
+    const data = await EJSON.parse(res.data);
+    if(data.authenticated === true){
+        console.log('Authenticated! providing access')
+        this.props.onLoginSuccess(data)
+        return true
+      }
+    return false
+  } 
+
+  /*componentWillMount = async () => {
+
+    /*const url = '/users/sessionAuthentication'
     axios.get(url,{credentials: 'include'})
     .then(res => {
       const data = EJSON.parse(res.data);
@@ -76,7 +89,10 @@ class LoginPage extends React.Component {
     }).catch( error => {
       console.log(error)
     })
-  }
+
+    var loggedIn = await this.checkAuthentication()
+    loggedIn? console.log('login Successfull'):{}
+  }*/
 
   /*handleValueChange = target => event => {
     this.setState({ [target] : event.target.value });
@@ -97,15 +113,22 @@ class LoginPage extends React.Component {
 
     axios.post(url,payload,{credentials:'include'})
     .then(res => {
-      console.log(res)
-      const data = EJSON.parse(res.data);
-      if(data.authenticated === true){
-        console.log('Authenticated! providing access')
-        this.setState({
-          authenticated: true 
-        })
-        this.props.onLoginSuccess(data)
+      if(res.status == 200){
+        const data = EJSON.parse(res.data);
+        if(data.authenticated === true){
+          console.log('Authenticated! providing access')
+          this.setState({
+            authenticated: true 
+          })
+          this.props.onLoginSuccess(data)
+        }
       }
+
+      if(res.status==401){
+          console.log('not authenticated')
+          this.setState({error:true})        
+      }
+
     })
     .catch(error => {
       console.error(error)
@@ -141,6 +164,7 @@ class LoginPage extends React.Component {
                 <div>
                 <FormControl fullWidth={true} margin='normal'>
                   <TextField
+                    error={this.state.error}
                     required
                     id='pass'
                     type='password'

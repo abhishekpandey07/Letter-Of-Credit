@@ -30,6 +30,7 @@ const CycleSchema = new mongoose.Schema({
         bill_com: { type : mongoose.Schema.Types.Decimal128, default: 0},
         post: { type : mongoose.Schema.Types.Decimal128, default: 0},
         GST : { type : mongoose.Schema.Types.Decimal128, default: 0},
+        mode: {type: String, enum: ['Not Updated','Regular', 'Devolved']},
         TID: {
             type: String,
             default: ''
