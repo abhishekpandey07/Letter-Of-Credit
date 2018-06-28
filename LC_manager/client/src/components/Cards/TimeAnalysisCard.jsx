@@ -14,7 +14,9 @@ import { BugReport, Code, Cloud, Calendar } from "@material-ui/icons";
 import { Tasks } from "components";
 import PageTable from 'components/Table/PaginationTable'
 
-import { bugs, website, server } from "variables/general";
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Switch from '@material-ui/core/Switch'
+
 
 import tasksCardStyle from "assets/jss/material-dashboard-react/tasksCardStyle";
 import Button from '@material-ui/core/Button'
@@ -62,22 +64,25 @@ class TimeAnalysisCard extends React.Component {
     super(props)
     this.today = new Date(Date.now())
     this.state = {
-      value: this.today.getMonth()
+      value: this.today.getMonth(),
+      dateWise:false
     }
     
     console.log(this.props.data)
   };
 
-  handleChange = (event, value) => {
-    this.setState({ value });
+  handleChange = name => (event,value) => {
+    this.setState({ [name] : value});
+    console.log(this.state)
   };  
 
   getDownloadButton(data){
     const headers = ['Issuer','Supplier', 'LCNo', 'DueDate' ,'DueAmount','Payment'];
-    var workBookData = null
+    var monthData = null
+    var dateData = null
     var workBook = null
     if(data!= null){
-      workBookData = data.reduce((acc,prop,key) => {
+      monthData = data.monthData.reduce((acc,prop,key) => {
         acc.push({
           Issuer: prop[0],
           Supplier: prop[1],
@@ -88,18 +93,27 @@ class TimeAnalysisCard extends React.Component {
         })
         return acc;
       },[])
+      monthData.push({
+        DueDate: 'Total',
+        Dueamount: this.totalDue
+
+      })
 
       const name = 'LC_payments_' + month[this.state.value]
 
       workBook =
             <ExcelFile element={downloadIcon} filename={name}>
-                <ExcelSheet data={workBookData} name={month[this.state.value]}>
+                <ExcelSheet data={monthData} name={month[this.state.value]}>
                     <ExcelColumn label="Issuer" value="Issuer"/>
                     <ExcelColumn label="Supplier" value="Supplier"/>
                     <ExcelColumn label="LC no." value="LCNO"/>
                     <ExcelColumn label="Due Date" value="DueDate"/>
                     <ExcelColumn label="Due Amount" value="Dueamount"/>
                     <ExcelColumn label="Payment Type" value="Payment"/>
+                </ExcelSheet>
+                <ExcelSheet data={data.dateWiseData} name={'date_wise_' + month[this.state.value]}>
+                    <ExcelColumn label="Due Date" value="date"/>
+                    <ExcelColumn label="Due Amount" value="amount"/>
                 </ExcelSheet>
             </ExcelFile>
     }
@@ -116,6 +130,7 @@ class TimeAnalysisCard extends React.Component {
       console.log('creating month content')
       this.totalDue = 0
       this.totalCount = 0
+
       monthTableData = this.props.data.reduce((data,prop,key) => {
         if((prop._id.month===(this.state.value + 1))){
           const tableData = prop.LC.map((lc,index) => {
@@ -125,26 +140,64 @@ class TimeAnalysisCard extends React.Component {
             const date = formatDate(new Date(lc.payment.due_DT))
 
             const row = [String(prop._id.issuer),lc.supplier[0],String(lc.LC_no),date,formatAmount(lc.payment.due_amt),paid]
-            data.push(row) 
+            data.monthData.push(row) 
+
+            var index = data.dateWiseData.findIndex((obj)=>{
+              return (obj.date == date) ? true : false
+            })
+
+            index == -1 ? data.dateWiseData.push({date: date, amount: parseFloat(lc.payment.due_amt)}) :
+            data.dateWiseData[index].amount += parseFloat(lc.payment.due_amt)
+
             })
           this.totalDue += parseFloat(prop.amount)
           this.totalCount += prop.count
         }
         return data
+      },{monthData:[],dateWiseData:[]})
+
+      
+      const dateWiseData = monthTableData.dateWiseData.reduce((list,data,key)=>{
+        list.push([data.date,formatAmount(data.amount)])
+        return list
       },[])
+      console.log(monthTableData.dateWiseData)
       const downloadButton = this.getDownloadButton(monthTableData)
+
       monthContent = (
         <div>
-          <Typography variant='body2' align='left' padding='10'>
+          <Typography variant='body2' align='left' padding='10' style={{flexBasis: 0.8, flexShrink:0}}>
             Total Amount Due : Rs.{formatAmount(this.totalDue)}
           </Typography>
-          <PageTable
-            isNumericColumn={[false,false,false,false,true,true]}
-            tableHeaderColor="primary"
-            tableHead = {['Issuer','Supplier', 'LC No.', 'Due Date' ,'Due Amount',"Payment Type"]}
-            tableData = {monthTableData}
-            download = {downloadButton}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={this.state.dateWise}
+                onChange={this.handleChange('dateWise')}
+                value="checkedB"
+                color="primary"
+              />
+            }
+            label="Day Wise Payments"
+            style={{flexBasis:0.8, flexShrink:0}}
           />
+          {this.state.dateWise?
+            <PageTable
+              isNumericColumn={[false,true]}
+              tableHeaderColor="primary"
+              tableHead = {['Due Date',' Due Amount']}
+              tableData = {dateWiseData}
+              download = {downloadButton}
+            />
+            :
+            <PageTable
+              isNumericColumn={[false,false,false,false,true,true]}
+              tableHeaderColor="primary"
+              tableHead = {['Issuer','Supplier', 'LC No.', 'Due Date' ,'Due Amount',"Payment Type"]}
+              tableData = {monthTableData.monthData}
+              download = {downloadButton}
+            />
+          }
         </div>
         )
     }
@@ -172,7 +225,7 @@ class TimeAnalysisCard extends React.Component {
                 indicator: classes.displayNone
               }}
               value={this.state.value}
-              onChange={this.handleChange}
+              onChange={this.handleChange('value')}
               textColor="inherit"
             >
             { month.map((prop,key) => {

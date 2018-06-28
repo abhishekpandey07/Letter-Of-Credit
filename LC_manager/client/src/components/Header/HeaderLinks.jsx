@@ -61,7 +61,7 @@ class HeaderLinks extends React.Component {
           activeClassName="active"
 
         >
-          <Button varaint='contained' >
+          <Button varaint='contained' style={{margin:"0px 15px"}}>
             Register New User
           </Button>
         </NavLink>
@@ -96,7 +96,7 @@ class HeaderLinks extends React.Component {
             <p className={classes.linkText}>Dashboard</p>
           </Hidden>
         </IconButton>
-        <Manager style={{ display: "inline-block" }}>
+        {/*<Manager style={{ display: "inline-block" }}>
           <Target>
             <IconButton
               color="inherit"
@@ -167,7 +167,7 @@ class HeaderLinks extends React.Component {
               </Grow>
             </ClickAwayListener>
           </Popper>
-        </Manager>
+        </Manager>*/}
         <Manager style={{ display: "inline-block" }}>
           <Target>
             <IconButton

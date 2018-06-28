@@ -1,7 +1,18 @@
 var nodemailer = require('nodemailer');
+var sendmail = require('sendmail')()
+
+sendmail({
+	from:'lcmanager@localhost.com',
+    to: 'mcpandey@mvomni.com',
+    subject: 'test sendmail',
+    html: 'Mail of test sendmail ',
+  }, function(err, reply) {
+    console.log(err && err.stack);
+    console.dir(reply);
+})
 
 
-var transporter = nodemailer.createTransport({
+/*var transporter = nodemailer.createTransport({
 	name: 'localhost',
 	secure:false
 });
@@ -19,4 +30,4 @@ transporter.sendMail(mailOptions,function(error, info){
     } else{
 	console.log('Email Sent: '+ info.response)
     }
-});
+});*/

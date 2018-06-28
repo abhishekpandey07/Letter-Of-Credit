@@ -94,10 +94,10 @@ class LoginPage extends React.Component {
     loggedIn? console.log('login Successfull'):{}
   }*/
 
-  /*handleValueChange = target => event => {
+  handleValueChange = target => event => {
     this.setState({ [target] : event.target.value });
     console.log(this.state)
-  }*/
+  }
 
   handleSubmit = event => {
     const url = '/users/login'
@@ -111,28 +111,37 @@ class LoginPage extends React.Component {
     }
 
 
-    axios.post(url,payload,{credentials:'include'})
-    .then(res => {
-      if(res.status == 200){
-        const data = EJSON.parse(res.data);
-        if(data.authenticated === true){
-          console.log('Authenticated! providing access')
-          this.setState({
-            authenticated: true 
-          })
-          this.props.onLoginSuccess(data)
+    try{
+      axios.post(url,payload,{credentials:'include'})
+      .then(res => {
+        if(res.status == 200){
+
+          const data = EJSON.parse(res.data);
+          if(data.status === 404){
+            this.setState({userError:true})
+            console.log(data.message)
+          } 
+          if(data.status === 401){
+            this.setState({error:true})
+          }
+          if(data.status === 200 && data.authenticated === true){
+            console.log('Authenticated! providing access')
+            this.setState({
+              authenticated: true 
+            })
+            this.props.onLoginSuccess(data)
+          } else {
+            console.log('not authenticated')
+            this.setState({error:true})        
+          }
         }
-      }
-
-      if(res.status==401){
-          console.log('not authenticated')
-          this.setState({error:true})        
-      }
-
-    })
-    .catch(error => {
-      console.error(error)
-    })
+      })
+      .catch(error => {
+        console.error(error)
+      })
+    }catch(error){
+      console.log(error)
+    }
   }
 
   render () {

@@ -88,13 +88,24 @@ router.post('/login', function(req, res, next) {
   				console.error(error)
   				error = new Error('User not found!')
   				error.status = 404
-          res.status(404)
-  				return res.end(error)
+  				return res.format({
+            json: ()=>{
+             res.json(JSON.stringify({
+              status : 500,
+              authenticated:false,
+              message: 'Credentials could not be verified'
+            }))
+            }
+          })
   			}
 
         if(user == null){
-          res.status(404);
-          return res.end("User doesn't exists.")
+          //res.status(404);
+          return res.json(JSON.stringify({
+            message:'The user does not exist',
+            status: 404,
+            authenticated: false
+          }))
         }
   			
         bcrypt.compare(req.body.password,user.password, (error,same) => {
@@ -106,25 +117,28 @@ router.post('/login', function(req, res, next) {
   				if(!same){
   					error = new Error('Incorrect Password')
   					error.status = 401
-            res.status(401)
-  					return res.send(error)
+            //res.status(401)
+  					return res.json(JSON.stringify({
+              status: 401,
+              message: 'Incorrect Password',
+              authenticated:false
+            }))
+
   				} else{
   					// what to do if the user exists and password matches!
   					// just return the user
             const data = {
               name: user.name,
               role: user.role,
-              authenticated: true
+              authenticated: true,
+              email: user.email,
+              status: 200
             }
             req.session.authenticated = true
             req.session.role = user.role
             req.session.name = user.name
 
-  					res.format({
-  						json:()=>{
-  							res.json(JSON.stringify(data))
-  						}
-  					})
+  					return res.json(JSON.stringify(data))  					
   				}
   			})
   			
