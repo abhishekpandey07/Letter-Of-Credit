@@ -23,14 +23,14 @@ const appStyle = theme => ({
     ...transition,
     maxHeight: "100%",
     width: "100%",
-    overflowScrolling: 'touch'
+    overflowScrolling: 'none'
   },
   content: {
     position: "relative",
     top: "0",
     height: "100%",
     zIndex: 0.5,
-    overflow: 'hidden',
+    overflow: 'none',
     marginTop: "15px",
     padding: "30px 15px",
     minHeight: "calc(100% - 123px)",

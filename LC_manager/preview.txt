@@ -1,0 +1,12 @@
+Hi LC Payment Update,
+
+The Following LCs were due today and have been marked as paid in the system.
+Please logon to the portal and update necessary details.        
+
+You can check the status of your order and more in your dashboard:<b>Note: This will only work when you are connected to office network.        
+http://192.168.0.10:3000/        
+
+Yours truly,
+MVOMNI Letter of Credit Manager
+
+&copy; 2018 <a href="http://192.168.0.10:3000" target="_blank">MVOMNI Letter of Credit Manager</a>. All rights reserved.

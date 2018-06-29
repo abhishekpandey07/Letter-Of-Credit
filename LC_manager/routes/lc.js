@@ -523,6 +523,13 @@ router.put('/:id/addNewCycle', function(req, res) {
             GST: req.body.GST,
             TID: req.body.TID? req.body.TID : ''   
         },
+        pay: {
+            bill_com: 0,
+            post: 0,
+            GST: 0,
+            TID: '',
+            mode: 'Not Updated'
+        },
         payed: false
     }
 

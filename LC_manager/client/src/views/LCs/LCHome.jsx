@@ -4,7 +4,7 @@ import AddIcon from '@material-ui/icons/Add'
 
 import EJSON from 'mongodb-extended-json'
 //import getComponent from 'hadron-react-bson'
-import { NavLink } from "react-router-dom";
+import { Link,NavLink } from "react-router-dom";
 import { RegularCard, Table, ItemGrid, LCPanel } from "components";
 import LCRoutes from 'routes/lcs.jsx'
 import TextField from '@material-ui/core/TextField'
@@ -160,31 +160,25 @@ class LCHome extends React.Component{
           </Grid>:
           <div/>
          }
-          <Grid item className={classes.grid} xs={12} sm={12} md={2}>
-              <TextField
-                style={{
-                  marginTop: '32px'
-                }}
-                margin="normal"
-                fullWidth
-                inputProps={{
-                  placeholder: "Search by LC number"
-                }}
-                onChange={this.handleChange('search')}
-              />
-          </Grid>
-          <Grid item className={classes.grid} xs={12} sm={12} md={1}>
-              <SearchButton
-                style={{
-                  marginTop: '28px',
-                  marginBottom: '20px',
-                  marginLeft: '0px'
-                }}
-                color="white"
-                aria-label="edit" 
-              >
+          <Grid item className={classes.grid} xs={12} sm={12} md={3}>
+            <Grid container spacing={8} alignItems="flex-end">
+              <Grid item>
                 <Search style={{width:'17px'}} />
-              </SearchButton>
+              </Grid>
+              <Grid item>                
+                <TextField
+                  style={{
+                    marginTop: '32px'
+                  }}
+                  margin="normal"
+                  fullWidth
+                  inputProps={{
+                    placeholder: "Search keyword"
+                  }}
+                  onChange={this.handleChange('search')}
+                />
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
 
@@ -215,7 +209,12 @@ class LCHome extends React.Component{
         var panels = LCs.reduce((arr,prop,key) => {
           var panel = null
           if(this.state.search){
-            if(prop.LC_no.includes(this.state.search)){
+            if(prop.LC_no.includes(this.state.search) ||
+               prop.supplier.name.includes((this.state.search).toUpperCase()) ||
+               prop.issuer.name.includes((this.state.search).toUpperCase()) ||
+               prop.project.name.includes((this.state.search).toUpperCase()) ||
+               prop.project.location.includes((this.state.search).toUpperCase())
+             ){
               panel = 
                       <Grid item xs={12} sm={12} md={12}>
                         <LCPanel LC={prop} id={key}
@@ -256,16 +255,12 @@ class LCHome extends React.Component{
                   </Grid>
               }
               footer={
-                  <div>
-                    <NavLink
-                      to={'/LCs/AddNewLC'}
-                      activeClassName="active"
-                    >
-                      <Button variant="fab" color="secondary" aria-label="add" onClick={this.handleAddOpen}>
+                  
+                      <Button variant="fab" component={Link} to={'/LCs/AddNewLC'} 
+                        color="secondary" aria-label="add" onClick={this.handleAddOpen}>
                         <AddIcon />
                       </Button>
-                    </ NavLink>
-                   </div>
+                  
               }/> 
             </ItemGrid>
           </Grid>
