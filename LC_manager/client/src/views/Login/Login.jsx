@@ -76,9 +76,8 @@ class LoginPage extends React.Component {
     return false
   } 
 
-  /*componentWillMount = async () => {
-
-    /*const url = '/users/sessionAuthentication'
+  componentWillMount = async () => {
+    const url = '/users/sessionAuthentication'
     axios.get(url,{credentials: 'include'})
     .then(res => {
       const data = EJSON.parse(res.data);
@@ -92,7 +91,23 @@ class LoginPage extends React.Component {
 
     var loggedIn = await this.checkAuthentication()
     loggedIn? console.log('login Successfull'):{}
-  }*/
+  }
+
+  componentDidMount = () =>{
+    var input = document.getElementById("pass");
+    var submit = document.getElementById("submit")
+
+      // Execute a function when the user releases a key on the keyboard
+      input.addEventListener("keyup", function(event) {
+        // Cancel the default action, if needed
+        event.preventDefault();
+        // Number 13 is the "Enter" key on the keyboard
+        if (event.keyCode === 13) {
+          // Trigger the button element with a click
+          submit.click();
+        }
+    });
+  }
 
   handleValueChange = target => event => {
     this.setState({ [target] : event.target.value });
@@ -182,7 +197,7 @@ class LoginPage extends React.Component {
                 </FormControl>
                 </div>
                 <div>
-                <Button variant='contained' onClick={this.handleSubmit} align='center'>
+                <Button id='submit' variant='contained' onClick={this.handleSubmit} align='center'>
                   Submit
                 </Button>
                 </div>

@@ -35,7 +35,7 @@ const styles = theme => ({
     width: '100%'
   },
   heading: {
-    fontSize: theme.typography.pxToRem(13),
+    fontSize: theme.typography.pxToRem(10),
     flexBasis: '20.00%',
     flexShrink: 0,
   },
