@@ -4,10 +4,14 @@ var sendMail = function(options){
 
     var transporter = nodemailer.createTransport({
         host: 'smtp.office365.com',
+        port: 587,
         auth: {
             user: 'lcmanager@mvomni.com',
             pass: 'Daz37888'
-        }
+        },
+        secureConnection: false,
+        tls: {ciphers: 'SSLv3'}
+
     });
 
 

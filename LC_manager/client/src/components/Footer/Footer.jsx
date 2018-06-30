@@ -17,13 +17,13 @@ function Footer({ ...props }) {
               </a>
             </ListItem>
             <ListItem className={classes.inlineBlock}>
-              <a href="#company" className={classes.block}>
+              <a href="www.mvomni.com" className={classes.block}>
                 Company
               </a>
             </ListItem>
             <ListItem className={classes.inlineBlock}>
               <a href="#portfolio" className={classes.block}>
-                Portfolio
+                protfolio
               </a>
             </ListItem>
             <ListItem className={classes.inlineBlock}>
@@ -36,9 +36,9 @@ function Footer({ ...props }) {
         <p className={classes.right}>
           <span>
             &copy; {1900 + new Date().getYear()}{" "}
-            <a href="http://www.creative-tim.com" className={classes.a}>
-              Creative Tim
-            </a>, made with love for a better web
+            <a href="www.linkedin.com/in/abhishek-pandey-723037107" className={classes.a}>
+              Abhishek Pandey
+            </a>
           </span>
         </p>
       </div>

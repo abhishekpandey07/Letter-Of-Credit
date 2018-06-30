@@ -3,7 +3,7 @@ const supplierBankSchema = require('./supplier')
 const ObjectID = mongoose.Schema.Types.ObjectId;
 
 const CycleSchema = new mongoose.Schema({
-    due_DT: Date,
+    due_DT: {type: Date, required: true},
     due_amt: { type : mongoose.Schema.Types.Decimal128, default: 0},
     payed: {
         type: Boolean,
@@ -98,8 +98,9 @@ var LCSchema = new mongoose.Schema({
     LC_no : { type : String, required : true },
     FDR_no: { type : String, },
     FDR_DT: { type : Date },
-    m_amt : { type : mongoose.Schema.Types.Decimal128 },
+    m_amt : { type : mongoose.Schema.Types.Decimal128, default: 0 },
     m_cl_DT : { type : Date },
+    m_cl_amt: { type : mongoose.Schema.Types.Decimal128, default: 0 },
     amount : { type : mongoose.Schema.Types.Decimal128, required : true },
     payment: LC_Payment_Schema,
     status : {type: String, enum: ['Active', 'Expired', 'InValid', 'Extended']} //may add these later 'Completed', 'Closed']},

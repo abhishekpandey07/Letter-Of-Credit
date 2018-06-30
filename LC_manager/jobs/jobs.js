@@ -6,7 +6,8 @@ const mongoose = require('mongoose'),
     fetch = require('node-fetch')
     EJSON = require('mongodb-extended-json')
     Mailgen = require('mailgen')
-    emailer = require('./emailer/emailer.js')
+    genAndSend = require('./emailer/genAndSend.js')
+    formatter = require('../utils/common.js')
 
 var mailGenerator = new Mailgen({
     theme: 'salted',
@@ -20,13 +21,17 @@ var mailGenerator = new Mailgen({
 });
 
 var data = []
+
+
 function onPaymentUpdate(callback) {
 
   const MapFunction = function() {
     var today = new Date(new Date(Date.now()).setHours(24,0,0,0))
     for(var idx = 0 ; idx < this.payment.cycles.length; idx ++){
       var payments = []
-      if(this.payment.cycles[idx].payed != true && this.payment.cycles[idx].due_DT <= today){
+      if(this.payment.cycles[idx].payed != true &&
+         this.payment.cycles[idx].due_DT <= today &&
+         this.status != 'Expired'){
         var amount = this.payment.cycles[idx].due_amt;
         payments.push(idx)
       }
@@ -68,7 +73,7 @@ function onPaymentUpdate(callback) {
                   'LC No.': LC.LC_no,
                   'Supplier': LC.supplier.name,
                   'Due Date': String(LC.payment.cycles[prop].due_DT).slice(0,10),
-                  'Due Amount': parseFloat(LC.payment.cycles[prop].due_amt),
+                  'Due Amount': formatter.formatAmount(parseFloat(LC.payment.cycles[prop].due_amt)),
                   'Type': LC.payment.cycles[prop].pay.mode
                 })
                 total += due_amt
@@ -92,56 +97,9 @@ function onPaymentUpdate(callback) {
               }
             });
 
-            console.log(data)
-            var email = {
-                body: {
-                    name: "LC Payment Update",
-                    intro: 'The Following LCs were due today and have been marked as paid in the system.<br/>'+
-                           'Please logon to the portal and update necessary details.',
-                    table: {
-                        data: data,
-                        columns: {
-                            // Optionally, customize the column widths
-                            customWidth: {
-                                'LC no.': '25%',
-                                'Supplier': '30%',
-                                'Due Date': '15%',
-                                'Due Amount': '15%',
-                                'Type': '15%'
-                            },
-                            // Optionally, change column text alignment
-                            customAlignment: {
-                                'Due Amount': 'right'
-                            }
-                        }
-                    },
-
-                    action: {
-                        instructions: 'You can check the status of your order and more in your dashboard:<br>' +
-                                      'Note: This will only work when you are connected to office network.',
-                        button: {
-                            color: '#3869D4',
-                            text: 'Go to portal',
-                            link: 'http://192.168.0.10:3000/'
-                        }
-                    },
-                    //outro: ''
-                }
-            };
-
-            // Generate an HTML email with the provided contents
-            var emailBody = mailGenerator.generate(email);
-
-            // Generate the plaintext version of the e-mail (for clients that do not support HTML)
-            var emailText = mailGenerator.generatePlaintext(email);
-
-            var options = {}
-            options.to = 'abhi02.1998@gmail.com'
-            options.subject = 'LC Payment Update'
-            options.html = emailBody
-            emailer.sendMail(options)        
-            require('fs').writeFileSync('preview.html', emailBody, 'utf8');
-            require('fs').writeFileSync('preview.txt', emailText, 'utf8');
+            
+            // only send if something to send.
+            data.length > 0 ? genAndSend.genAndSendPaymentEmail(data) : {}
             callback()            
           }
         })
@@ -162,31 +120,75 @@ var callExpiryApi = async () => {
     return EJSON.parse(body)   
   }
 
-const onExpirationUpdate= function (callback) {
-  var today = new Date (Date.now())
-  today = new Date(today.setHours(0,0,0,0))
-  var today7 = new Date()
-  today7.setDate( today.getDate() + 5 )
-  console.log(today7)
-  
-  const filter = function(obj){
+
+const filterExpirationData = function(obj){
     console.log(obj)
     var expDT = new Date(obj.expDT) // why ? because the result is from aggregation.
-    var ret = (expDT <= today7)
+    var ret = (expDT <= today)
     console.log(ret)
 
     return ret
   }
 
+const dayExpirationUpdate= function (callback) {
+  var today = new Date (Date.now())
+  today = new Date(today.setHours(24,0,0,0))
+  //var today7 = new Date()
+  //today7.setDate( today.getDate())
+  //console.log(today7)
+
   callExpiryApi()
   .then((body) => {
-    console.log(typeof(body))
-    console.log(body)
-    var LCExpiring = body.filter(filter)
-    console.log(LCExpiring)
+    var LCExpiring = body.filter(filterExpirationData)
+    if(LCExpiring.length > 0){
+      var emailData = LCExpiring.reduce((acc,prop,key)=>{
+        acc.push({
+          'Issuer': prop.issuer[0],
+          'LC no.': prop.LC_no,
+          'Supplier': prop.supplier[0],
+          'Expiration Date': String(prop.expDT).slice(0,10),
+          'Amount': formatter.formatAmount(parseFloat(prop.amount)),
+          'Unused': formatter.formatAmount(parseFloat(prop.unUtilized)),
+        })
+        return acc
+      },[])
+      genAndSend.genAndSendExpDayEmail(emailData)
+    }
     callback()
   })
   .catch((error)=>console.log(error))
+}
+
+const weekExpirationUpdate = function (callback) {
+  callExpiryApi()
+  .then((body) => {
+    
+    if(body.length > 0){
+      var emailData = LCExpiring.reduce((acc,prop,key)=>{
+        acc.push({
+          'Issuer': prop.issuer[0],
+          'LC no.': prop.LC_no,
+          'Supplier': prop.supplier[0],
+          'Expiration Date': String(prop.expDT).slice(0,10),
+          'Amount': formatter.formatAmount(parseFloat(prop.amount)),
+          'Unused': formatter.formatAmount(parseFloat(prop.unUtilized)),
+        })
+        return acc
+      },[])
+      genAndSend.genAndSendExpWeekEmail(emailData)
+    }
+    callback()
+  })
+  .catch((error)=>console.log(error))
+}
+
+/* Should the Letter of Credits be automatically expiring ?*/
+const ExpirationUpdate = function(callback) {
+  today = new Date((new Date(Date.now()).setHours(24,0,0,0)))
+  callExpiryApi()
+  .then((body) => {
+    var LCExpiring = body.filter(filterExpirationData)
+  })
 }
 
 
@@ -195,23 +197,44 @@ const onExpirationUpdate= function (callback) {
 const getJobSchedules = function(){
   var jobs = {}
   var rule = new cron.RecurrenceRule();
-  rule.hour = 18;
-  rule.minute = 5;
+  // everyday at 7 am. (15th second)
+  rule.hour = 7;
+  rule.minute = 0;
   rule.second = 30;
+
   jobs['paymentUpdate'] = cron.scheduleJob(rule,function(){
-    console.log('job started.')
+    console.log('Sending Payment Update Emails.')
     onPaymentUpdate(function(){
       console.log('execution finished!')
     })
   })
 
-  var expRule = new cron.RecurrenceRule();
-  expRule.hour = 7;
-  expRule.minute = 0;
-  jobs['onExpirationUpdate'] = cron.scheduleJob(expRule,function(){
-    onExpirationUpdate(function(){
+  var dayExpRule = new cron.RecurrenceRule();
+  
+  // everyday at 7 a.m.
+  dayExpRule.hour = 7;
+  dayExpRule.minute = 0;
+  dayExpRule.second = 0
+  
+  jobs['dayExpirationUpdate'] = cron.scheduleJob(dayExpRule,function(){
+    console.log(' Sending day Expiration Emails.')
+    dayExpirationUpdate(function(){
     console.log('finished')
   })})
+
+  var weekExpRule = new cron.RecurrenceRule();
+
+  weekExpRule.dayOfWeek = 1 //monday
+  weekExpRule.hour = 8;
+  weekExpRule.minute = 0;  // 8 a.m.
+
+  jobs['weekExpirationUpdate'] = cron.scheduleJob(weekExpRule,function(){
+    console.log('Sending Weekly Expiration Update Emails.')
+    weekExpirationUpdate(function(){
+      console.log('finished')
+    })
+  })
+
   return jobs
 }
 

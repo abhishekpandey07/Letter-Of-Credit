@@ -40,11 +40,14 @@ function addBankLC(bank,LC,callback){
 
 function removeBankLC(bank,LC,callback){
 
-    var LC_used = parseFloat(bank.LC_used);
-    var amount = parseFloat(LC.amount);
-    LC_used -= amount;
-    
-    bank.LC_used = LC_used;
+    if(LC.status !== 'Expired'){
+      var LC_used = parseFloat(bank.LC_used);
+      var due_amt = parseFloat(LC.payment.due_amt)
+      var amount = parseFloat(LC.amount);
+      LC_used -= (amount - due_amt);
+      bank.LC_used = LC_used;
+    }
+
     bank.LCs.pull(LC._id);
     console.log('issuer LC_used changed to : '+ bank.LC_used);
     bank.save(function(error,bank){
@@ -63,8 +66,10 @@ function removeBankLC(bank,LC,callback){
 
 function closeLC(bank,LC,callback){
     var LC_used = parseFloat(bank.LC_used);
-    var amount = parseFloat(LC.amount);
-    LC_used -= amount;
+    var used = parseFloat(LC.payment.due_amt);
+    var amount = parseFloat(LC.amount)
+
+    LC_used -= (amount - used);
 
     bank.LC_used = LC_used
     console.log('issuer LC_used changed to : '+ LC_used);

@@ -242,7 +242,7 @@ router.route('/month').get(function(req,res){
 
 // TODO : Add a routine to get all the LCs expiring in 14 days.
 router.route('/LC/expiring').get(function (req,res) {
-  const today = new Date(Date.now())
+  const today = new Date((new Date(Date.now())).setHours(0,0,0,0))
   const next14 = new Date
   next14.setDate(today.getDate() + 14)
   LCDB.aggregate([

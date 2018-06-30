@@ -92,7 +92,7 @@ const styles = theme => ({
   },
 });
 
-const states = {notCompleted: 0 , completed: 1, closed: 2}
+//const states = {notCompleted: 0 , completed: 1, closed: 2}
 const cycleSwitch = {
   newCycle: 0,
   cycleEdit: 1,
@@ -115,6 +115,7 @@ class LCPanel extends React.Component {
       cycleIndex: null,
       cycleContent: cycleSwitch.none,
       cycleFile: null,
+
       //new cycle states
       pay_ref: '',
       due_DT: '',
@@ -127,11 +128,13 @@ class LCPanel extends React.Component {
       payBC: 0,
       payGST: 0,
       payMode:'',
+
       // extension states
       extensionIndex:null,
       extensionContent: extensionSwitch.none,
       extensionFile: '',
       expanded: null,
+
       // new extension
       openDT: '',
       expDT:'',
@@ -140,11 +143,15 @@ class LCPanel extends React.Component {
       post:200,
       GST:0,
       TID: '',
+
+      // margin dates
+      m_cl_DT: '',
+      m_cl_amt: 0,
+      
       //other states
-      closed: states.notCompleted,
+      closed: this.props.LC.status==='Expired',
       refFile: ''
     }
-    console.log(this.props.LC)
   }
 
   resetState = () => {
@@ -177,7 +184,7 @@ class LCPanel extends React.Component {
       post:200,
       GST:0,
       //other states
-      closed: states.notCompleted,
+      closed: this.props.LC.status==='Expired',
       refFile: ''
     })
   }
@@ -187,7 +194,6 @@ class LCPanel extends React.Component {
       expanded: expanded ? panel : false,
     });
   };
-
 
   handleValueChange = name => event => {
     switch(name){
@@ -960,6 +966,72 @@ class LCPanel extends React.Component {
     return form;
   }
 
+  /// margin clearance form
+  generateMarginClearanceForm = () => {
+    const {classes} = this.props
+    console.log(this.props.LC.m_cl_DT)
+    const form = !this.props.LC.m_cl_DT ?
+      <Grid item className={classes.grid} xs={12} sm={12}>
+          <Divider style={{padding:'5px',marginTop: '20px'}}/>
+          <Grid item className={classes.grid} xs={12} sm={12}>
+            <Typography variant='body1' 
+              style={{marginTop: '10px',
+                      color:"purple"}}>
+            Update Margin Clearance Details </Typography>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={12}>
+            <Grid container>
+              <Grid item className={classes.grid} xs={12} sm={4}>
+                <TextField
+                  required
+                  id="m_cl_DT"
+                  label="Clearance Date"
+                  type="date"
+                  value = {this.state.m_cl_DT}
+                  onChange = {this.handleValueChange('m_cl_DT')}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  margin='normal'
+                  fullWidth
+                  className={classes.textField}
+                />
+              </Grid>
+              <Grid item className={classes.grid} xs={12} sm={4}>
+                <FormControl margin='normal' fullWidth>
+                  <InputLabel htmlFor="m_cl_amt">Cleared Amount</InputLabel>
+                  <Input
+                    id="m_cl_amt"
+                    type="number"
+                    value={this.state.m_cl_amt}
+                    onChange={this.handleValueChange('m_cl_amt')}
+                    className={classes.textField}
+                    startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+                  />
+                </FormControl>
+            </Grid>
+              <Button color="primary" size='small'
+                variant='outlined' className={classes.button}
+                onClick={this.handleMarginDataSubmit}>
+                submit
+              </Button>
+          </Grid>
+        </Grid>
+      </Grid>
+      :
+      <div>
+        <Typography variant='body1'
+          style={{padding:'10px', margin:'10px'}}>
+          Margin Clearance Date : {formatDate(new Date(this.props.LC.m_cl_DT))}
+        </Typography>
+        <Typography variant='body1'
+          style={{padding:'10px', margin:'10px'}}>
+          Margin Cleared Amount : {formatAmount(this.props.LC.m_cl_amt)}
+        </Typography>
+      </div>
+      return form 
+  }
+
   //// Handle Cycle Content Switch
 
   cycleContentSwitch = () => {
@@ -995,12 +1067,14 @@ class LCPanel extends React.Component {
         return this.generateCycleFilesForm(this.state.cycleIndex);
       }
       case cycleSwitch.none:{
-        return <Button mini variant='contained' className={classes.button}
-                        onClick={this.handleCycle}>Create New Cycle</Button>        
+        return <Button mini disabled={this.state.closed} 
+                variant='contained' className={classes.button}
+                onClick={this.handleCycle}>Create New Cycle</Button>        
       }
       default:{
         return <Button mini variant='contained' className={classes.button}
-                        onClick={this.handleCycle}>Create New Cycle</Button>        
+                disabled={this.state.closed}
+                onClick={this.handleCycle}>Create New Cycle</Button>        
       }
 
     }
@@ -1042,13 +1116,22 @@ class LCPanel extends React.Component {
       }
 
       case extensionSwitch.none: {
-        return <Button size='small' variant='contained' className={classes.button}
-                          onClick={this.handleExtensionClick}>Add Ext.</Button>        
+        return this.state.closed? 
+          this.generateMarginClearanceForm()
+          :
+          <Button size='small' disabled={this.state.closed}
+            variant='contained' className={classes.button}
+            onClick={this.handleExtensionClick}>Add Ext.</Button>        
       }
 
       default:
-       return <Button size='small' variant='contained' className={classes.button}
-                          onClick={this.handleExtensionClick}>Add Ext.</Button>         
+       return this.state.closed? 
+          this.generateMarginClearanceForm()
+          :
+          <Button size='small' disabled={this.state.closed}
+            variant='contained' className={classes.button}
+            onClick={this.handleExtensionClick}>Add Ext.</Button>         
+       
     } 
   }
 
@@ -1325,11 +1408,29 @@ class LCPanel extends React.Component {
     axios.post(url,{_method: 'PUT'},{credentials:'include'})
     .then((response) => {
       console.log(response)
-      this.setState({closed:states.closed})
+      this.setState({closed:true})
     }).catch((error) => {
       console.log(error)
     })
   }
+
+  // handle margin update
+  handleMarginDataSubmit = (event) => {
+    var payload ={
+      _method : 'PUT',
+      m_cl_DT : this.state.m_cl_DT,
+      m_cl_amt: this.state.m_cl_amt
+    }
+    const url = 'LCs/'+this.props.LC._id+
+                '/addMarginData'
+    axios.post(url,payload,{credentials: 'include'})
+    .then((response) => {
+      this.props.onDelete(this.props.id)
+    }).then((error) => {
+      console.log(error)
+    })
+  }
+
 
   // Deletion Handles
   handleDelete = (event) => {
@@ -1356,16 +1457,12 @@ class LCPanel extends React.Component {
   render() {
     const { classes ,LC} = this.props;
     const { expanded } = this.state;
-    var disableCloseButton = false
-    if(this.state.closed){
-       disableCloseButton = (this.state.closed === states.completed)? false: true
-    }
-    
-   const paymentData = this.generatePaymentData()
-   const extensionData = this.generateExtensionData()
-   var cycleEditForm = null;
-   if(this.state.cycleEdit)    
-    cycleEditForm = this.generateCycleEditForm()
+        
+    const paymentData = this.generatePaymentData()
+    const extensionData = this.generateExtensionData()
+    var cycleEditForm = null;
+    if(this.state.cycleEdit)    
+      cycleEditForm = this.generateCycleEditForm()
 
     return (
     <div>
@@ -1379,7 +1476,7 @@ class LCPanel extends React.Component {
             <Typography className={classes.heading}>{LC.status}</Typography>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
-            <Grid container spacing={32}>
+            <Grid container spacing={32} justify='flex-end'>
             <Grid item className={classes.grid} xs={12} sm={6}>
               <Grid item className={classes.grid}>
                 <Table
@@ -1403,17 +1500,15 @@ class LCPanel extends React.Component {
                 </Grid>
                 {this.extensionContentSwitch()}
             </Grid>
-            <Grid item className={classes.grid} xs={12} sm={12}>
-              <Button mini variant='contained' className={classes.button}
+            <Grid item className={classes.grid} xs={6} sm={3}>
+              <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
                 onClick={this.handleEditClick}>Edit</Button>
               <Button mini variant='contained' className={classes.button}
                   onClick={this.handleDelete} colour={red}>Delete</Button>
-              <Button mini disabled={disableCloseButton} variant='contained' className={classes.button}
+              <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
                   onClick={this.handleClose}>
                   Close
               </Button>
-               
-              
             </Grid>
           </Grid>
           </ExpansionPanelDetails>

@@ -152,14 +152,14 @@ router.route('/').post(function(req,res){
     				})
     			    }
     			});
-    			return res.send(neg_error);
+    			return res.end(neg_error);
     		    }else {
     			// add LC to bank 
     			
         			bankMethods.addBankLC(bank, LC, function(error,bank){
         			    if (error) {
         				res.status = error.status;
-        				res.send(error);
+        				return res.end(error);
         			    }
         			    else {
         				console.log('LC successfully added to : '+ bank.name);
@@ -178,7 +178,7 @@ router.route('/').post(function(req,res){
                 supplierMethods.addLC(supplier, req.body.supBank, LC, function(error,supplier){
                     if (error) {
                     res.status = error.status;
-                    res.send(error);
+                    return res.end(error);
                     }
                     else {
                     console.log('LC successfully added to : '+ supplier.name);
@@ -445,6 +445,22 @@ router.put('/:id/addCharges', function(req, res) {
                 }
             });
             
+        }
+    });
+});
+
+router.put('/:id/addMarginData', function(req,res) {
+    var LC = res.locals.LC;
+    
+    LC.m_cl_DT = req.body.m_cl_DT;
+    LC.m_cl_amt = parseFloat(req.body.m_cl_amt);
+
+    LC.save(function(error,LCID) {
+        if(error){
+            console.log(error);
+            return res.end(error)
+        } else {
+            res.json(JSON.stringify(LC))
         }
     });
 });
@@ -869,7 +885,7 @@ router.put('/:id/close', function(req, res) {
         console.log('LC Closed')
     })
 
-    try{supplierMethods.removeLC(res.locals.supplier,LC,function(error,supplier){
+    supplierMethods.removeLC(res.locals.supplier,LC,function(error,supplier){
         if(error){
             console.error(error)
             return res.send(error)
@@ -877,10 +893,7 @@ router.put('/:id/close', function(req, res) {
 
         console.log('LC successfully removed from supplier.')
 
-    })}
-    catch(error){
-        console.log(error)
-    }
+    })
     
     LC.save(function (err, LCID) {
         if (err) {
