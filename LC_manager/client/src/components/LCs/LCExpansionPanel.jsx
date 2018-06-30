@@ -999,7 +999,7 @@ class LCPanel extends React.Component {
               </Grid>
               <Grid item className={classes.grid} xs={12} sm={4}>
                 <FormControl margin='normal' fullWidth>
-                  <InputLabel htmlFor="m_cl_amt">Cleared Amount</InputLabel>
+                  <InputLabel htmlFor="m_cl_amt">Credited Amount</InputLabel>
                   <Input
                     id="m_cl_amt"
                     type="number"
