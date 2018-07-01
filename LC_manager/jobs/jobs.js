@@ -200,7 +200,7 @@ const getJobSchedules = function(){
   // everyday at 7 am. (15th second)
   rule.hour = 7;
   rule.minute = 0;
-  rule.second = 30;
+  rule.second = 15;
 
   jobs['paymentUpdate'] = cron.scheduleJob(rule,function(){
     console.log('Sending Payment Update Emails.')

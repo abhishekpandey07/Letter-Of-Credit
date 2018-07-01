@@ -114,7 +114,7 @@ function update(bankID, callback){
 
   console.log('retreiving bank with ID '+ bankID)
   bankDB.findById(bankID._id)
-  .populate('LCs',['amount','status','payment'])
+  .populate('LCs',['LC_no','amount','status','payment'])
   .exec(function(error,bank){
     if(error){
       console.error(error)
@@ -122,13 +122,18 @@ function update(bankID, callback){
     } else {
       console.log('Recalculating.')
       const LC_used = bank.LCs.reduce((total,lc)=>{
-        if(lc.status === 'Active' || lc.status === 'Extended')
+        console.log(lc.LC_no)
+        console.log(lc.status)
+        if(lc.status === 'Active' || lc.status === 'Extended'){
+          console.log('adding amount')
           total += parseFloat(lc.amount);
           lc.payment.cycles.map((cycle,index)=>{
             if(cycle.payed==true){
+              console.log('payed cycle ' + index)
               total-= parseFloat(cycle.due_amt)
             }
-          })        
+          })
+        }        
         return total
       },0)
 

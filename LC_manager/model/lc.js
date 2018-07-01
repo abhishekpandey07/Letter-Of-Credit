@@ -4,6 +4,7 @@ const ObjectID = mongoose.Schema.Types.ObjectId;
 
 const CycleSchema = new mongoose.Schema({
     due_DT: {type: Date, required: true},
+    payed_DT: {type: Date},
     due_amt: { type : mongoose.Schema.Types.Decimal128, default: 0},
     payed: {
         type: Boolean,

@@ -599,9 +599,11 @@ router.put('/:id/editCycle', function(req, res) {
 
 
     //updating cycle
-    cycle.due_DT = req.body.due_DT,
-    cycle.due_amt = req.body.due_amt,
-    cycle.LB_pay_ref = req.body.LB_pay_ref,
+    cycle.due_DT = req.body.due_DT
+    console.log(req.body.payed_DT)
+    cycle.payed_DT = req.body.payed_DT
+    cycle.due_amt = req.body.due_amt
+    cycle.LB_pay_ref = req.body.LB_pay_ref
     cycle.acc = {
             acc: req.body.acc,
             GST: req.body.accGST,
@@ -662,7 +664,8 @@ router.put('/:id/checkCyclePayment', function(req, res) {
             TID: req.body.payTID,
             mode: req.body.payMode
         }
-
+    console.log(payed_DT)
+    cycle.payed_DT = req.body.payed_DT
     // saving the update cycle
     LC.payment.cycles[idx] = cycle;
     
@@ -834,7 +837,8 @@ router.put('/:id/edit', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC;
-
+    console.log(req.body)
+    try{
     LC.FDR_no = req.body.FDR_no;
     LC.LC_no = req.body.LC_no;
     LC.amount = req.body.amount;
@@ -844,7 +848,7 @@ router.put('/:id/edit', function(req, res) {
             res.send("There was a problem updating the information to the database: " + err);
         } 
         else {
-
+            console.log('updating bank')
             bankMethods.update(LC.issuer,function(error,bank){
                 if(error){
                     console.log(error)
@@ -854,6 +858,7 @@ router.put('/:id/edit', function(req, res) {
             })
 
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            console.log('sending reply')
             res.format({
                 /*html: function(){
                     res.redirect("/LCs/" + LC._id);
@@ -866,6 +871,10 @@ router.put('/:id/edit', function(req, res) {
             
         }
     });
+    }
+    catch(error){
+        console.log(error)
+    }
 });
 
 /* Can only edit LC_no, FDR_no, amount. Need authorisation.*/    

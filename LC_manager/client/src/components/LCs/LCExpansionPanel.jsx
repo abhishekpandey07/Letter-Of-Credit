@@ -29,6 +29,7 @@ import FileIOButton from 'components/FileIOButtons/FileIOButton'
 import EJSON from 'mongodb-extended-json'
 import {roundAmount, formatDate, formatAmount} from 'utils/common'
 import moment from 'moment'
+import {Done, Delete, Save} from '@material-ui/icons'
 
 const styles = theme => ({
   root: {
@@ -36,7 +37,7 @@ const styles = theme => ({
   },
   heading: {
     fontSize: theme.typography.pxToRem(10),
-    flexBasis: '20.00%',
+    flexBasis: '19.00%',
     flexShrink: 0,
   },
   secondaryHeading: {
@@ -128,6 +129,7 @@ class LCPanel extends React.Component {
       payBC: 0,
       payGST: 0,
       payMode:'',
+      payed_DT: '',
 
       // extension states
       extensionIndex:null,
@@ -150,8 +152,12 @@ class LCPanel extends React.Component {
       
       //other states
       closed: this.props.LC.status==='Expired',
+      edit: false,
       refFile: ''
     }
+    this.totalPaymentCharges = 0;
+    this.totalExtensionCharges = 0;
+    this.newPayment = false;
   }
 
   resetState = () => {
@@ -185,6 +191,7 @@ class LCPanel extends React.Component {
       GST:0,
       //other states
       closed: this.props.LC.status==='Expired',
+      edit: false,
       refFile: ''
     })
   }
@@ -296,6 +303,12 @@ class LCPanel extends React.Component {
         id:'Info',
       },
       {
+        icon: Done,
+        handle: (index) => {},
+        tip: 'Payment Completed and Reviewed',
+        id:'Done'
+      },
+      {
         icon: Close,
         handle: this.handleCycleDelete,
         tip: 'Delete',
@@ -306,10 +319,10 @@ class LCPanel extends React.Component {
         handle : this.handleCycleEditClick,
         tip: 'Edit',
         id: 'Edit',
-      }   
+      }
     ]
     
-
+    this.totalPaymentCharges = 0
     const paymentData = LC.payment.cycles.reduce((array,item,index) => {
       if(item.due_DT){
         const due = formatDate(new Date(item.due_DT))
@@ -320,8 +333,13 @@ class LCPanel extends React.Component {
                         parseFloat(item.pay.bill_com) +
                         parseFloat(item.pay.post) +
                         parseFloat(item.pay.GST));
-        const render = [true,(item.pay.mode=='Not Updated' && item.payed==true),this.state.cycleContent === cycleSwitch.edit,
-                        this.state.cycleContent === cycleSwitch.edit]
+
+        this.totalPaymentCharges += charges;
+        const newPayment = (item.pay.mode=='Not Updated' && item.payed==true)
+        this.newPayment = this.newPayment || (newPayment)
+        const render = [true, newPayment,
+                        (item.pay.mode!=='Not Updated' && item.payed===true),
+                        this.state.edit, this.state.edit]
         const icons = this.generateToolTipIcons(paymentIconTools,index,render);
         
         array.push([due,formatAmount(item.due_amt),ref,formatAmount(charges),icons])
@@ -351,28 +369,29 @@ class LCPanel extends React.Component {
         handle : this.handleExtensionEditClick,
         tip: 'Edit',
         id: 'Edit',
-        render : this.state.cycleContent === cycleSwitch.edit
+        render : this.state.edit
       },
       {
         icon: Close,
         handle: this.handleExtensionDelete,
         tip: 'Delete',
         id:'deleteExtension',
-        render: this.state.cycleContent === cycleSwitch.edit
+        render: this.state.edit
       }
     ]
-
+    this.totalExtensionCharges = 0;
     const extensionData = LC.dates.reduce((array,item,index) => {
       var id = index === 0? 'Original': 'Extended'
 
       const icons = this.generateToolTipIcons(extensionIconTools,index)
-      const charges = ( parseFloat(item.post) + 
-                        parseFloat(item.open) +
-                        parseFloat(item.amend) +
-                        parseFloat(item.GST))
+      const charges = parseFloat(item.post) + 
+                                    parseFloat(item.open) +
+                                    parseFloat(item.amend) +
+                                    parseFloat(item.GST)
+      this.totalExtensionCharges += charges;
       const open = formatDate(new Date(item.openDT))
       const exp = formatDate(new Date(item.expDT))
-      array.push([id,open,exp,charges,icons])//,app, bc])
+      array.push([id,open,exp,formatAmount(roundAmount(charges)),icons])//,app, bc])
       return array
     },[])
 
@@ -382,99 +401,103 @@ class LCPanel extends React.Component {
   generateCycleCreationForm = () => {
     const {classes} = this.props;
     const form = 
-    <div> 
-    <Grid container>
-      <Grid item className={classes.grid} xs={12} sm={4}>
-          <TextField
-            required
-            id="LB_pay_ref"
-            label="Bank LB_pay_ref"
-            type="text"
-            value={this.state.pay_ref}
-            className={classes.textField}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            margin='normal'
-            fullWidth={true}
-            onChange={this.handleValueChange('pay_ref')}
-        />
-      </Grid>
-      <Grid item className={classes.grid} xs={12} sm={4}>
-          <TextField
-            required
-            id="due_DT"
-            label="Due Date"
-            type="date"
-            className={classes.textField}
-            value={String(this.state.due_DT).slice(0,10)}
-            onChange={this.handleValueChange('due_DT')}
-            margin='normal'
-            fullWidth={true}
-            InputLabelProps={{
-              shrink: true,
-            }}
-        />
-      </Grid>
-      <Grid item className={classes.grid} xs={12} sm={4}>
-          <TextField
-            required
-            id="cycleTID"
-            label="Transaction ID"
-            type="text"
-            className={classes.textField}
-            value={this.state.cycleTID}
-            onChange={this.handleValueChange('cycleTID')}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            margin='normal'
-            fullWidth={true}
-        />
-      </Grid>
-    </Grid>
-    <Grid container >
-      <Grid item className={classes.grid} xs={12} sm={4}>
-        <FormControl margin='normal' fullWidth>
-          <InputLabel htmlFor="due_amt">Due Amount</InputLabel>
-          <Input
-            id="due_amt"
-            type="number"
-            value={this.state.due_amt}
-            onChange={this.handleValueChange('due_amt')}
-            className={classes.textField}
-            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+    <div>  
+      <Divider style={{margin:'10px'}}/>
+      <Typography variant='body1' align='center' style={{color:'purple'}}>
+        Cycle Creation Details
+      </Typography> 
+      <Grid container justify='flex-end'>
+        <Grid item className={classes.grid} xs={12} sm={4}>
+            <TextField
+              required
+              id="LB_pay_ref"
+              label="Bank LB_pay_ref"
+              type="text"
+              value={this.state.pay_ref}
+              className={classes.textField}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              margin='normal'
+              fullWidth={true}
+              onChange={this.handleValueChange('pay_ref')}
           />
-        </FormControl>
-      </Grid>
-      <Grid item className={classes.grid} xs={12} sm={4} md={4}>
-        <FormControl margin='normal' fullWidth>
-          <InputLabel htmlFor="acc-charge">Acceptance Charge</InputLabel>
-          <Input
-            id="acc"
-            type="number"
-            value={this.state.acc}
-            onChange={this.handleValueChange('acc')}
-            className={classes.textField}
-            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+        </Grid>
+        <Grid item className={classes.grid} xs={12} sm={4}>
+            <TextField
+              required
+              id="due_DT"
+              label="Due Date"
+              type="date"
+              className={classes.textField}
+              value={String(this.state.due_DT).slice(0,10)}
+              onChange={this.handleValueChange('due_DT')}
+              margin='normal'
+              fullWidth={true}
+              InputLabelProps={{
+                shrink: true,
+              }}
           />
-        </FormControl>
-      </Grid>
-      <Grid item className={classes.grid} xs={12} sm={4} md={4}>
-        <FormControl margin='normal' fullWidth>
-          <InputLabel htmlFor="acc-charge">GST</InputLabel>
-          <Input
-            id="cycleGST"
-            type="number"
-            value={this.state.cycleGST}
-            onChange={this.handleValueChange('cycleGST')}
-            className={classes.textField}
-            startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+        </Grid>
+        <Grid item className={classes.grid} xs={12} sm={4}>
+            <TextField
+              required
+              id="cycleTID"
+              label="Transaction ID"
+              type="text"
+              className={classes.textField}
+              value={this.state.cycleTID}
+              onChange={this.handleValueChange('cycleTID')}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              margin='normal'
+              fullWidth={true}
           />
-        </FormControl>
+        </Grid>
       </Grid>
-    </Grid>
-  </div>
+      <Grid container >
+        <Grid item className={classes.grid} xs={12} sm={4}>
+          <FormControl margin='normal' fullWidth>
+            <InputLabel htmlFor="due_amt">Due Amount</InputLabel>
+            <Input
+              id="due_amt"
+              type="number"
+              value={this.state.due_amt}
+              onChange={this.handleValueChange('due_amt')}
+              className={classes.textField}
+              startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+            />
+          </FormControl>
+        </Grid>
+        <Grid item className={classes.grid} xs={12} sm={4} md={4}>
+          <FormControl margin='normal' fullWidth>
+            <InputLabel htmlFor="acc-charge">Acceptance Charge</InputLabel>
+            <Input
+              id="acc"
+              type="number"
+              value={this.state.acc}
+              onChange={this.handleValueChange('acc')}
+              className={classes.textField}
+              startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+            />
+          </FormControl>
+        </Grid>
+        <Grid item className={classes.grid} xs={12} sm={4} md={4}>
+          <FormControl margin='normal' fullWidth>
+            <InputLabel htmlFor="acc-charge">GST</InputLabel>
+            <Input
+              id="cycleGST"
+              type="number"
+              value={this.state.cycleGST}
+              onChange={this.handleValueChange('cycleGST')}
+              className={classes.textField}
+              startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+            />
+          </FormControl>
+        </Grid>
+      </Grid>
+    </div>
     return form
   }
   
@@ -483,7 +506,28 @@ class LCPanel extends React.Component {
     const paymentModes = ['Regular','Devolved']
     const {classes} = this.props;
     const form = 
+      <div>
+        <Divider style={{margin:'10px'}}/>
+        <Typography variant='body1' align='center' style={{color:'purple'}}>
+          Payment Details
+        </Typography>
         <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <TextField
+              required
+              id="payed_DT"
+              label="Payment Date"
+              type="date"
+              className={classes.textField}
+              value={String(this.state.payed_DT).slice(0,10)}
+              onChange={this.handleValueChange('payed_DT')}
+              margin='normal'
+              fullWidth={true}
+              InputLabelProps={{
+                shrink: true,
+              }}
+          />
+        </Grid>
           <Grid item className={classes.grid} xs={12} sm={4}>
             <TextField
               id='payTID'
@@ -497,28 +541,27 @@ class LCPanel extends React.Component {
                 shrink:true
               }}
             />
-
           </Grid>
           <Grid item className={classes.grid} xs={12} sm={4}>
-          <FormControl fullWidth={true} margin='normal'>
-            <InputLabel htmlFor="cycleFileSelect"> Payment Type</InputLabel>
-            <Select
-              required
-              native
-              onChange={this.handleValueChange('payMode')}
-              inputProps={{
-                name: 'Payment Type',
-                id: 'paymentType'
-              }}
-              value={this.state.payMode}
-            >
-              {paymentModes.reduce((acc,prop,key) => {
-                acc.push(<option value={prop}>{prop}</option>)
-                return acc
-              },[<option/>])}
-            </Select>
-          </FormControl>
-        </Grid>
+            <FormControl fullWidth={true} margin='normal'>
+              <InputLabel htmlFor="cycleFileSelect"> Payment Type</InputLabel>
+              <Select
+                required
+                native
+                onChange={this.handleValueChange('payMode')}
+                inputProps={{
+                  name: 'Payment Type',
+                  id: 'paymentType'
+                }}
+                value={this.state.payMode}
+              >
+                {paymentModes.reduce((acc,prop,key) => {
+                  acc.push(<option value={prop}>{prop}</option>)
+                  return acc
+                },[<option/>])}
+              </Select>
+            </FormControl>
+          </Grid>
           <Grid item className={classes.grid} xs={12} sm={4}>
             <FormControl margin='normal' fullWidth>
               <InputLabel htmlFor="bill_com">Bill Commission</InputLabel>
@@ -558,8 +601,8 @@ class LCPanel extends React.Component {
               />
             </FormControl>
           </Grid>
-
         </Grid>
+      </div>
       return form
   }
   // Returns a form to edit the whole Cycle
@@ -571,16 +614,13 @@ class LCPanel extends React.Component {
     const form = 
       <div>
         {creationDetails}
-        <Divider style={{margin:'10px'}}/>
-        <Typography variant='body1'>
-          Payment Details
-        </Typography>
         {paymentDetails}
-        <Button color="primary" size='small'
-          variant='outlined' className={classes.button}
+        <Button color="green" size='small'
+          variant='contained' className={classes.button}
           onClick={this.handleCycleEditSubmit}>
-          submit
+          <Save style={{marginRight: '10px'}}/> Save
         </Button>
+        
       </div>
     return form
   }
@@ -610,52 +650,56 @@ class LCPanel extends React.Component {
     const {classes, LC} = this.props
     const form = 
       <div>
-      <Grid container>
-        <Grid item className={classes.grid} xs={12} sm={4}>
-        <FormControl fullWidth={true} margin='normal'>
-            <TextField
-              required
-              id="LC_no"
-              label="LC Number"
-              type="text"
-              defaultValue = {LC.LC_no}
-              className={classes.textField}
-              InputLabelProps={{
-                shrink: true,
-              }}
-          /> </FormControl>
+      <Divider style={{margin:'10px'}}/>
+        <Typography variant='body1' align='center' style={{color:'purple'}}>
+          LC Details
+        </Typography>
+        <Grid container>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+          <FormControl fullWidth={true} margin='normal'>
+              <TextField
+                required
+                id="LC_no"
+                label="LC Number"
+                type="text"
+                defaultValue = {LC.LC_no}
+                className={classes.textField}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+            /> </FormControl>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+          <FormControl fullWidth={true} margin='normal'>
+              <TextField
+                required
+                id="FDR_no"
+                label="FDR Number"
+                type="text"
+                defaultValue = {LC.FDR_no}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                className={classes.textField}
+            /> </FormControl>
+          </Grid>
+          <Grid item className={classes.grid} xs={12} sm={4}>
+            <FormControl margin='normal'>
+              <InputLabel htmlFor="amount"> Amount</InputLabel>
+              <Input
+                id="amount"
+                type="number"
+                defaultValue = {String(LC.amount)}
+                startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
+              />
+            </FormControl>
+          </Grid>
         </Grid>
-        <Grid item className={classes.grid} xs={12} sm={4}>
-        <FormControl fullWidth={true} margin='normal'>
-            <TextField
-              required
-              id="FDR_no"
-              label="FDR Number"
-              type="text"
-              defaultValue = {LC.FDR_no}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              className={classes.textField}
-          /> </FormControl>
-        </Grid>
-        <Grid item className={classes.grid} xs={12} sm={4}>
-          <FormControl margin='normal'>
-            <InputLabel htmlFor="amount"> Amount</InputLabel>
-            <Input
-              id="amount"
-              type="number"
-              defaultValue = {String(LC.amount)}
-              startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
-            />
-          </FormControl>
-        </Grid>
-      </Grid>
-      <Button color="primary" size='small'
-        variant='outlined' className={classes.button}
-        onClick={this.handleEditSubmit}>
-        submit
-      </Button>
+        <Button color="green" size='small'
+          variant='contained' className={classes.button}
+          onClick={this.handleEditSubmit}>
+          <Save style={{marginRight: '10px'}}/> Save
+        </Button>
       </div>    
 
     return form
@@ -1020,16 +1064,116 @@ class LCPanel extends React.Component {
       </Grid>
       :
       <div>
-        <Typography variant='body1'
-          style={{padding:'10px', margin:'10px'}}>
-          Margin Clearance Date : {formatDate(new Date(this.props.LC.m_cl_DT))}
-        </Typography>
-        <Typography variant='body1'
-          style={{padding:'10px', margin:'10px'}}>
-          Margin Cleared Amount : {formatAmount(this.props.LC.m_cl_amt)}
-        </Typography>
+        {/*<Typography variant='body1'
+                  style={{padding:'10px', margin:'10px'}}>
+                  Margin Clearance Date : {formatDate(new Date(this.props.LC.m_cl_DT))}
+                </Typography>
+                <Typography variant='body1'
+                  style={{padding:'10px', margin:'10px'}}>
+                  Margin Cleared Amount : {formatAmount(this.props.LC.m_cl_amt)}
+                </Typography>*/}
       </div>
       return form 
+  }
+
+  generateSummary = () => {
+    const {classes, LC} = this.props
+    const amount = parseFloat(LC.amount)
+    const due_amt = parseFloat(LC.payment.total_due)
+    const clearedAmount = parseFloat(LC.m_cl_amt)
+    const UnUtilized = amount-due_amt
+    const totalCharges = roundAmount(this.totalPaymentCharges + this.totalExtensionCharges)
+    const form = 
+      <div>
+        <Typography variant='body1' align='center' style={{color:'purple'}}>Summary</Typography>
+        <Divider inset style={{margin:'5px'}}/>
+        <Grid container>
+          <Grid item xs={2}>
+            <TableCell>
+              <Typography variant='body2' align='left' >
+                Payment Charges : 
+              </Typography>
+            </TableCell>
+            <TableCell>
+              <Typography variant='body2' align='left' >
+                Extension Charges : 
+              </Typography>
+            </TableCell><TableCell>
+              <Typography variant='body2' align='left' >
+                Total Charges : 
+              </Typography>
+            </TableCell>
+          </Grid>
+          <Grid item xs={2}>
+            <TableCell numeric>
+              {formatAmount(this.totalPaymentCharges)}
+            </TableCell>
+            <TableCell numeric>
+              {formatAmount(roundAmount(this.totalExtensionCharges))}
+            </TableCell>
+            <TableCell numeric>
+              {formatAmount(roundAmount(this.totalExtensionCharges + this.totalPaymentCharges))}
+            </TableCell>
+          </Grid>
+          <Grid item xs={2}>
+            <TableCell>
+              <Typography variant='body2' align='left' >
+                UnUtilized Amount : 
+              </Typography>
+            </TableCell>
+            <TableCell>
+              <Typography variant='body2' align='left' >
+                Loss : 
+              </Typography>
+            </TableCell>
+            {/*<TableCell>
+              <Typography variant='body2' align='left' >
+                Total Charges : 
+              </Typography>
+            </TableCell>*/}
+          </Grid>
+          <Grid item xs={2}>
+            <TableCell numeric>
+              {formatAmount(UnUtilized)}
+            </TableCell>
+            <TableCell numeric>
+              {formatAmount(roundAmount((UnUtilized/amount)*totalCharges))}
+            </TableCell>
+            {/*<TableCell numeric>
+              {formatAmount(totalCharges)}
+            </TableCell>*/}
+        </Grid>
+        <Grid item xs={2}>
+          <TableCell>
+            <Typography variant='body2' align='left' >
+              Clearance Date : 
+            </Typography>
+          </TableCell>
+          <TableCell>
+            <Typography variant='body2' align='left' >
+              Cleared Amount: 
+            </Typography>
+            <Typography variant='body2' align='left' >
+              Interest : 
+            </Typography>
+          </TableCell>
+        </Grid>
+        <Grid item xs={2}>
+          <TableCell numeric>
+            {LC.m_cl_DT ? formatDate(new Date(LC.m_cl_DT)) : 'Not Updated'}
+          </TableCell>
+          <TableCell numeric>
+            {clearedAmount > 0 ? formatAmount(clearedAmount) : 'Not Updated'}
+          </TableCell>
+          <TableCell numeric>
+            {clearedAmount > 0 ? formatAmount(roundAmount(clearedAmount-amount)) : '0'}
+          </TableCell>
+        </Grid>
+      </Grid>
+    </div>
+
+    return form
+      
   }
 
   //// Handle Cycle Content Switch
@@ -1038,7 +1182,7 @@ class LCPanel extends React.Component {
     const newCycleForm = this.generateCycleCreationForm();
     const paymentCheckForm = this.generateCyclePaymentSubmitForm();
     const cycleEditForm = this.generateCycleEditForm();
-    const LCEditForm = this.generateLCEditForm();
+    //const LCEditForm = this.generateLCEditForm();
     
     const {classes} = this.props;
     switch(this.state.cycleContent){
@@ -1046,11 +1190,18 @@ class LCPanel extends React.Component {
         return (
             <div>
             {newCycleForm}
-              <Button color="primary" size='small'
-                variant='outlined' className={classes.button}
+            <Grid item xs={6} sm={3} justify='flex-end'>
+              <Button color="blue" size='small' 
+                variant='contained' className={classes.button}
                 onClick={this.handleCycleSubmit}>
-                submit
+                Submit
               </Button>
+              <Button color="contained" size='small'
+                variant='outlined' className={classes.button}
+                onClick={this.handleCycle}>
+                Close
+              </Button>
+            </Grid>
             </div>
           )
       }
@@ -1060,9 +1211,9 @@ class LCPanel extends React.Component {
       case cycleSwitch.cyclePayCheck: {
         return paymentCheckForm;
       }
-      case cycleSwitch.edit: {
-        return LCEditForm;
-      }
+      // case cycleSwitch.edit: {
+      //   return LCEditForm;
+      // }
       case cycleSwitch.cycleFiles: {
         return this.generateCycleFilesForm(this.state.cycleIndex);
       }
@@ -1092,9 +1243,14 @@ class LCPanel extends React.Component {
             <div>
             {extensionForm}
               <Button color="primary" size='small'
-                variant='outlined' className={classes.button}
+                variant='contained' className={classes.button}
                 onClick={this.handleExtensionSubmit}>
                 submit
+              </Button>
+              <Button color="secondary" size='small'
+                variant='contained' className={classes.button}
+                onClick={this.handleExtensionClick}>
+                Close
               </Button>
             </div>
           )
@@ -1103,10 +1259,10 @@ class LCPanel extends React.Component {
         return (
             <div>
             {extensionForm}
-              <Button color="primary" size='small'
-                variant='outlined' className={classes.button}
+              <Button color="green" size='small'
+                variant='contained' className={classes.button}
                 onClick={this.handleEditExtensionSubmit}>
-                submit
+                <Save style={{marginRight: '10px'}}/> Save
               </Button>
             </div>
           )
@@ -1138,7 +1294,10 @@ class LCPanel extends React.Component {
   // Cycle Handles
 
   handleCycle = (event) => {
-    this.setState({cycleContent:cycleSwitch.newCycle})
+    this.setState({cycleContent:
+                      this.state.cycleContent === cycleSwitch.newCycle ?
+                      cycleSwitch.none : cycleSwitch.newCycle
+                    })
   }
 
   handleCycleEditClick = (cycleIndex) => (event) => {
@@ -1148,6 +1307,7 @@ class LCPanel extends React.Component {
                     cycleSwitch.none: cycleSwitch.cycleEdit: cycleSwitch.cycleEdit),
                    cycleIndex: cycleIndex,
                    due_DT: cycle.due_DT,
+                   payed_DT: cycle.payed_DT ? cycle.payed_DT : cycle.due_DT,
                    due_amt: cycle.due_amt,
                    acc: cycle.acc.acc,
                    cycleGST: cycle.acc.GST,
@@ -1167,6 +1327,7 @@ class LCPanel extends React.Component {
                     this.state.cycleContent === cycleSwitch.cyclePayCheck?
                     cycleSwitch.none: cycleSwitch.cyclePayCheck: cycleSwitch.cyclePayCheck),
                    cycleIndex: cycleIndex,
+                   payed_DT: cycle.due_DT,
                    payTID: cycle.pay.TID,
                    payPost: cycle.pay.post,
                    payBC: cycle.pay.bill_com,
@@ -1225,7 +1386,8 @@ class LCPanel extends React.Component {
       payGST: this.state.payGST,
       LB_pay_ref: this.state.pay_ref,
       payMode: this.state.payMode,
-      index: this.state.cycleIndex
+      index: this.state.cycleIndex,
+      payed_DT: this.state.payed_DT
     }
     const url = 'LCs/'+this.props.LC._id+
                     '/editCycle'
@@ -1262,7 +1424,8 @@ class LCPanel extends React.Component {
       payBC: this.state.payBC,
       payGST: this.state.payGST,
       index: this.state.cycleIndex,
-      payMode: this.state.payMode
+      payMode: this.state.payMode,
+      payed_DT: this.state.payed_DT
     }
     const url = 'LCs/'+this.props.LC._id+
                     '/checkCyclePayment'
@@ -1278,7 +1441,10 @@ class LCPanel extends React.Component {
   // Extension Handles
 
   handleExtensionClick = (event) => {
-    this.setState({extensionContent: extensionSwitch.newExtension})
+    this.setState({extensionContent:
+                    this.state.extensionContent ===  extensionSwitch.newExtension ?
+                    extensionSwitch.none: extensionSwitch.newExtension
+                  })
   }
 
   handleExtensionEditClick = (extensionIndex) => (event) => {
@@ -1291,9 +1457,9 @@ class LCPanel extends React.Component {
           openDT: String(extension.openDT).slice(0,10),
           expDT: String(extension.expDT).slice(0,10),
           amend: extension.amend,
-          open: extension.open,
-          post: extension.post,
-          GST: extension.GST,
+          open: extension.open === 0 ? roundAmount(this.props.LC.amount*0.0045) : extension.open ,
+          post: extension.post === 0 ? 200: extension.post,
+          GST: extension.GST === 0 ? roundAmount(this.props.LC.amount*0.0045*0.18): extension.GST,
           TID: extension.TID
          })
   }
@@ -1376,9 +1542,8 @@ class LCPanel extends React.Component {
   }
 
   handleEditClick = (event) => {
-    this.setState({ cycleContent :
-                    (this.state.cycleContent===cycleSwitch.edit)?
-                      cycleSwitch.none : cycleSwitch.edit})
+    this.setState({edit: !this.state.edit})
+    
   }
 
   handleEditSubmit = (event) => {
@@ -1393,6 +1558,7 @@ class LCPanel extends React.Component {
 
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
+      console.log(response)
       this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
     }).then((error) => {
@@ -1469,48 +1635,91 @@ class LCPanel extends React.Component {
       <div className={classes.root}>
         <ExpansionPanel expanded={expanded === 'panel1'} onChange={this.handlePanelChange('panel1')} divider>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography className={classes.heading}>{LC.issuer.name}</Typography>
             <Typography className={classes.heading}>{LC.supplier.name}</Typography>
-            <Typography className={classes.heading}>{LC.project.name + '(' + (LC.project.location) + ')'}</Typography>
+            {/*/<Typography className={classes.heading}>{LC.project.name + '(' + (LC.project.location) + ')'}</Typography>*/}
             <Typography className={classes.heading}>{LC.LC_no}</Typography>
             <Typography className={classes.heading}>Rs. {String(LC.amount)}</Typography>
-            <Typography className={classes.heading}>{LC.status}</Typography>
+            <Typography className={classes.heading}>{LC.status === 'Expired' ? 'Closed' : LC.status}</Typography>
+            {this.newPayment ? 
+             <InfoOutline className={classes.tableActionButtonIcon}/> : 
+             LC.status==='Expired' ? 
+             <Done className={classes.tableActionButtonIcon}/>
+             :
+             <div/>
+           }
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
-            <Grid container spacing={32} justify='flex-end'>
-            <Grid item className={classes.grid} xs={12} sm={6}>
-              <Grid item className={classes.grid}>
-                <Table
-                  isNumericColumn={[false,true,true,true,true]}
-                  tableHead = {['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
-                  tableData = {paymentData}
-                  icon={true}
-                />
+            <Grid container spacing={24} justify='flex-end' style={{flexGrow:1}}>
+              <Grid item className={classes.grid} xs={12}>
+                <Divider style={{margin:'5px',padding:'1px'}}/>
               </Grid>
-              {this.cycleContentSwitch()}                
-            </Grid>
-            <Grid item className={classes.grid} xs={12} sm={6}>
+              <Grid item className={classes.grid} xs={12} sm={6}>
+                <Grid container >
+                  <Grid item className={classes.grid} xs={12}>
+                    <Divider inset style={{margin:'10px'}}/>
+                    <Typography variant='body1' align='center' style={{color:'purple'}}>
+                      Payment Cycles
+                    </Typography>
+                    <Divider inset style={{margin:'10px'}}/>
+                    <Table
+                      isNumericColumn={[false,true,true,true,true]}
+                      tableHead = {['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
+                      tableData = {paymentData}
+                      icon={true}
+                    />
+                  </Grid>
+                  {this.cycleContentSwitch()}                
+                </Grid>
+              </Grid>
+              <Grid item className={classes.grid} xs={12} sm={6}>
                 <Grid item className={classes.grid} xs={12}>
+                  <Divider inset style={{margin:'10px'}}/>
+                  <Typography variant='body1' align='center' style={{color:'purple'}}>
+                    Extension Cycles
+                  </Typography>
+                  <Divider inset style={{margin:'10px'}}/>
                   <Table
                     icon={true}
                     isNumericColumn={['false,false,false,false,false']}
                     tableHead = {['Type','Opening Date', 'Expirty Date',
                                   'Bank Charges']}
                     tableData = {extensionData}
-                  />
+                  />                  
                 </Grid>
                 {this.extensionContentSwitch()}
+              </Grid>
+              <Grid item xs={12}>
+                <Divider />
+              </Grid>
+              <Grid item xs={2} />
+              <Grid item className={classes.grid} xs={8} >
+              {
+                this.state.edit === true ?
+                this.generateLCEditForm() : 
+                this.generateSummary()
+              }
+              </Grid>
+              <Grid item xs={2}/>
+              <Grid item className={classes.grid} xs={12}>
+                <Divider inset style={{margin:'0px',marginTop:'20px'}} />
+              </Grid>
+              <Grid item className={classes.grid} xs={12} sm={4}>
+                <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
+                  onClick={this.handleEditClick} >
+                  Edit <Edit style={{marginLeft:'10px'}} />
+                </Button>
+                <Button mini variant='contained' className={classes.button}
+                    disabled={this.state.closed}
+                    onClick={this.handleDelete} color="secondary">
+                    Delete <Delete style={{marginLeft:'10px'}}/>
+                </Button>
+                <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
+                    onClick={this.handleClose}>
+                    Close
+                </Button>
+              </Grid>
             </Grid>
-            <Grid item className={classes.grid} xs={6} sm={3}>
-              <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
-                onClick={this.handleEditClick}>Edit</Button>
-              <Button mini variant='contained' className={classes.button}
-                  onClick={this.handleDelete} colour={red}>Delete</Button>
-              <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
-                  onClick={this.handleClose}>
-                  Close
-              </Button>
-            </Grid>
-          </Grid>
           </ExpansionPanelDetails>
         </ExpansionPanel>
       </div>
