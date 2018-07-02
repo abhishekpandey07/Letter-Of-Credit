@@ -271,7 +271,7 @@ router.route('/payment/14').get(function(req,res){
       $match : {
         $and: [{"payment.cycles.due_DT" : {$gte : today , $lte : next14}}]
       }
-    }
+    },    
   ]).exec(function(error,LCs){
     if(error){
       console.log(error)

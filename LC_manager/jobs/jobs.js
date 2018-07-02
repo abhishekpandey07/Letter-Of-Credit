@@ -128,9 +128,9 @@ const weekPaymentUpdate = function (callback) {
     if(body.length > 0){
       var emailData = body.reduce((acc,prop,key)=>{
         acc.push({
-          'Issuer': prop.issuer[0],
+          'Issuer': prop.issuingBank[0].name,
           'LC no.': prop.LC_no,
-          'Supplier': prop.supplier[0],
+          'Supplier': prop.supplierd[0].name,
           'Due Date': String(prop.payment.cycles.due_DT).slice(0,10),
           'Due Amount': formatter.formatAmount(parseFloat(prop.payment.cycles.due_amt)),
         })
@@ -236,7 +236,7 @@ const ExpirationUpdate = function(callback) {
 const getJobSchedules = function(){
   var jobs = {}
   var rule = new cron.RecurrenceRule();
-  // everyday at 7 am. (15th second)
+  // everyday at 9 am. NO->(15th second)
   rule.hour = 9;
   rule.minute = 0;
   rule.second = 0;
@@ -250,7 +250,7 @@ const getJobSchedules = function(){
 
   var dayExpRule = new cron.RecurrenceRule();
   
-  // everyday at 7 a.m.
+  // everyday at 9 a.m.
   dayExpRule.hour = 9;
   dayExpRule.minute = 0;
   dayExpRule.second = 0
@@ -265,7 +265,7 @@ const getJobSchedules = function(){
 
   weekExpRule.dayOfWeek = 1 //monday
   weekExpRule.hour = 9;
-  weekExpRule.minute = 0;  // 8 a.m.
+  weekExpRule.minute = 0;  // 9 a.m.
   weekExpRule.second = 0;
 
   jobs['weekExpirationUpdate'] = cron.scheduleJob(weekExpRule,function(){
@@ -278,7 +278,7 @@ const getJobSchedules = function(){
   weekPayRule = new cron.RecurrenceRule();
   weekPayRule.dayOfWeek = 1 //monday
   weekPayRule.hour = 9;
-  weekPayRule.minute = 0;  // 8 a.m.
+  weekPayRule.minute = 0;  // 9 a.m.
   weekPayRule.second = 0;
 
   jobs['weekPaymentUpdate'] = cron.scheduleJob(weekPayRule,function(){
