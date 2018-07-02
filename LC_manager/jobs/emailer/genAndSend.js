@@ -76,11 +76,11 @@ var genAndSendPaymentEmail = function (data){
               columns: {
                   // Optionally, customize the column widths
                   customWidth: {
-                      'LC no.': '25%',
-                      'Supplier': '30%',
+                      'Issuer': '5%',
+                      'LC no.': '30%',
+                      'Supplier': '35%',
                       'Due Date': '15%',
                       'Due Amount': '15%',
-                      'Type': '15%'
                   },
                   // Optionally, change column text alignment
                   customAlignment: {
@@ -111,6 +111,57 @@ var genAndSendPaymentEmail = function (data){
     var options = {}
     options.to = 'lcupdate@mvomni.com'
     options.subject = 'LC Payment Update'
+    options.html = emailBody
+    emailer.sendMail(options)        
+    //require('fs').writeFileSync('preview.html', emailBody, 'utf8');
+    //require('fs').writeFileSync('preview.txt', emailText, 'utf8');  
+}
+
+var genAndSendPayWeekEmail = function (data){
+  var email = {
+      body: {
+          name: "",
+          intro: 'The Following LCs are due to expire in the next 14 days.',
+          table: {
+              data: data,
+              columns: {
+                  // Optionally, customize the column widths
+                  customWidth: {
+                      'Issuer': '5%',
+                      'LC no.': '30%',
+                      'Supplier': '35%',
+                      'Due Date': '15%',
+                      'Due Amount': '15%',
+                  },
+                  // Optionally, change column text alignment
+                  customAlignment: {
+                      'Due Amount': 'right'
+                  }
+              }
+          },
+
+          action: {
+              instructions: 'You can find more information about the LC payments and expirations in your dashboard:<br>' +
+                            'Note: This will only work when you are connected to office network.',
+              button: {
+                  color: '#3869D4',
+                  text: 'Go to portal',
+                  link: 'http://192.168.0.10:3000/'
+              }
+          },
+          //outro: ''
+      }
+    };
+
+    // gen an HTML email with the provided contents
+    var emailBody = mailGenerator.generate(email);
+
+    // gen the plaintext version of the e-mail (for clients that do not support HTML)
+    var emailText = mailGenerator.generatePlaintext(email);
+
+    var options = {}
+    options.to = 'lcupdate@mvomni.com'
+    options.subject = 'LC Weekly Payment Update'
     options.html = emailBody
     emailer.sendMail(options)        
     //require('fs').writeFileSync('preview.html', emailBody, 'utf8');
@@ -228,5 +279,6 @@ var genAndSendExpWeekEmail= function(data){
 module.exports={
   genAndSendPaymentEmail,
   genAndSendExpDayEmail,
-  genAndSendExpWeekEmail
+  genAndSendExpWeekEmail,
+  genAndSendPayWeekEmail
 }

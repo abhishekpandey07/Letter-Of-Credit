@@ -240,6 +240,54 @@ router.route('/month').get(function(req,res){
   })
 })
 
+router.route('/payment/14').get(function(req,res){
+  const today = new Date((new Date(Date.now())).setHours(0,0,0,0))
+  const next14 = new Date
+  next14.setDate(today.getDate() + 14)
+  LCDB.aggregate([
+    {
+      $lookup : {
+        from:"nativebanks",
+        localField: "issuer",
+        foreignField: "_id",
+        as: "issuingBank"
+      }
+    },
+    {
+      $lookup : {
+        from: "suppliers",
+        localField: "supplier",
+        foreignField: "_id",
+        as: "supplierd"
+      }
+    },
+    {
+      $unwind : "$payment.cycles"
+    },
+    {
+      $sort : {"payment.cycles.due_DT": 1}
+    },
+    {
+      $match : {
+        $and: [{"payment.cycles.due_DT" : {$gte : today , $lte : next14}}]
+      }
+    }
+  ]).exec(function(error,LCs){
+    if(error){
+      console.log(error)
+      
+      res.end(error)
+    }else{
+      console.log(LCs)
+      res.format({
+        json: function(){
+          res.json(JSON.stringify(LCs))
+        }
+      })
+    }
+  })
+})
+
 // TODO : Add a routine to get all the LCs expiring in 14 days.
 router.route('/LC/expiring').get(function (req,res) {
   const today = new Date((new Date(Date.now())).setHours(0,0,0,0))
@@ -310,6 +358,7 @@ router.route('/LC/expiring').get(function (req,res) {
     }
   })
 })
+
 
 // TODO : Add a routine to get all the LCs expiring in 14 days.
 router.route('/30days').get(function (req,res) {

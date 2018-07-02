@@ -106,5 +106,5 @@ function onListening() {
   console.log('Next payment Update @ ' + paymentUpdate.nextInvocation())
   console.log('Next dayExpiration Update @ ' + jobSchedules.dayExpirationUpdate.nextInvocation())
   console.log('Next weekExpiration Update @ '+ jobSchedules.weekExpirationUpdate.nextInvocation())
-
+  console.log('Next weekPayment Update @ '+ jobSchedules.weekPaymentUpdate.nextInvocation())
 }

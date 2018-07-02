@@ -22,6 +22,17 @@ var mailGenerator = new Mailgen({
 
 var data = []
 
+var callPaymentApi = async () => {
+    const url = 'http://localhost:3001/info/payment/14'
+    var response = await fetch(url)
+    const body = await response.json()
+    if(response.status !== 200){
+      console.log(response.status)
+      return null
+    }
+    
+    return EJSON.parse(body)   
+  }
 
 function onPaymentUpdate(callback) {
 
@@ -53,6 +64,7 @@ function onPaymentUpdate(callback) {
         console.log(prop)
         LCDB.findById(prop._id._id)
         .populate('supplier',['name'])
+        .populate('issuer',['name'])
         .exec(function(error,LC){
           if(error){
             console.log(error)
@@ -70,11 +82,11 @@ function onPaymentUpdate(callback) {
                 LC.payment.cycles[prop].pay.GST = GST
                 LC.payment.cycles[prop].pay.post = postage
                 data.push({
+                  'Issuer': LC.issuer.name,
                   'LC No.': LC.LC_no,
                   'Supplier': LC.supplier.name,
                   'Due Date': String(LC.payment.cycles[prop].due_DT).slice(0,10),
                   'Due Amount': formatter.formatAmount(parseFloat(LC.payment.cycles[prop].due_amt)),
-                  'Type': LC.payment.cycles[prop].pay.mode
                 })
                 total += due_amt
                 return total
@@ -107,6 +119,31 @@ function onPaymentUpdate(callback) {
     }
   })
 }
+
+
+const weekPaymentUpdate = function (callback) {
+  callPaymentApi()
+  .then((body) => {
+    
+    if(body.length > 0){
+      var emailData = body.reduce((acc,prop,key)=>{
+        acc.push({
+          'Issuer': prop.issuer[0],
+          'LC no.': prop.LC_no,
+          'Supplier': prop.supplier[0],
+          'Due Date': String(prop.payment.cycles.due_DT).slice(0,10),
+          'Due Amount': formatter.formatAmount(parseFloat(prop.payment.cycles.due_amt)),
+        })
+        return acc
+      },[])
+      genAndSend.genAndSendPayWeekEmail(emailData)
+      //console.log(emailData)
+    }
+    callback()
+  })
+  .catch((error)=>console.log(error))
+}
+
 
 var callExpiryApi = async () => {
     const url = 'http://localhost:3001/info/LC/expiring'
@@ -200,9 +237,9 @@ const getJobSchedules = function(){
   var jobs = {}
   var rule = new cron.RecurrenceRule();
   // everyday at 7 am. (15th second)
-  rule.hour = 7;
+  rule.hour = 9;
   rule.minute = 0;
-  rule.second = 15;
+  rule.second = 0;
 
   jobs['paymentUpdate'] = cron.scheduleJob(rule,function(){
     console.log('Sending Payment Update Emails.')
@@ -214,7 +251,7 @@ const getJobSchedules = function(){
   var dayExpRule = new cron.RecurrenceRule();
   
   // everyday at 7 a.m.
-  dayExpRule.hour = 7;
+  dayExpRule.hour = 9;
   dayExpRule.minute = 0;
   dayExpRule.second = 0
   
@@ -227,13 +264,26 @@ const getJobSchedules = function(){
   var weekExpRule = new cron.RecurrenceRule();
 
   weekExpRule.dayOfWeek = 1 //monday
-  weekExpRule.hour = 8;
+  weekExpRule.hour = 9;
   weekExpRule.minute = 0;  // 8 a.m.
   weekExpRule.second = 0;
 
   jobs['weekExpirationUpdate'] = cron.scheduleJob(weekExpRule,function(){
     console.log('Sending Weekly Expiration Update Emails.')
     weekExpirationUpdate(function(){
+      console.log('finished')
+    })
+  })
+
+  weekPayRule = new cron.RecurrenceRule();
+  weekPayRule.dayOfWeek = 1 //monday
+  weekPayRule.hour = 9;
+  weekPayRule.minute = 0;  // 8 a.m.
+  weekPayRule.second = 0;
+
+  jobs['weekPaymentUpdate'] = cron.scheduleJob(weekPayRule,function(){
+    console.log('Sending Weekly Payment Update Emails.')
+    weekPaymentUpdate(function(){
       console.log('finished')
     })
   })
