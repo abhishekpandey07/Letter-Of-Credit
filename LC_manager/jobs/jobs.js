@@ -42,7 +42,7 @@ function onPaymentUpdate(callback) {
       var payments = []
       if(this.payment.cycles[idx].payed != true &&
          this.payment.cycles[idx].due_DT <= today &&
-         this.status != 'Expired'){
+         this.status != 'Closed'){
         var amount = this.payment.cycles[idx].due_amt;
         payments.push(idx)
       }
@@ -120,11 +120,11 @@ function onPaymentUpdate(callback) {
   })
 }
 
-
+var total = 0
 const weekPaymentUpdate = function (callback) {
   callPaymentApi()
   .then((body) => {
-    
+    total = 0
     if(body.length > 0){
       var emailData = body.reduce((acc,prop,key)=>{
         acc.push({
@@ -134,10 +134,15 @@ const weekPaymentUpdate = function (callback) {
           'Due Date': String(prop.payment.cycles.due_DT).slice(0,10),
           'Due Amount': formatter.formatAmount(parseFloat(prop.payment.cycles.due_amt)),
         })
+        total += parseFloat(prop.payment.cycles.due_amt)
         return acc
       },[])
-      genAndSend.genAndSendPayWeekEmail(emailData)
-      //console.log(emailData)
+      emailData.push({
+        'Due Date': 'Total',
+        'Due Amount': formatter.formatAmount(total)
+      })
+      //genAndSend.genAndSendPayWeekEmail(emailData)
+      console.log(emailData)
     }
     callback()
   })
@@ -170,8 +175,6 @@ const filterExpirationData = function(obj){
   }
 
 const dayExpirationUpdate= function (callback) {
-  var today = new Date (Date.now())
-  today = new Date(today.setHours(24,0,0,0))
   //var today7 = new Date()
   //today7.setDate( today.getDate())
   //console.log(today7)
@@ -222,12 +225,26 @@ const weekExpirationUpdate = function (callback) {
 }
 
 /* Should the Letter of Credits be automatically expiring ?*/
-const ExpirationUpdate = function(callback) {
-  today = new Date((new Date(Date.now()).setHours(24,0,0,0)))
+const LCExpiryAction = function(callback) {
   callExpiryApi()
   .then((body) => {
-    var LCExpiring = body.filter(filterExpirationData)
+    var LCExpiring = body.filter(filterExpirationData);
+    LC.Expiring.map((prop,key) => {
+      LCDB.find({_id:prop._id},function(error,LC){
+        if(error){
+          console.log('Error retreiving LC')  
+        } else {
+          LC.status = 'Expired';
+          LC.save(function(error,LCID){
+            console.log('LC with ID : ' + prop._id + ' was successfully marked as expired')
+          })
+        }
+      })
+      console.log(LC.length + ' Letters of credit were marked as expired.')
+      callback()
+    })
   })
+  .catch((error) => {console.log(error)})
 }
 
 
@@ -253,13 +270,25 @@ const getJobSchedules = function(){
   // everyday at 9 a.m.
   dayExpRule.hour = 9;
   dayExpRule.minute = 0;
-  dayExpRule.second = 0
+  dayExpRule.second = 0;
   
   jobs['dayExpirationUpdate'] = cron.scheduleJob(dayExpRule,function(){
     console.log(' Sending day Expiration Emails.')
     dayExpirationUpdate(function(){
     console.log('finished')
   })})
+
+  var LCExpiryActionRule = new cron.RecurrenceRule();
+  LCExpiryActionRule.hour=23;
+  LCExpiryActionRule.minute=59;
+  LCExpiryActionRule.second=0;
+
+  jobs['LCExpiryAction'] = cron.scheduleJob(LCExpiryActionRule,function(){
+    console.log(' Sending day Expiration Emails.')
+    LCExpiryAction(function(){
+    console.log('finished')
+  })})
+
 
   var weekExpRule = new cron.RecurrenceRule();
 

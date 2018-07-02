@@ -329,7 +329,7 @@ router.route('/LC/expiring').get(function (req,res) {
     {
       $match : {
         $and: [{"date.expDT" : {$gte : today , $lte : next14}},
-                {"status" : {$ne : "Expired"}}
+                {"status" : {$ne : "Closed"}}
               ]
       }
     },

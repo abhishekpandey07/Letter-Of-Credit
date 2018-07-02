@@ -120,3 +120,5 @@ typings/
 
 DATA_Files/
 .keys/
+
+emailer.js

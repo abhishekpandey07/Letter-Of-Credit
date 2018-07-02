@@ -104,7 +104,7 @@ var LCSchema = new mongoose.Schema({
     m_cl_amt: { type : mongoose.Schema.Types.Decimal128, default: 0 },
     amount : { type : mongoose.Schema.Types.Decimal128, required : true },
     payment: LC_Payment_Schema,
-    status : {type: String, enum: ['Active', 'Expired', 'InValid', 'Extended']} //may add these later 'Completed', 'Closed']},
+    status : {type: String, enum: ['Active', 'Expired', 'InValid', 'Extended', 'Closed']} //may add these later 'Completed', 'Closed']},
     //lock: {type: Boolean, deafault: false}
 
    

@@ -40,7 +40,7 @@ function addBankLC(bank,LC,callback){
 
 function removeBankLC(bank,LC,callback){
 
-    if(LC.status !== 'Expired'){
+    if(LC.status !== 'Closed'){
       var LC_used = parseFloat(bank.LC_used);
       var due_amt = parseFloat(LC.payment.due_amt)
       var amount = parseFloat(LC.amount);

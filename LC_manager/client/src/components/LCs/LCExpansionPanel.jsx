@@ -152,7 +152,7 @@ class LCPanel extends React.Component {
       m_cl_amt: 0,
       
       //other states
-      closed: this.props.LC.status==='Expired',
+      closed: this.props.LC.status==='Closed',
       edit: false,
       refFile: ''
     }
@@ -191,7 +191,7 @@ class LCPanel extends React.Component {
       post:200,
       GST:0,
       //other states
-      closed: this.props.LC.status==='Expired',
+      closed: this.props.LC.status==='Closed',
       edit: false,
       refFile: ''
     })
@@ -1223,7 +1223,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     const paymentCheckForm = this.generateCyclePaymentSubmitForm();
     const cycleEditForm = this.generateCycleEditForm();
     //const LCEditForm = this.generateLCEditForm();
-    
+    const disableNewCycle = (this.props.LC.status === 'Expired') || this.state.closed
     const {classes} = this.props;
     switch(this.state.cycleContent){
       case cycleSwitch.newCycle:{
@@ -1258,13 +1258,13 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
         return this.generateCycleFilesForm(this.state.cycleIndex);
       }
       case cycleSwitch.none:{
-        return <Button mini disabled={this.state.closed} 
+        return <Button mini disabled={disableNewCycle} 
                 variant='contained' className={classes.button}
                 onClick={this.handleCycle}>Create New Cycle</Button>        
       }
       default:{
         return <Button mini variant='contained' className={classes.button}
-                disabled={this.state.closed}
+                disabled={disableNewCycle}
                 onClick={this.handleCycle}>Create New Cycle</Button>        
       }
 
@@ -1276,7 +1276,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
   extensionContentSwitch = () => {
     const extensionForm = this.generateExtensionForm();
     const {classes} = this.props;
-
+    const disableNewExtension = (this.props.LC.status === 'Expired') || this.state.closed
     switch(this.state.extensionContent){
       case extensionSwitch.newExtension:{
         return (
@@ -1315,7 +1315,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
         return this.state.closed? 
           this.generateMarginClearanceForm()
           :
-          <Button size='small' disabled={this.state.closed}
+          <Button size='small' disabled={disableNewExtension}
             variant='contained' className={classes.button}
             onClick={this.handleExtensionClick}>Add Ext.</Button>        
       }
@@ -1677,13 +1677,12 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography className={classes.heading}>{LC.issuer.name}</Typography>
             <Typography className={classes.heading}>{LC.supplier.name}</Typography>
-            {/*/<Typography className={classes.heading}>{LC.project.name + '(' + (LC.project.location) + ')'}</Typography>*/}
             <Typography className={classes.heading}>{LC.LC_no}</Typography>
             <Typography className={classes.heading}>Rs. {String(LC.amount)}</Typography>
-            <Typography className={classes.heading}>{LC.status === 'Expired' ? 'Closed' : LC.status}</Typography>
+            <Typography className={classes.heading}>{LC.status}</Typography>
             {this.newPayment ? 
              <InfoOutline className={classes.tableActionButtonIcon}/> : 
-             LC.status==='Expired' ? 
+             LC.status==='Closed' ? 
              <Done className={classes.tableActionButtonIcon}/>
              :
              <div/>

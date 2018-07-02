@@ -883,9 +883,9 @@ router.put('/:id/close', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
     var LC = res.locals.LC;
-    LC.status === 'Expired'? res.format({json:function(){res.json(JSON.stringify(LC))}}): null
+    LC.status === 'Closed'? res.format({json:function(){res.json(JSON.stringify(LC))}}): null
     console.log('Updating LC')
-    LC.status = 'Expired';
+    LC.status = 'Closed';
 
     bankMethods.closeLC(res.locals.issuer,LC,function(error,bank){
         if(error) {
