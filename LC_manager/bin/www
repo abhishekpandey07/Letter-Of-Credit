@@ -19,15 +19,15 @@ app.set('port', port);
 /**
  * Create HTTP server.
  */
-var privateKey  = fs.readFileSync('.keys/key.pem', 'utf8');
-var certificate = fs.readFileSync('.keys/cert.pem', 'utf8');
+//var privateKey  = fs.readFileSync('.keys/key.pem', 'utf8');
+//var certificate = fs.readFileSync('.keys/cert.pem', 'utf8');
 
 var server = http.createServer(app);
-var httpsServer = https.createServer({
+/*var httpsServer = https.createServer({
   key: privateKey,
   cert: certificate,
   passphrase: 'f-22raptor2'
-},app)
+},app)*/
 
 /**
  * Listen on provided port, on all network interfaces.

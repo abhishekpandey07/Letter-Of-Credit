@@ -1,4 +1,15 @@
 const emailer = require('./emailer')
+const Mailgen = require('mailgen')
+
+var mailGenerator = new Mailgen({
+    theme: 'salted',
+    product: {
+        name: 'MVOMNI Letter of Credit Manager',
+        link: 'http://192.168.0.10:3000'
+    }
+})
+
+const updateEmail = 'lcupdate@mvomni.com'
 
 var genAndSendExpDayEmail= function(data){
   var email = {
@@ -40,13 +51,13 @@ var genAndSendExpDayEmail= function(data){
   };
 
   // gen an HTML email with the provided contents
-  var emailBody = mailGenerator.gen(email);
+  var emailBody = mailGenerator.generate(email);
 
   // gen the plaintext version of the e-mail (for clients that do not support HTML)
-  var emailText = mailGenerator.genPlaintext(email);
+  var emailText = mailGenerator.generatePlaintext(email);
 
   var options = {}
-  options.to = 'abhi02.1998@gmail.com'
+  options.to = 'lcupdate@mvomni.com'
   options.subject = 'LC Expiration Update'
   options.html = emailBody
   emailer.sendMail(options)        
@@ -92,13 +103,13 @@ var genAndSendPaymentEmail = function (data){
     };
 
     // gen an HTML email with the provided contents
-    var emailBody = mailGenerator.gen(email);
+    var emailBody = mailGenerator.generate(email);
 
     // gen the plaintext version of the e-mail (for clients that do not support HTML)
-    var emailText = mailGenerator.genPlaintext(email);
+    var emailText = mailGenerator.generatePlaintext(email);
 
     var options = {}
-    options.to = 'abhi02.1998@gmail.com'
+    options.to = 'lcupdate@mvomni.com'
     options.subject = 'LC Payment Update'
     options.html = emailBody
     emailer.sendMail(options)        
@@ -146,13 +157,13 @@ var genAndSendExpDayEmail= function(data){
   };
 
   // gen an HTML email with the provided contents
-  var emailBody = mailGenerator.gen(email);
+  var emailBody = mailGenerator.generate(email);
 
   // gen the plaintext version of the e-mail (for clients that do not support HTML)
-  var emailText = mailGenerator.genPlaintext(email);
+  var emailText = mailGenerator.generatePlaintext(email);
 
   var options = {}
-  options.to = 'abhi02.1998@gmail.com'
+  options.to = 'lcupdate@mvomni.com'
   options.subject = 'LC Expiration Update'
   options.html = emailBody
   emailer.sendMail(options)        
@@ -200,13 +211,13 @@ var genAndSendExpWeekEmail= function(data){
   };
 
   // gen an HTML email with the provided contents
-  var emailBody = mailGenerator.gen(email);
+  var emailBody = mailGenerator.generate(email);
 
   // gen the plaintext version of the e-mail (for clients that do not support HTML)
-  var emailText = mailGenerator.genPlaintext(email);
+  var emailText = mailGenerator.generatePlaintext(email);
 
   var options = {}
-  options.to = 'abhi02.1998@gmail.com'
+  options.to = 'lcupdate@mvomni.com'
   options.subject = 'LC Weekly Expiration Update'
   options.html = emailBody
   emailer.sendMail(options)        

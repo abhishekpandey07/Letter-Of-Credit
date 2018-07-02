@@ -96,7 +96,7 @@ class LCHome extends React.Component{
 
       var searchBar =
         <Grid container justify='flex-end'>
-          <Grid item className={classes.grid} xs={12} sm={12} md={2}>
+          <Grid item className={classes.grid} xs={12} sm={12} md={3}>
              <FormControl fullWidth={true} margin='normal'>
               <InputLabel htmlFor="issuer"> Search By</InputLabel>
               <Select
@@ -115,7 +115,7 @@ class LCHome extends React.Component{
             </FormControl>
           </Grid>
           {this.state.arrange === 'supplier' ?
-          <Grid item className={classes.grid} xs={12} sm={12} md={2}>
+          <Grid item className={classes.grid} xs={12} sm={12} md={3}>
              <FormControl fullWidth={true} margin='normal'>
               <InputLabel htmlFor="supplierSelect"> Select a supplier</InputLabel>
               <Select
@@ -138,7 +138,7 @@ class LCHome extends React.Component{
           <div/>
          }
          {this.state.arrange === 'issuing bank' ?
-          <Grid item className={classes.grid} xs={12} sm={12} md={2}>
+          <Grid item className={classes.grid} xs={12} sm={12} md={3}>
              <FormControl fullWidth={true} margin='normal'>
               <InputLabel htmlFor="issuerSelect"> Select a bank</InputLabel>
               <Select
@@ -160,7 +160,7 @@ class LCHome extends React.Component{
           </Grid>:
           <div/>
          }
-          <Grid item className={classes.grid} xs={12} sm={12} md={3}>
+          <Grid item className={classes.grid} xs={12} sm={12} md={4}>
             <Grid container spacing={8} alignItems="flex-end">
               <Grid item>
                 <Search style={{width:'17px'}} />
@@ -244,7 +244,7 @@ class LCHome extends React.Component{
                 cardSubtitle="Click on a panel to know more about or to update a Letter of Credit."
                 content={
                   <Grid container style={{flexGrow:1}}>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} sm={12} md={12}>
                       {searchBar}
                     </Grid>
                     <Grid item xs={12}>

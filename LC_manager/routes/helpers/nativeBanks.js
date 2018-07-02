@@ -66,7 +66,7 @@ function removeBankLC(bank,LC,callback){
 
 function closeLC(bank,LC,callback){
     var LC_used = parseFloat(bank.LC_used);
-    var used = parseFloat(LC.payment.due_amt);
+    var used = parseFloat(LC.payment.total_due);
     var amount = parseFloat(LC.amount)
 
     LC_used -= (amount - used);

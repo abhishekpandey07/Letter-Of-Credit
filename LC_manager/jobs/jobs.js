@@ -122,6 +122,8 @@ var callExpiryApi = async () => {
 
 
 const filterExpirationData = function(obj){
+    var today = new Date (Date.now())
+    today = new Date(today.setHours(24,0,0,0))
     console.log(obj)
     var expDT = new Date(obj.expDT) // why ? because the result is from aggregation.
     var ret = (expDT <= today)
@@ -164,7 +166,7 @@ const weekExpirationUpdate = function (callback) {
   .then((body) => {
     
     if(body.length > 0){
-      var emailData = LCExpiring.reduce((acc,prop,key)=>{
+      var emailData = body.reduce((acc,prop,key)=>{
         acc.push({
           'Issuer': prop.issuer[0],
           'LC no.': prop.LC_no,
@@ -227,6 +229,7 @@ const getJobSchedules = function(){
   weekExpRule.dayOfWeek = 1 //monday
   weekExpRule.hour = 8;
   weekExpRule.minute = 0;  // 8 a.m.
+  weekExpRule.second = 0;
 
   jobs['weekExpirationUpdate'] = cron.scheduleJob(weekExpRule,function(){
     console.log('Sending Weekly Expiration Update Emails.')

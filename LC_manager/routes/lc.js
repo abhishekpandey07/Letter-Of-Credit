@@ -664,7 +664,8 @@ router.put('/:id/checkCyclePayment', function(req, res) {
             TID: req.body.payTID,
             mode: req.body.payMode
         }
-    console.log(payed_DT)
+    console.log(req.body.payed_DT)
+
     cycle.payed_DT = req.body.payed_DT
     // saving the update cycle
     LC.payment.cycles[idx] = cycle;

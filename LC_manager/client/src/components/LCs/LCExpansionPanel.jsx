@@ -30,6 +30,7 @@ import EJSON from 'mongodb-extended-json'
 import {roundAmount, formatDate, formatAmount} from 'utils/common'
 import moment from 'moment'
 import {Done, Delete, Save} from '@material-ui/icons'
+import {List, ListItem} from '@material-ui/core'
 
 const styles = theme => ({
   root: {
@@ -1081,26 +1082,63 @@ class LCPanel extends React.Component {
     const amount = parseFloat(LC.amount)
     const due_amt = parseFloat(LC.payment.total_due)
     const clearedAmount = parseFloat(LC.m_cl_amt)
+    const marginAmount = parseFloat(LC.m_amt)
     const UnUtilized = amount-due_amt
     const totalCharges = roundAmount(this.totalPaymentCharges + this.totalExtensionCharges)
     const form = 
       <div>
-        <Typography variant='body1' align='center' style={{color:'purple'}}>Summary</Typography>
+        <Typography variant='title' align='center' style={{color:'purple'}}>Summary</Typography>
         <Divider inset style={{margin:'5px'}}/>
-        <Grid container>
+	<Grid item xs={12}>
+	<Grid container justify='center'>
+          <Grid item xs={6}>
+            <TableCell>
+              <Typography variant='body1' align='center' style={{color:'purple'}}>
+                Projects 
+              </Typography>
+            </TableCell>
+	    {
+		[LC.project].map((prop,key) => {
+		   var name = prop.name.split(/[\s,-]+/).slice(1).join(' ')
+		   console.log(name);
+		   var element = 
+			<TableCell>
+                	    <Typography variant='body2' align='center'>
+				{name + ' - ' + prop.location}
+			    </Typography>
+	                </TableCell>					
+		    return element
+                })
+	    }
+          </Grid>
+	</Grid>
+	<Grid item xs={12}>
+	    <Divider style={{margin:'10px'}}/>
+	</Grid>
+	</Grid>
+	<Grid item xs={12}>
+	<Grid container>
+	  <Grid item xs={4}/>
+	  <Grid item xs={4}>
+	    <Typography variant='body1' align='center' style={{color:'purple'}}>
+                Charges and Margins
+            </Typography>
+	    <Divider style={{margin:'10px'}}/>
+          </Grid>
+	  <Grid item xs={4}/>
           <Grid item xs={2}>
             <TableCell>
               <Typography variant='body2' align='left' >
-                Payment Charges : 
+                Payment Charges: 
               </Typography>
             </TableCell>
             <TableCell>
               <Typography variant='body2' align='left' >
-                Extension Charges : 
+                Extension Charges: 
               </Typography>
             </TableCell><TableCell>
               <Typography variant='body2' align='left' >
-                Total Charges : 
+                Total Charges: 
               </Typography>
             </TableCell>
           </Grid>
@@ -1166,9 +1204,11 @@ class LCPanel extends React.Component {
             {clearedAmount > 0 ? formatAmount(clearedAmount) : 'Not Updated'}
           </TableCell>
           <TableCell numeric>
-            {clearedAmount > 0 ? formatAmount(roundAmount(clearedAmount-amount)) : '0'}
+            {clearedAmount > 0 ? 
+formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
           </TableCell>
         </Grid>
+      </Grid>
       </Grid>
     </div>
 
@@ -1692,19 +1732,20 @@ class LCPanel extends React.Component {
               <Grid item xs={12}>
                 <Divider />
               </Grid>
-              <Grid item xs={2} />
-              <Grid item className={classes.grid} xs={8} >
+        
+              <Grid item xs={12} sm={12} 
+md={12}>
               {
                 this.state.edit === true ?
                 this.generateLCEditForm() : 
                 this.generateSummary()
               }
               </Grid>
-              <Grid item xs={2}/>
+              
               <Grid item className={classes.grid} xs={12}>
                 <Divider inset style={{margin:'0px',marginTop:'20px'}} />
               </Grid>
-              <Grid item className={classes.grid} xs={12} sm={4}>
+              <Grid item className={classes.grid} xs={12} sm={6} md={6}>
                 <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
                   onClick={this.handleEditClick} >
                   Edit <Edit style={{marginLeft:'10px'}} />
