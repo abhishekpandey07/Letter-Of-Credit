@@ -5,11 +5,10 @@ var UserSchema = new mongoose.Schema({
     	type : String,
 	    required : true
 	},
-    
-    _id :{
-    	type : Number,
-	},
-    
+    _id: {
+        type:Number,
+        required: true,
+    },
     role : {
     	type: String,
     	required: true
@@ -22,17 +21,22 @@ var UserSchema = new mongoose.Schema({
     	trim: true
 	},
     
-    username : {
+    /*username : {
     	type: String,
     	unique: true,
     	required: true,
     	trim: true
-	},
+	},*/
 
     password : {
     	type: String,
     	required: true,
 	},
+    created: {
+        type: Date,
+        default: new Date(Date.now())
+    },
+    lastLogin: Date
 
 });
 

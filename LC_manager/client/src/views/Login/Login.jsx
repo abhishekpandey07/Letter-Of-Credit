@@ -166,44 +166,42 @@ class LoginPage extends React.Component {
         <Header {...rest}/>
         <div className={classes.content}>
         <div className={classes.container}>
-          <Grid container>
-            <Grid item xs={12} sm={12} md={4} />
-            <Grid item xs={12} sm={12} md={4}>
-              <Paper margin='normal' className={classes.paper} elevation={6}>
-                <div>
-                  <Typography variant='headline' align='center' >
-                    LC Manager Login
-                  </Typography>
-                </div>
-                <div clasName={classes.content} justifyContent='center'>
-                <FormControl margin='normal' fullWidth={true} >
-                  <TextField
-                    required
-                    id='username'
-                    type='text'
-                    label='username'
-                  />
-                </FormControl>
-                </div>
-                <div>
-                <FormControl fullWidth={true} margin='normal'>
-                  <TextField
-                    error={this.state.error}
-                    required
-                    id='pass'
-                    type='password'
-                    label='password'
-                  />
-                </FormControl>
-                </div>
-                <div>
-                <Button id='submit' variant='contained' onClick={this.handleSubmit} align='center'>
-                  Submit
-                </Button>
-                </div>
+          <Grid container justify='center' alignItems='center'>
+            <Grid item xs={6} sm={3} md={3}>
+              <Paper style={{padding:'10px 10px', marginLeft: 'auto', marginRight:'auto'}} elevation={6}>
+                <Grid container justify='space-around' alignItems='center' direction='column'>
+                    <Typography variant='headline' align='center' style={{padding:'10px',marginTop:'10px'}} >
+                      LC Manager Login
+                    </Typography>
+                  <Grid item xs={12} sm={12} md={12}>
+                    <FormControl margin='normal'  >
+                      <TextField
+                        required
+                        id='username'
+                        type='text'
+                        label='Email'
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={12}>
+                    <FormControl  margin='normal'>
+                      <TextField
+                        error={this.state.error}
+                        required
+                        id='pass'
+                        type='password'
+                        label='password'
+                      />
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={12} md={12}>
+                    <Button id='submit' variant='contained' onClick={this.handleSubmit} align='center'>
+                      Submit
+                    </Button>
+                  </Grid>
+                </Grid>
               </Paper>
             </Grid>
-            <Grid item xs={12} sm={12} md={4} />
           </Grid>
         </div>
         </div>

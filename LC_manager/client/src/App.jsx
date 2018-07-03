@@ -6,14 +6,16 @@ import LoginPage from 'views/Login/Login.jsx'
 import Dashboard from 'layouts/Dashboard/Dashboard'
 import axios from 'axios'
 import EJSON from 'mongodb-extended-json'
+import SplashComponent from 'SplashPage.jsx'
 const hist = createBrowserHistory();
+
 class App extends React.Component {
   constructor(props){
     super(props)
     this.state ={
       name: null,
       role: null,
-      authenticated: false,
+      authenticated: null,
     }
   }
   
@@ -21,6 +23,8 @@ class App extends React.Component {
       const url = '/users/sessionAuthentication'
       var res = await axios.get(url,{credentials: 'include'})
       const data = await EJSON.parse(res.data);
+      console.log(data)
+      this.setState({authenticated: data.authenticated})
       if(data.authenticated === true){
           console.log('Authenticated! providing access')
           this.handleLoginSuccess(data)
@@ -52,6 +56,8 @@ class App extends React.Component {
   }
 
   render () {
+    if(this.state.authenticated !== null){
+      
     const LoginSwitch = (<Switch>
                 <Route path='/' component={this.loginPage} key='login' />
               </Switch>) 
@@ -68,9 +74,11 @@ class App extends React.Component {
     return (
 
       <Router history={hist}>
-        {this.state.authenticated ? authenticatedSwitch : LoginSwitch}
+        {this.state.authenticated===true ? authenticatedSwitch : LoginSwitch}
        </Router>)   
+    }
 
+    return <SplashComponent/>
   }
 }
 

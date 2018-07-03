@@ -16,7 +16,7 @@ import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 import tableStyle from "assets/jss/material-dashboard-react/tableStyle";
 import { Edit, Close, Check } from "@material-ui/icons";
-
+import Typography from '@material-ui/core/Typography'
 
 const actionsStyles = theme => ({
   root: {
@@ -169,7 +169,7 @@ class CustomPaginationActionsTable extends React.Component {
                       return (
                         <TableCell className={classes.tableCell} key={key}
                           numeric={this.props.isNumericColumn[key]}>
-                          {prop}
+                          <Typography style={{fontSize:'10px'}}>{prop}</Typography>
                         </TableCell>
                         );
                   })}

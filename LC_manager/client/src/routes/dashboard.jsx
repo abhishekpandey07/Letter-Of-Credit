@@ -8,8 +8,9 @@ import Typography from "views/Typography/Typography.jsx";
 import Icons from "views/Icons/Icons.jsx";
 import Maps from "views/Maps/Maps.jsx";
 import NotificationsPage from "views/Notifications/Notifications.jsx";
-import RegisterPage from 'views/Login/Register.jsx';
+import Users from 'views/Users/Users.jsx';
 import Projects from 'views/Projects/Projects.jsx';
+
 import {
   Dashboard,
   Person,
@@ -27,7 +28,8 @@ const dashboardRoutes = [
     sidebarName: "Dashboard",
     navbarName: "Material Dashboard",
     icon: Dashboard,
-    component: DashboardPage
+    component: DashboardPage,
+    roles: ['admin','read','readWrite']
   },/*
   {
     path: "/user",
@@ -72,39 +74,44 @@ const dashboardRoutes = [
     component: NotificationsPage
   },*/
   {
-    path: "/Banks",
+    path: "/banks",
     sidebarName: "Banks",
     icon: Home,
     component: Banks,
-    navbarName: "Bank Accounts And Information"
-
+    navbarName: "Bank Accounts And Information",
+    roles: ['admin','read','readWrite']
   },
   {
-    path: "/Suppliers",
+    path: "/suppliers",
     sidebarName: "Suppliers",
     icon: Person,
     component: Suppliers,
-    navbarName: "Suppliers Information"
+    navbarName: "Suppliers Information",
+    roles: ['admin','read','readWrite']
   },
   {
     path: "/LCs",
     sidebarName: "Letters Of Credit",
     icon: LibraryBooks,
     component: LCs,
-    navbarName: "Letters of Credit"
+    navbarName: "Letters of Credit",
+    roles: ['admin','read','readWrite']
   },
   {
-    path: "/Projects",
+    path: "/projects",
     sidebarName: "Projects",
     icon: ContentPaste,
     component: Projects,
-    navbarName: "Projects Information"
+    navbarName: "Projects Information",
+    roles: ['admin','read','readWrite']
   },
   {
-    path: "/Register",
-    sidebarName: 'Register',
-    icon: ContentPaste,
-    component: RegisterPage,
+    path: '/users',
+    sidebarName: 'Users',
+    icon: Person,
+    component: Users,
+    navbarName: 'Users',
+    roles: ['admin']
   },
   { redirect: true, path: "/", to: "/dashboard", navbarName: "Redirect" }
 ];

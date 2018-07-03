@@ -276,9 +276,47 @@ var genAndSendExpWeekEmail= function(data){
   //require('fs').writeFileSync('preview.txt', emailText, 'utf8');
 }
 
+var genAndSendNewUserEmail = function(data){
+  var email = {
+      body: {
+          name: data.name,
+          intro: ['You have been successfully registered to LC Mangar Portal.','Use the following details to login'],
+          dictionary:{
+            email: data.email,
+            password: data.password
+          },
+          action: {
+              instructions: ['Note: You can change your password later.',
+                              'However, it is highly recommended that you use a stong password.'],
+              button: {
+                  color: '#3869D4',
+                  text: 'Go to portal',
+                  link: 'http://192.168.0.10:3000/'
+              }
+          },
+          //outro: ''
+      }
+  };
+
+  // gen an HTML email with the provided contents
+  var emailBody = mailGenerator.generate(email);
+
+  // gen the plaintext version of the e-mail (for clients that do not support HTML)
+  var emailText = mailGenerator.generatePlaintext(email);
+
+  var options = {}
+  options.to = data.email,
+  options.subject = 'LC Weekly Expiration Update'
+  options.html = emailBody
+  emailer.sendMail(options)        
+  //require('fs').writeFileSync('preview.html', emailBody, 'utf8');
+  //require('fs').writeFileSync('preview.txt', emailText, 'utf8');
+}
+
 module.exports={
   genAndSendPaymentEmail,
   genAndSendExpDayEmail,
   genAndSendExpWeekEmail,
-  genAndSendPayWeekEmail
+  genAndSendPayWeekEmail,
+  genAndSendNewUserEmail
 }

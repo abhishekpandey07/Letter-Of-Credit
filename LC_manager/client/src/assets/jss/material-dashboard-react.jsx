@@ -18,6 +18,8 @@
 // // // Variables - Styles that are used on more than one component
 // #############################
 
+import 'typeface-roboto'
+
 const drawerWidth = 260;
 
 const transition = {
@@ -48,6 +50,7 @@ const card = {
 };
 
 const defaultFont = {
+  font: 'typeface-roboto',
   fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
   fontWeight: "300",
   lineHeight: "1.2em"

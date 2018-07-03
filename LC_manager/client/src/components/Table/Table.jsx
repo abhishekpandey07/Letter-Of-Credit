@@ -9,7 +9,7 @@ import {
   Tooltip,
   IconButton
 } from "material-ui";
-
+import Typography from '@material-ui/core/Typography'
 import PropTypes from "prop-types";
 //import { Edit, Close, Check, Add, FileUpload } from "@material-ui/icons";
 import tableStyle from "assets/jss/material-dashboard-react/tableStyle";
@@ -73,12 +73,12 @@ function CustomTable({ ...props }) {
                     </TableCell> :
                     <CustomTableCell className={classes.tableCell} key={key}
                       numeric={props.isNumericColumn[key]}>
-                      {prop}
+                      <Typography style={{fontSize:'10px'}}>{prop}</Typography>
                     </CustomTableCell>
                     :
                     <CustomTableCell className={classes.tableCell} key={key}
                       numeric={props.isNumericColumn[key]}>
-                      {prop}
+                      <Typography style={{fontSize:'10px'}}>{prop}</Typography>
                     </CustomTableCell>
 
                   );

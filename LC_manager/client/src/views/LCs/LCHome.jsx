@@ -180,6 +180,13 @@ class LCHome extends React.Component{
               </Grid>
             </Grid>
           </Grid>
+          <Grid item >
+            <Button variant='contained' aria-label='add'
+            size='medium' color='primary' style={{marginTop:'32px'}}>
+            <AddIcon style={{width:'17px',height:'17px',marginRight:'10px'}}/>
+            <Typography align='center'> New LC</Typography>
+          </Button>
+          </Grid>
         </Grid>
 
       var panels

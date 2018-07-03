@@ -5,7 +5,8 @@ const express = require('express'),
       methodOverride = require('method-override'),
       userDB = mongoose.model('Users')
       bcrypt = require('bcrypt')
-
+      generatePassword = require('password-generator')
+      sendEmail = require('../jobs/emailer/genAndSend')
 router.use(bodyParser.urlencoded({ extended: true }))
 
 // no idea what this code does
@@ -18,19 +19,44 @@ router.use(methodOverride(function(req, res){
     }
 }))
 
+router.route('/').get(function(req,res){
+  userDB.find({},function(error,users){
+    if(error){
+      console.log(error)
+      return res.end(error)
+    } else {
+
+      var userData = users.map((user,key) => {
+        return {
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          username: user.username,
+          created: user.created,
+          lastLogin: user.lastLogin
+        }
+      })
+
+      return res.json(JSON.stringify(userData));
+    }
+
+  })
+})
+
 router.post('/register', function(req, res, next) {
   	console.log(req.body)
     if( req.body.name &&
   		req.body._id  &&
   		req.body.role &&
-  		req.body.username &&
-  		req.body.password &&
-  		req.body.email
+  		req.body.email &&
+      req.body.name
   		){
+
+      const password = generatePassword(12,false);
 
   		var user = null;
       console.log('computing hash')
-  		bcrypt.hash(req.body.password,10)
+  		bcrypt.hash(password,10)
   		.then((hash) => {
   			console.log('Generated Hash :' + hash)
   			user = {
@@ -49,7 +75,14 @@ router.post('/register', function(req, res, next) {
               console.log(error)
               return res.send(error)
             }
-            console.log('Sending reply')
+            
+            console.log('Sending email to the new user.')
+            sendEmail.genAndSendNewUserEmail({
+              email: req.body.email,
+              password: password,
+              name: req.body.name.split(' ')[0]
+            })
+            console.log('sending Reply')
             res.format({
               json: function(){
                 res.json(JSON.stringify(user.role))
@@ -137,6 +170,16 @@ router.post('/login', function(req, res, next) {
             req.session.authenticated = true
             req.session.role = user.role
             req.session.name = user.name
+
+            user.lastLogin = new Date(Date.now())
+            user.save(function(error,userID){
+              if(error){
+                console.log('Last Login could not be updated')
+                console.log(error)
+              } else{
+                console.log('Last Login was updated')
+              }
+            })
 
   					return res.json(JSON.stringify(data))  					
   				}

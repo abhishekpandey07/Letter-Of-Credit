@@ -35,11 +35,11 @@ class Sidebar extends React.Component {
   }
 
  render ()
-   {const { classes, color, logo, image, logoText, routes } = this.props;
+   {const { classes, color, logo, image, logoText, routes,data } = this.props;
        var links = (
        <List className={classes.list}>
          {routes.map((prop, key) => {
-           if (prop.redirect || prop.path==='/Register') return null;
+           if (prop.redirect || !prop.roles.includes(data.role)) return null;
            const listItemClasses = cx({
              [" " + classes[color]]: this.activeRoute(prop.path)
            });

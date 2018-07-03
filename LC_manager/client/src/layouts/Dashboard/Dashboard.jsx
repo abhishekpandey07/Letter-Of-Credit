@@ -13,7 +13,6 @@ import loginRoutes from 'routes/login.js'
 import LCRoutes from "routes/lcs.jsx"
 
 import appStyle from "assets/jss/material-dashboard-react/appStyle.jsx";
-import RegisterPage from 'views/Login/Register.jsx'
 import image from "assets/img/sidebar-2.jpg";
 import logo from "assets/img/reactlogo.png";
 import axios from 'axios'
@@ -24,10 +23,8 @@ class DashLayout extends React.Component {
     super(props)
     this.state = {
       mobileOpen: false,
-      permOpen: true,
-      data: this.props.data
+      permOpen: true,      
     }
-    console.log(this.props)
   }
 
   handleDrawerToggle = () => {
@@ -75,7 +72,7 @@ class DashLayout extends React.Component {
                 dashboardRoutes.map((prop, key) => {
                 if (prop.redirect)
                   return <Redirect from={prop.path} to={prop.to} key={key} />;
-                return <Route path={prop.path} render={(props) => {return <prop.component {...props} data={this.state.data}/>}} key={key} />;
+                return <Route path={prop.path} render={(props) => {return <prop.component {...props} data={this.props.data}/>}} key={key} />;
                 })
               }                         
             </Switch>
@@ -90,7 +87,7 @@ class DashLayout extends React.Component {
           handleDrawerToggle={this.handleDrawerToggle}
           open={this.state.mobileOpen}
           color="blue"
-          data={this.state.data}
+          data={this.props.data}
           permOpen={this.state.permOpen}
           permHandle={this.handlePermDrawerToggle}
           handleLogout={this.handleLogout}
@@ -102,10 +99,7 @@ class DashLayout extends React.Component {
             })} ref='mainPanel'
           >
           <div className={classes.mainPanel}>
-            {/*<Header
-              routes={dashboardRoutes}
-              {...rest}
-            />*/}
+            
             {/* On the /maps route we want the map to be on full screen - this is not possible if the content and conatiner classes are present because they have some paddings which would make the map smaller */}
             {this.getRoute() ? (
               <div className={classes.content}>
