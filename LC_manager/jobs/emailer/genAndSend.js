@@ -306,7 +306,7 @@ var genAndSendNewUserEmail = function(data){
 
   var options = {}
   options.to = data.email,
-  options.subject = 'LC Weekly Expiration Update'
+  options.subject = 'LCMANGAER Welcome Email'
   options.html = emailBody
   emailer.sendMail(options)        
   //require('fs').writeFileSync('preview.html', emailBody, 'utf8');
