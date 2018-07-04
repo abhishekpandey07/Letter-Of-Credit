@@ -36,7 +36,12 @@ var UserSchema = new mongoose.Schema({
         type: Date,
         default: new Date(Date.now())
     },
-    lastLogin: Date
+    lastLogin: Date,
+    locked : {
+        type: Boolean,
+        required: true,
+        default: false
+    }
 
 });
 

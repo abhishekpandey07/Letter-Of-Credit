@@ -33,13 +33,11 @@ class Users extends React.Component{
       this.state = {
         users: [],
       }
-      console.log('Created Users instance')
-      console.log(this.state)
     }
 
     callApi = async () => {
 
-      const response = await fetch('/users');
+      const response = await fetch('/users',{credentials:'include'});
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
       return EJSON.parse(body);

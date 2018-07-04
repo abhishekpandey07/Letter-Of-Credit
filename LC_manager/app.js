@@ -51,7 +51,10 @@ app.use(session({
 	}),*/
 	cookie:{
 
-	}
+	},
+	loginAttempts: 0,
+	blocked: false,
+	authenticated: false,
 }))
 /*app.use(cors({
 	credentials: 'include'

@@ -111,7 +111,7 @@ const dashboardRoutes = [
     icon: Person,
     component: Users,
     navbarName: 'Users',
-    roles: ['admin']
+    roles: ['admin','readWrite']
   },
   { redirect: true, path: "/", to: "/dashboard", navbarName: "Redirect" }
 ];
