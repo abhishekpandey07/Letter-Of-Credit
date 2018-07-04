@@ -31,7 +31,7 @@ const CycleSchema = new mongoose.Schema({
         bill_com: { type : mongoose.Schema.Types.Decimal128, default: 0},
         post: { type : mongoose.Schema.Types.Decimal128, default: 0},
         GST : { type : mongoose.Schema.Types.Decimal128, default: 0},
-        mode: {type: String, enum: ['Not Updated','Regular', 'Devolved']},
+        mode: {type: String, enum: ['Not Payed','Not Updated','Regular', 'Devolved'], default: 'Not Payed'},
         TID: {
             type: String,
             default: ''
@@ -102,8 +102,9 @@ var LCSchema = new mongoose.Schema({
     m_amt : { type : mongoose.Schema.Types.Decimal128, default: 0 },
     m_cl_DT : { type : Date },
     m_cl_amt: { type : mongoose.Schema.Types.Decimal128, default: 0 },
-    amount : { type : mongoose.Schema.Types.Decimal128, required : true },
+    amount : { type : mongoose.Schema.Types.Decimal128, required : true, min:0 },
     payment: LC_Payment_Schema,
+    closeDT: Date,
     status : {type: String, enum: ['Active', 'Expired', 'InValid', 'Extended', 'Closed']} //may add these later 'Completed', 'Closed']},
     //lock: {type: Boolean, deafault: false}
 

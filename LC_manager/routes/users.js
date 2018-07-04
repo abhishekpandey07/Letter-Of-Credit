@@ -7,7 +7,11 @@ const express = require('express'),
       bcrypt = require('bcrypt')
       generatePassword = require('password-generator')
       sendEmail = require('../jobs/emailer/genAndSend')
+      logger = require('../logger/logger')
 router.use(bodyParser.urlencoded({ extended: true }))
+
+userLogger = logger.createLogger('user.log');
+
 
 // no idea what this code does
 router.use(methodOverride(function(req, res){
@@ -116,7 +120,7 @@ router.post('/login', function(req, res, next) {
   		req.body.password
   		){
 
-  		userDB.findOne({username:req.body.username}, function(error,user){
+  		userDB.findOne({email:req.body.username}, function(error,user){
   			if(error) {
   				console.error(error)
   				error = new Error('User not found!')
@@ -168,8 +172,13 @@ router.post('/login', function(req, res, next) {
               status: 200
             }
             req.session.authenticated = true
-            req.session.role = user.role
-            req.session.name = user.name
+            
+            req.session.user = {
+              role: user.role,
+              ID: user._id,
+              name: user.name,
+              email: user.email
+            }
 
             user.lastLogin = new Date(Date.now())
             user.save(function(error,userID){
@@ -197,16 +206,14 @@ router.post('/login', function(req, res, next) {
 
 router.route('/sessionAuthentication')
   .get(function(req,res){
-    console.log(req.session)
     var data = undefined
-    if(req.session.name &&
-       req.session.role &&
+    if(req.session.user &&
        req.session.authenticated){
         
       req.session.authenticated ? 
       data = {
-        name: req.session.name,
-        role: req.session.role,
+        name: req.session.user.name,
+        role: req.session.user.role,
         authenticated: req.session.authenticated,
       }:
 
@@ -219,7 +226,6 @@ router.route('/sessionAuthentication')
         authenticated: false
       }
     }
-    console.log(data)
     try {
       res.format({
         json: function(){

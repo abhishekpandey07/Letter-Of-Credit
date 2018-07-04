@@ -203,6 +203,14 @@ router.route('/month').get(function(req,res){
       }
     },
     {
+      $lookup : {
+        from: "projects",
+        localField: "project",
+        foreignField: "_id",
+        as: "projectDetails"
+      }
+    },
+    {
       $unwind : "$payment.cycles"
     },
     {
@@ -212,8 +220,8 @@ router.route('/month').get(function(req,res){
       $group: {
         _id : { issuer : "$issuingBank.name" ,month : {$month: "$payment.cycles.due_DT"}, year : {$year : "$payment.cycles.due_DT"} },
         amount : {$sum: "$payment.cycles.due_amt"},
-        LC : {$push : {supplier : "$supplierd.name", LC_no: "$LC_no", payment : "$payment.cycles", issuer : "$issuingBank.name"}},
-        count : {$sum : 1}
+        LC : {$push : {supplier : "$supplierd.name", LC_no: "$LC_no", payment : "$payment.cycles", issuer : "$issuingBank.name", project: "$projectDetails.name"}},
+        count : {$sum : 1},
       }
     },
     {

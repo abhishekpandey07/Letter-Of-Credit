@@ -77,7 +77,7 @@ class TimeAnalysisCard extends React.Component {
   };  
 
   getDownloadButton(data){
-    const headers = ['Issuer','Supplier', 'LCNo', 'DueDate' ,'DueAmount','Payment'];
+    const headers = ['Issuer','Supplier', 'Project', 'LCNo', 'DueDate' ,'DueAmount','Payment'];
     var monthData = null
     var dateData = null
     var workBook = null
@@ -86,10 +86,11 @@ class TimeAnalysisCard extends React.Component {
         acc.push({
           Issuer: prop[0],
           Supplier: prop[1],
-          LCNO : prop[2],
-          DueDate: prop[3],
-          Dueamount: Number(prop[4].split(',').join('')),
-          Payment: prop[5]
+          Project: prop[2],
+          LCNO : prop[3],
+          DueDate: prop[4],
+          Dueamount: Number(prop[5].split(',').join('')),
+          Payment: prop[6]
         })
         return acc;
       },[])
@@ -106,6 +107,7 @@ class TimeAnalysisCard extends React.Component {
                 <ExcelSheet data={monthData} name={month[this.state.value]}>
                     <ExcelColumn label="Issuer" value="Issuer"/>
                     <ExcelColumn label="Supplier" value="Supplier"/>
+                    <ExcelColumn label="Project" value="Project"/>
                     <ExcelColumn label="LC no." value="LCNO"/>
                     <ExcelColumn label="Due Date" value="DueDate"/>
                     <ExcelColumn label="Due Amount" value="Dueamount"/>
@@ -139,7 +141,7 @@ class TimeAnalysisCard extends React.Component {
             
             const date = formatDate(new Date(lc.payment.due_DT))
 
-            const row = [String(prop._id.issuer),lc.supplier[0],String(lc.LC_no),date,formatAmount(lc.payment.due_amt),paid]
+            const row = [String(prop._id.issuer),lc.supplier[0],lc.project[0],String(lc.LC_no),date,formatAmount(lc.payment.due_amt),paid]
             data.monthData.push(row) 
 
             var index = data.dateWiseData.findIndex((obj)=>{
@@ -193,7 +195,7 @@ class TimeAnalysisCard extends React.Component {
             <PageTable
               isNumericColumn={[false,false,false,false,true,true]}
               tableHeaderColor="primary"
-              tableHead = {['Issuer','Supplier', 'LC No.', 'Due Date' ,'Due Amount',"Payment Type"]}
+              tableHead = {['Issuer','Supplier', 'Project','LC No.', 'Due Date' ,'Due Amount',"Payment Type"]}
               tableData = {monthTableData.monthData}
               download = {downloadButton}
             />

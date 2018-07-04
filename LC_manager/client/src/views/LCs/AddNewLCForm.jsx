@@ -122,7 +122,7 @@ class NewLCForm extends React.Component{
 
   handleSubmit = event => {
     
-    axios.post('/LCs', this.state)
+    axios.post('/LCs', this.state,{credentials : 'include'})
      .then(function(response){
         console.log(response)
         window.location ='/LCs'

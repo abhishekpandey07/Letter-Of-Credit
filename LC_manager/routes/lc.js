@@ -10,10 +10,27 @@ const express = require('express'),
       fs = require('fs'),
       mv = require('mv'),
       util = require('util');
+      logger = require('../logger/logger')
 
+// SchemaConnections
 const LCDB = mongoose.model('LC')
 const natBankDB = mongoose.model('nativeBanks')
 const supplierDB = mongoose.model('Supplier')
+
+// logger connections
+const lcLogger = logger.createLogger('LC.log')
+
+//
+const writeRoles = ['readWrite','admin']
+
+const saveErrorLog = function(error,LC_no){
+    lcLogger.log({
+        level: 'error',
+        message: ' could not edit Margin Details',
+        error: String(error),
+        LC_no: LC_no,
+    })
+}
 //  router.use makes sure that all the requests go through the defined packages first
 
 // adds req.body property to manipulate post requests
@@ -38,11 +55,17 @@ router.use(methodOverride(function(req, res){
 router.route('/')
     .get(function(req,res){
 
-    console.log('request session: ' + req.sessionID)
-    console.log(req.session)
-    try{
+    if(req.session.authenticated !== true){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized read attempt'
+        });
+        res.status(401)
+        return res.end('Not authorized')
+    }
+    
+    
 	LCDB.find({},null,{sort:[{'LC_no':1}]})
-        .sort()
 	    .populate('supplier')
 	    .populate('issuer')
         .populate('project',['name','location'])
@@ -52,8 +75,6 @@ router.route('/')
 		throw err;
 
 	    }else{
-        console.log('response Session : '+res.sessionID);
-        console.log(res.session)
 		res.format({
 		    /*html: function(){
 			res.render('LCs/index',{
@@ -68,14 +89,22 @@ router.route('/')
 		});
 	    }
 	});
-    }catch(error){
-        console.log(error)
-    }
     });
 
 // post request to create a supplier entry
 router.route('/').post(function(req,res){
     // GET values from POST requests. These can be done through forms or rest calls. These rely on the "name" attributes of forms
+    
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC creation attempt by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
+
     var issuer = req.body.issuer;
     var supplier = req.body.supplier;
     var dates = [{
@@ -127,16 +156,24 @@ router.route('/').post(function(req,res){
     payment: payment
     }, function(error,LC){
 	if(error){
-	    console.error(error)
-	    res.send('An error occured. Could not create the new LC.')
+	    lcLogger.log({
+            level: 'error',
+            message: String(error),
+            user: req.session.user,
+        })
+	    res.end('An error occured. Could not create the new LC.')
 	}else{
+
 	    // LC created
 	    // need to deduct LC_used from nativeBank
 	    natBankDB.findById(issuer, function(error, bank){
     		if(error){
-    		    console.log('error retreiving issuing bank data.');
-    		    console.error('error')
-    		    res.send('An error occured while retreiving issuing bank data.')
+    		    lcLogger.log({
+                    level: 'error',
+                    message: 'error retreiving issuing bank data.',
+                    error: String(error)
+                });
+    		    return res.end('An error occured while retreiving issuing bank data.')
     		} else {
     		    var LC_used = bank.LC_used;
     		    LC_used += LC.amount;
@@ -155,14 +192,20 @@ router.route('/').post(function(req,res){
     			return res.end(neg_error);
     		    }else {
     			// add LC to bank 
-    			
         			bankMethods.addBankLC(bank, LC, function(error,bank){
         			    if (error) {
-        				res.status = error.status;
-        				return res.end(error);
+                            lcLogger.log({
+                                level:'warning',
+                                message: 'LC limit of issuing bank could not be updated. LC limit may be inconsistent',
+                                bank: bank.name
+                            })
+            				return res.end(error);
         			    }
         			    else {
-        				console.log('LC successfully added to : '+ bank.name);
+        				    lcLogger.log({
+                                'level': 'info',
+                                message: 'LC limit of bank successfully updated.'
+                            })
         			    }
         			});
     		    }      
@@ -171,24 +214,37 @@ router.route('/').post(function(req,res){
 
         supplierDB.findById(supplier, function(error, supplier){
             if(error){
-                console.log('error retreiving supplier data.');
-                console.error('error')
-                res.send('An error occured while retreiving issuing supplier data.')
+                lcLogger.log({
+                    level: 'warning',
+                    message: 'Supplier was not found. LC could not be updated to supplier',
+                    supplierID: supplier
+                })
+                return res.end('An error occured while retreiving issuing supplier data.')
             } else {
                 supplierMethods.addLC(supplier, req.body.supBank, LC, function(error,supplier){
                     if (error) {
-                    res.status = error.status;
-                    return res.end(error);
+                        lcLogger.log({
+                            level:'warning',
+                            message: 'LC could not be added to supplier.',
+                            supplier: supplier.name
+                        })
+                        return res.end(error);
                     }
                     else {
-                    console.log('LC successfully added to : '+ supplier.name);
+                    lcLogger.log('info','LC successfully added to : '+ supplier.name);
                     }
                 });
                 }
             }
         );
 
-	    console.log('POST creating new LC : '+ LC);
+        lcLogger.log({
+            level: 'audit',
+            kind: 'create',
+            message: 'LC',
+            LC_no: LC.LC_no,
+            user: req.session.user
+        })
 	    res.format({
 
 		/*html: function(){
@@ -211,6 +267,15 @@ router.get('/new', function(req,res){
 });
 
 router.param('id', function(req,res,next,id){
+    
+    if(req.session.authenticated !== true){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized read attempt.'
+        });
+        res.status(401)
+        return res.end('Not authorized')
+    }
     // find the LC by ID
     console.log('In param function.')
     LCDB.findById(id)
@@ -219,10 +284,14 @@ router.param('id', function(req,res,next,id){
     .populate('project')
 	.exec(function(error,LC){
 	    if (error){
-    		console.log('Error retreiving LC with ID : '+ id)
+    		
     		var err = new Error('LC with ID : '+ id + ' not found');
     		err.status = 404
-            console.log('sending error response')
+            lcLogger.log({
+                level: 'error',
+                message : 'LC with ID : '+ id + ' not found',
+                error: error
+            })
     		res.format({
     		    /*html: function(){
     			next(err);
@@ -234,7 +303,6 @@ router.param('id', function(req,res,next,id){
 	    }
         else{
         //console.log(LC);
-        console.log(' Setting locals variables')
 		res.locals.id = LC._id;
 		res.locals.LC = LC;
 		res.locals.issuer = LC.issuer;
@@ -249,7 +317,7 @@ router.param('id', function(req,res,next,id){
 // used findByID in router.param  as well. Maybe this can be optimised
 router.route('/:id')
     .get(function(req, res){
-        console.log('in route /LCs/:id')
+
     	res.format({
     	    /*html: function(){
     		res.render('LCs/show', {
@@ -269,8 +337,19 @@ router.route('/:id')
 
 //GET the individual blob by Mongo ID
 router.get('/:id/edit', function(req, res) {
+    
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC Edit attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
+
     var LC = res.locals.LC;
-    console.log('GET Processing ID: ' + LC._id);
+    
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
@@ -410,6 +489,17 @@ router.get('/:id/close', function(req, res) {
 router.put('/:id/addCharges', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC edit attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
+
     var LC = res.locals.LC;
     var charges = {
 	opening : req.body.opening,                // miscellaneous charges
@@ -431,7 +521,8 @@ router.put('/:id/addCharges', function(req, res) {
     
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
@@ -450,16 +541,31 @@ router.put('/:id/addCharges', function(req, res) {
 });
 
 router.put('/:id/addMarginData', function(req,res) {
-    var LC = res.locals.LC;
-    
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC Margin Data Edit attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
+    var LC = res.locals.LC;    
     LC.m_cl_DT = req.body.m_cl_DT;
     LC.m_cl_amt = parseFloat(req.body.m_cl_amt);
-
     LC.save(function(error,LCID) {
         if(error){
-            console.log(error);
+            saveErrorLog(error,LC.LC_no)
             return res.end(error)
         } else {
+            lcLogger.log({
+                level: 'audit',
+                kind: 'edit',
+                message: 'Margin Details',
+                payload: req.body,
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
             res.json(JSON.stringify(LC))
         }
     });
@@ -469,12 +575,22 @@ router.put('/:id/addMarginData', function(req,res) {
 router.put('/:id/addOrEditExtension', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC Extension Edit attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
+
     var LC = res.locals.LC;
     console.log(req.body)
     const index = (req.body.index === undefined)? null : parseFloat(req.body.index)
     console.log(index)
     if(index != null){
-        console.log('editing Extension')
+        
         extension = LC.dates[index]
         extension.openDT = req.body.openDT,
         extension.expDT= req.body.expDT,
@@ -501,9 +617,19 @@ router.put('/:id/addOrEditExtension', function(req, res) {
     
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
+            
+            lcLogger.log({
+                level: 'audit',
+                kind: req.body.index === undefined ? 'create' : 'edit',
+                message: 'Opening/Extension Details',
+                payload: req.body,
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             res.format({
                 /*html: function(){
@@ -526,8 +652,16 @@ router.put('/:id/addOrEditExtension', function(req, res) {
 router.put('/:id/addNewCycle', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
-    console.log('Adding new Installment now.');
-    console.log(req.body)
+    
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC Cycle Creation attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     try{
     var LC = res.locals.LC;
     var details = {
@@ -566,11 +700,20 @@ router.put('/:id/addNewCycle', function(req, res) {
     }
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
+
+            lcLogger.log({
+                level: 'audit',
+                kind: 'create',
+                message: 'Cycle',
+                payload: req.body,
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
-	    console.log('Installment Details Added: '+ LC.payment)
             res.format({
                 /*html: function(){
                     res.redirect("/LCs/" + LC._id);
@@ -588,7 +731,17 @@ router.put('/:id/addNewCycle', function(req, res) {
 router.put('/:id/editCycle', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
-    console.log('Adding new Installment now.');
+    
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC Cycle Edit attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
+
     var LC = res.locals.LC;
 
     const idx = parseFloat(req.body.index)
@@ -626,11 +779,19 @@ router.put('/:id/editCycle', function(req, res) {
     console.log(LC.payment.total_due)
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
-        console.log('Cycle Details Updated: '+ cycle)
+            lcLogger.log({
+                level: 'audit',
+                kind: 'edit',
+                message: 'Cycle',
+                payload: req.body,
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
             res.format({
                 /*html: function(){
                     res.redirect("/LCs/" + LC._id);
@@ -648,7 +809,15 @@ router.put('/:id/editCycle', function(req, res) {
 router.put('/:id/checkCyclePayment', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
-    console.log('Updating Payment details now.');
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC Cycle Payment review attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     var LC = res.locals.LC;
 
     const idx = parseFloat(req.body.index)
@@ -672,11 +841,19 @@ router.put('/:id/checkCyclePayment', function(req, res) {
     
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
-        console.log('Cycle Details Updated: '+ cycle.pay)
+            lcLogger.log({
+                level: 'audit',
+                kind: 'edit',
+                message: 'Cycle Payment review',
+                payload: req.body,
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
             res.format({
                 /*html: function(){
                     res.redirect("/LCs/" + LC._id);
@@ -694,6 +871,15 @@ router.put('/:id/checkCyclePayment', function(req, res) {
 router.put('/:id/addPayment', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized LC adding Payment attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     var LC = res.locals.LC; // is this pass by reference?
     var payment = parseFloat(req.body.payment);
     var pay_ref = req.body.pay_ref;
@@ -721,10 +907,18 @@ router.put('/:id/addPayment', function(req, res) {
 
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
-
+            lcLogger.log({
+                level: 'audit',
+                kind: 'edit',
+                message: 'Cycle Payment amount',
+                payload: req.body,
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
             // Need to free utilized from bank.
             bankMethods.onPayment(LC.issuer,payment, function(error,bank){
                 if(error){
@@ -755,8 +949,16 @@ router.put('/:id/addPayment', function(req, res) {
 router.route('/:id/addDocument').post(function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized document Addition attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     var LC = res.locals.LC;
-    
     var file = req.files.file;
     var name = req.fields.name;
     var index = parseFloat(req.fields.index);    
@@ -814,10 +1016,19 @@ router.route('/:id/addDocument').post(function(req, res) {
     console.log('saving')
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            lcLogger.log({
+                level: 'audit',
+                kind: 'create',
+                message: 'Document',
+                payload: req.fields,
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
             res.format({
                 /*html: function(){
                     res.redirect("/LCs/" + LC._id);
@@ -837,6 +1048,15 @@ router.route('/:id/addDocument').post(function(req, res) {
 router.put('/:id/edit', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized Edit attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     var LC = res.locals.LC;
     console.log(req.body)
     try{
@@ -846,10 +1066,19 @@ router.put('/:id/edit', function(req, res) {
         
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
-            console.log('updating bank')
+            lcLogger.log({
+                level: 'audit',
+                kind: 'edit',
+                message: 'LC',
+                payload: req.body,
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
+
             bankMethods.update(LC.issuer,function(error,bank){
                 if(error){
                     console.log(error)
@@ -882,10 +1111,19 @@ router.put('/:id/edit', function(req, res) {
 router.put('/:id/close', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized Closing attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     var LC = res.locals.LC;
     LC.status === 'Closed'? res.format({json:function(){res.json(JSON.stringify(LC))}}): null
-    console.log('Updating LC')
     LC.status = 'Closed';
+    LC.closeDT = new Date(Date.now())
 
     bankMethods.closeLC(res.locals.issuer,LC,function(error,bank){
         if(error) {
@@ -907,9 +1145,17 @@ router.put('/:id/close', function(req, res) {
     
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
+            lcLogger.log({
+                level: 'audit',
+                kind: 'edit',
+                message: 'Close LC',
+                LC_no: LC.LC_no,
+                user: req.session.user
+            })
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
             res.format({
                 /*html: function(){
@@ -928,10 +1174,19 @@ router.put('/:id/close', function(req, res) {
 //DELETE a Bank by ID
 router.delete('/:id/edit', function (req, res){
     //find bank by ID
-    
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized Deletion attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     res.locals.LC.remove(function (err, LC) {
         if (err) {
-            return console.error(err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end(err);
         } else {
             //Returning success messages saying it was deleted
             console.log('DELETE removing ID: ' + LC._id);
@@ -956,8 +1211,16 @@ router.delete('/:id/edit', function (req, res){
                     console.log('LC removed from supplier successfully.')
                 })
 	    
+        lcLogger.log({
+                level: 'audit',
+                kind: 'delete',
+                message: 'delete LC',
+                LC_no: LC.LC_no,
+            })
+
 	    res.format({
-		//HTML returns us back to the main page, or you can create a success page
+		
+        //HTML returns us back to the main page, or you can create a success page
 		/*html: function(){
 		    res.redirect("/LCs");
 		},*/
@@ -976,21 +1239,38 @@ router.delete('/:id/edit', function (req, res){
 router.delete('/:id/deleteExtension', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized Extension deletion attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     var LC = res.locals.LC;
     console.log(req.body)
     const index = (req.body.index === undefined)? null : parseFloat(req.body.index)
     console.log(index)
-    
+    var ext = LC.dates[index]
     LC.dates.splice(index,1)
 
     LC.dates.length === 1 ? LC.status='Active' : {}
 
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            lcLogger.log({
+                level: 'audit',
+                kind: 'delete',
+                message: 'delete Extension',
+                data : ext,
+                LC_no: LC.LC_no,
+            })
             res.format({
                 /*html: function(){
                     res.redirect("/LCs/" + LC._id);
@@ -1009,22 +1289,38 @@ router.delete('/:id/deleteExtension', function(req, res) {
 router.delete('/:id/deleteCycle', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
     //find the document by ID
+    if(req.session.authenticated !== true ||
+        !writeRoles.includes(req.session.user.role)){
+        lcLogger.log({
+            level: 'warning',
+            message: 'Unauthorized cycle deletion attempt on LC_NO : '+ res.locals.id + ' by :'  + req.session.user.name,
+            user: req.session.user
+        })
+        return res.end('Not authorized')
+    }
     var LC = res.locals.LC;
-    console.log(req.body)
     const index = (req.body.index === undefined)? null : parseFloat(req.body.index)
-    console.log(index)
     
-    LC.payment.cycles.splice(index,1)
-    
+    var delCycle = LC.payment.cycles[index]
+    LC.payment.cycles.splice(index,1)    
+
     var total_due = LCMethods.updateTotal(LC)
-    LC.total_due = total_due
-    console.log(LC.total_due)
+    LC.total_due = total_due    
+
     LC.save(function (err, LCID) {
         if (err) {
-            res.send("There was a problem updating the information to the database: " + err);
+            saveErrorLog(err,LC.LC_no)
+            return res.end("There was a problem updating the information to the database: " + err);
         } 
         else {
             //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            lcLogger.log({
+                level: 'audit',
+                kind: 'delete',
+                message: 'delete Cycle',
+                data : delCycle,
+                LC_no: LC.LC_no,
+            })
             res.format({
                 /*html: function(){
                     res.redirect("/LCs/" + LC._id);
