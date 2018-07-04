@@ -116,7 +116,8 @@ router.post('/login', function(req, res, next) {
   		req.body.password
   		){
 
-  		userDB.findOne({username:req.body.username}, function(error,user){
+  		userDB.findOne({email:req.body.username}, 
+function(error,user){
   			if(error) {
   				console.error(error)
   				error = new Error('User not found!')
