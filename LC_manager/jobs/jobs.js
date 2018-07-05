@@ -107,15 +107,13 @@ function onPaymentUpdate(callback) {
                   }
                 })
               }
-            });
-
-            
-            // only send if something to send.
-            data.length > 0 ? genAndSend.genAndSendPaymentEmail(data) : {}
-            callback()            
+            });            
           }
         })
       })
+      // only send if something to send.
+      data.length > 0 ? genAndSend.genAndSendPaymentEmail(data) : {}
+      callback()
     }
   })
 }

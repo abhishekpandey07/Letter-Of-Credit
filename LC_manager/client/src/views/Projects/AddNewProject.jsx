@@ -70,7 +70,7 @@ class NewProjectForm extends React.Component{
 
   handleSubmit = event => {
 
-    axios.post('/projects', this.state)
+    axios.post('/projects', this.state,{credentials:'include'})
      .then(function(response){
        console.log(response);
        window.location = '/Projects'

@@ -61,7 +61,7 @@ class RegisterPage extends React.Component {
       method: 'POST',
       body: data
     })*/
-    axios.post(url,this.state)
+    axios.post(url,this.state,{credentials:'include'})
     .then(res => {
       console.log(res)
     })

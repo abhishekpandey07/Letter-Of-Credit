@@ -1403,7 +1403,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     }
     const url = 'LCs/'+this.props.LC._id+
                     '/addNewCycle'
-    axios.post(url,payload)
+    axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
@@ -1431,7 +1431,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     }
     const url = 'LCs/'+this.props.LC._id+
                     '/editCycle'
-    axios.post(url,payload)
+    axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
@@ -1469,7 +1469,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     }
     const url = 'LCs/'+this.props.LC._id+
                     '/checkCyclePayment'
-    axios.post(url,payload)
+    axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
@@ -1531,7 +1531,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
 
     const url = 'LCs/'+this.props.LC._id+
                     '/addOrEditExtension'
-    axios.post(url,payload)
+    axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
@@ -1556,7 +1556,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
 
     const url = 'LCs/'+this.props.LC._id+
                     '/addOrEditExtension'
-    axios.post(url,payload)
+    axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))
@@ -1572,7 +1572,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     axios.post(url,{
       _method: 'DELETE',
       index: index
-    })
+    },{credentials:'include'})
     .then((response) =>{
       this.resetState()
       this.props.onUpdate(this.props.id,EJSON.parse(response.data))

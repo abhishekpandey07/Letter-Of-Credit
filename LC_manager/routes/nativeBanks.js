@@ -26,33 +26,31 @@ router.use(methodOverride(function(req, res){
 
 const writeRoles = ['admin','readWrite']
 
-const readValidate = function(req,res){
+const readValidate = function(req){
+  console.log(req)
   if(!req.session.authenticated){
     bankLogger.log({
       level: 'warning',
-      message: 'Unauthorised Access attempt',
+      message: 'Unauthorised Read attempt',
     })
-    res.status(401);
-    return res.end({
-      message: 'Unauthorised',
-    })
+    console.log('returning False')
+    return false
   }
+  return true
 }
 
-const writeValidate = function (req,res){
- if(!req.session.authenticated || 
-    !writeRoles.includes(req.session.user.role)){
-    bankLogger.log({
-      level: 'warning',
-      message: 'Unauthorised Access attempt',
-      user: req.session.user
-    })
-    res.status(401);
-    return res.end({
-      message: 'Unauthorised',
-      user: role
-    })
-  } 
+const writeValidate = function (req){
+ if(req.session.authenticated &&
+    req.session.user && 
+    writeRoles.includes(req.session.user.role)){
+    return true
+  }
+  bankLogger.log({
+    level: 'warning',
+    message: 'Unauthorised Access attempt',
+    user: req.session.user
+  })
+  return false
 }
 
 const logReadError = function(error){
@@ -94,7 +92,13 @@ router.route('/')
     //GET all banks
     .get(function(req, res, next) {
         //retrieve all blobs from Monogo
-        readValidate(req,res)
+        if(!readValidate(req)){
+          return res.json(JSON.stringify({
+            status: 401,
+            message: 'Unauthorised to read'
+          }))
+        }
+
         natBankDB.find({})
         .populate('LCs','status')
         .exec(function (err, banks) {
@@ -132,7 +136,13 @@ router.route('/')
 //POST a new bank
 .post(function(req, res) {
     // Get values from POST request. These can be done through forms or REST calls. These rely on the "name" attributes for forms
-  writeValidate(req,res);
+  if(!writeValidate(req)){
+    return res.json(JSON.stringify({
+      status: 401,
+      message: 'Unauthorised write attempt',
+      user: req.session.user
+    }))
+  }
   var name = req.body.name;
   var branch = req.body.branch;
   var IFSC = req.body.IFSC;
@@ -176,7 +186,7 @@ router.route('/')
                     res.json(JSON.stringify(bank));
                 }
             });
-          }
+        }
     })
 });
 

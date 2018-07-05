@@ -49,7 +49,7 @@ class SupplierHome extends React.Component{
     }
 
     callSupplierApi = async () => {
-      const response = await fetch('/suppliers');
+      const response = await fetch('/suppliers',{credentials:'include'});
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
       
@@ -58,7 +58,7 @@ class SupplierHome extends React.Component{
     }
 
     callProjectsApi = async() => {
-      const response = await fetch('/projects');
+      const response = await fetch('/projects',{credentials:'include'});
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
       

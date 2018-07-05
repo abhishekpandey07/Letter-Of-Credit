@@ -75,10 +75,10 @@ const blockUser = function(user){
 
 router.route('/').get(function(req,res){
   if(!validate(req,res))
-    return res.json(JSON.stringify{
+    return res.json(JSON.stringify({
       status: 401,
       message: 'Unauthorised access'
-    });
+    }));
   
   userDB.find({},function(error,users){
     if(error){
