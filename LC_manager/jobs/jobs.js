@@ -61,7 +61,6 @@ function onPaymentUpdate(callback) {
       console.log(error)
     else {
       results.results.map((prop,key)=>{
-        console.log(prop)
         LCDB.findById(prop._id._id)
         .populate('supplier',['name'])
         .populate('issuer',['name'])
@@ -77,7 +76,6 @@ function onPaymentUpdate(callback) {
                 var bill_com = Math.round(due_amt*0.003)
                 var GST = Math.round(bill_com*0.18)
                 var postage= 89
-                console.log(LC.payment.cycles[prop])
                 LC.payment.cycles[prop].pay.bill_com = bill_com
                 LC.payment.cycles[prop].pay.GST = GST
                 LC.payment.cycles[prop].pay.post = postage
@@ -108,14 +106,11 @@ function onPaymentUpdate(callback) {
                 })
               }
             });
-
-            
-            // only send if something to send.
-            data.length > 0 ? genAndSend.genAndSendPaymentEmail(data) : {}
-            callback()            
-          }
+           }
         })
       })
+      data.length > 0 ? genAndSend.genAndSendPaymentEmail(data) : {}
+      callback()
     }
   })
 }
