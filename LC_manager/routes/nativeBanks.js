@@ -3,9 +3,10 @@ const express = require('express'),
       mongoose = require('mongoose'),
       bodyParser = require('body-parser'),
       methodOverride = require('method-override');
+      logger = require('../logger/logger')
 
-
-
+//logger
+const bankLogger = logger.createLogger('bank.log')
 
 natBankDB = mongoose.model('nativeBanks')
 //  router.use makes sure that all the requests go through the defined packages first
@@ -23,6 +24,65 @@ router.use(methodOverride(function(req, res){
       }
 }))
 
+const writeRoles = ['admin','readWrite']
+
+const readValidate = function(req){
+  console.log(req)
+  if(!req.session.authenticated){
+    bankLogger.log({
+      level: 'warning',
+      message: 'Unauthorised Read attempt',
+    })
+    console.log('returning False')
+    return false
+  }
+  return true
+}
+
+const writeValidate = function (req){
+ if(req.session.authenticated &&
+    req.session.user && 
+    writeRoles.includes(req.session.user.role)){
+    return true
+  }
+  bankLogger.log({
+    level: 'warning',
+    message: 'Unauthorised Access attempt',
+    user: req.session.user
+  })
+  return false
+}
+
+const logReadError = function(error){
+  bankLogger.log({
+    level: 'error',
+    message: ' Could not read bank Details',
+    error: error
+  })
+}
+
+const logLimitChange = function(newData,bank){
+  bankLogger.log({
+    level: 'audit',
+    kind: 'critical',
+    message: 'Modifying bank limits or used data',
+    changes: {
+      bank: {
+        name: bank.name,
+        id: bank._id
+      },
+      LC_limit: {
+        old: parseFloat(bank.LC_limit),
+        new: newData.LC_limit,
+      },
+      LC_used: {
+        old: parseFloat(bank.LC_used),
+        new: newData.LC_used
+      },
+      user: req.session.user
+    }
+  })
+}
 
 // build the Rest operations at the base for native Banks
 // this will be accessible from https:127.0.0.1:3000/nativeBanks if the default router for /
@@ -32,14 +92,21 @@ router.route('/')
     //GET all banks
     .get(function(req, res, next) {
         //retrieve all blobs from Monogo
+        if(!readValidate(req)){
+          return res.json(JSON.stringify({
+            status: 401,
+            message: 'Unauthorised to read'
+          }))
+        }
+
         natBankDB.find({})
         .populate('LCs','status')
         .exec(function (err, banks) {
               if (err) {
-                  return console.error(err);
-		  
+                logReadError(err)
+                return res.end(err);
               } else {
-		  console.log('generating response!')
+        
                   //respond to both HTML and JSON. JSON responses require 'Accept: application/json;' in the Request Header
                   //console.log(banks[0].LC_limit)
                   banksdata = banks.reduce((banks,bank)=>{
@@ -67,46 +134,61 @@ router.route('/')
 
 
 //POST a new bank
-    .post(function(req, res) {
-        // Get values from POST request. These can be done through forms or REST calls. These rely on the "name" attributes for forms
-        var name = req.body.name;
-        var branch = req.body.branch;
-        var IFSC = req.body.IFSC;
-        var LC_limit = req.body.LC_limit;
-	var LC_used = req.body.LC_used;
-	
-        //call the create function for our database
-        natBankDB.create({
-            name : name,
-	    branch : branch,
-	    IFSC : IFSC,
-	    LC_limit : LC_limit,
-	    LC_used : LC_used
-	    
-        }, function (err, bank) {
-            if (err) {
-		console.log(err)
-                  res.send("There was a problem adding the information to the database.");
-		  
-              } else {
-                  //Bank has been created
-                  console.log('POST creating new bank: ' + bank);
-                  res.format({
-                      //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                    html: function(){
-                        // If it worked, set the header so the address bar doesn't still say /adduser
-                        res.location("nativeBanks");
-                        // And forward to success page
-                        res.redirect("/nativeBanks");
-                    },
-                    //JSON response will show the newly created blob
-                    json: function(){
-                        res.json(bank);
-                    }
-                });
-              }
-        })
-    });
+.post(function(req, res) {
+    // Get values from POST request. These can be done through forms or REST calls. These rely on the "name" attributes for forms
+  if(!writeValidate(req)){
+    return res.json(JSON.stringify({
+      status: 401,
+      message: 'Unauthorised write attempt',
+      user: req.session.user
+    }))
+  }
+  var name = req.body.name;
+  var branch = req.body.branch;
+  var IFSC = req.body.IFSC;
+  var LC_limit = req.body.LC_limit;
+  var LC_used = req.body.LC_used;
+
+    //call the create function for our database
+  natBankDB.create({
+        name : name,
+        branch : branch,
+        IFSC : IFSC,
+        LC_limit : LC_limit,
+        LC_used : LC_used
+    }, function (err, bank) {
+        if (err) {
+            bankLogger.log({
+              level:'error',
+              message: "Bank could not be created",
+              payload: req.body,
+              error: err
+            })
+            return res.end("There was a problem adding the information to the database.")
+        } else {
+              bankLogger.log({
+                level: 'audit',
+                kind: 'create',
+                message: 'Bank',
+                user: req.session.user,
+              })
+            
+              res.format({
+                /*//HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
+                html: function(){
+                    // If it worked, set the header so the address bar doesn't still say /adduser
+                    res.location("nativeBanks");
+                    // And forward to success page
+                    res.redirect("/nativeBanks");
+                },*/
+                
+                json: function(){
+                    res.json(JSON.stringify(bank));
+                }
+            });
+        }
+    })
+});
 
 /* GET new Native Bank page */
 router.get('/new', function(req,res){
@@ -117,38 +199,38 @@ router.get('/new', function(req,res){
 router.param('id', function(req, res, next, id) {
     //console.log('validating ' + id + ' exists');
     //find the ID in the Database
+    readValidate(req,res)
     natBankDB.findById(id, function (err, bank) {
         //if it isn't found, we are going to repond with 404
-        if (err) {
-            console.log(id + ' was not found');
-            res.status(404)
-            var err = new Error('Not Found');
-            err.status = 404;
-            res.format({
-                html: function(){
-                    next(err);
-                 },
-                json: function(){
-                       res.json({message : err.status  + ' ' + err});
-                 }
-            });
-        //if it is found we continue on
-        } else {
-            //uncomment this next line if you want to see every JSON document response for every GET/PUT/DELETE call
-            console.log(bank);
-            // once validation is done save the new item in the req
-            req.id = id;
-	    res.locals.bank = bank
-            // go to the next thing
-            next(); 
-        } 
+      if (err) {
+          logReadError(err)
+
+          res.status(404)
+          var err = new Error('Not Found');
+          err.status = 404;
+          res.format({
+              html: function(){
+                  next(err);
+               },
+              json: function(){
+                     res.json({message : err.status  + ' ' + err});
+               }
+          });
+      //if it is found we continue on
+      } else {
+          
+          // once validation is done save the new item in the req
+          res.locals.id = id;
+          res.locals.bank = bank
+          // go to the next thing
+          next(); 
+      } 
     });
 });
 
 
 router.route('/:id')
-  .get(function(req, res) {
-        
+  .get(function(req, res) {            
     var bank = res.locals.bank
     res.format({
       html: function(){
@@ -178,10 +260,10 @@ router.get('/:id/edit', function(req, res) {
     //search for the bank within Mongo
     natBankDB.findById(req.id, function (err, bank) {
         if (err) {
-            console.log('GET Error: There was a problem retrieving: ' + err);
+            logReadError(err)
+            return res.end(err)
         } else {
             //Return the bank
-            console.log('GET Retrieving ID: ' + bank._id);
             //format the date properly for the value to show correctly in our edit form
             res.format({
                 //HTML response will render the 'edit.jade' template
@@ -205,6 +287,7 @@ router.get('/:id/edit', function(req, res) {
 //PUT to update a bank by ID
 router.put('/:id/edit', function(req, res) {
     // Get our REST or form values. These rely on the "name" attributes
+    writeValidate(req,res);
     var name = req.body.name;
     var branch = req.body.branch;
     var IFSC = req.body.IFSC;
@@ -212,32 +295,49 @@ router.put('/:id/edit', function(req, res) {
     var LC_used = req.body.LC_used;
 
    //find the document by ID
-        natBankDB.findById(req.id, function (err, bank) {
-            //update it
-            bank.update({
-                name : name,
-		branch : branch,
-		IFSC : IFSC,
-		LC_limit : LC_limit,
-		LC_used : LC_used,
-            }, function (err, bankID) {
-              if (err) {
-                  res.send("There was a problem updating the information to the database: " + err);
-              } 
-              else {
-                      //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
-                      res.format({
-                          html: function(){
-                               res.redirect("/nativeBanks/" + bank._id);
-                         },
-                         //JSON responds showing the updated values
-                        json: function(){
-                               res.json(bank);
-                        }
-                      });
-              }
+    natBankDB.findById(req.id, function (err, bank) {
+
+      if(LC_limit != bank.LC_limit || LC_used != bank.LC_user){
+
+        logLimitChange({LC_limit: LC_limit,LC_used: LC_used}, bank)       
+      }
+
+      bank.update({
+        name : name,
+        branch : branch,
+        IFSC : IFSC,
+        LC_limit : LC_limit,
+        LC_used : LC_used,
+      }, function (err, bankID) {
+          if (err) {
+            logReadError(err)
+            return res.end("There was a problem updating the information to the database");
+          } 
+          else {
+                  //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+            bankLogger.log({
+              level: 'audit',
+              kind: 'edit',
+              message: 'Bank',
+              bank: {
+                name: bank.name,
+                _id: bank._id
+              },
+              payload: req.body,
+              user: req.body.user
             })
-        });
+            res.format({
+                html: function(){
+                     res.redirect("/nativeBanks/" + bank._id);
+               },
+               //JSON responds showing the updated values
+              json: function(){
+                     res.json(bank);
+              }
+            });
+          }
+        })
+    });
 });
 
 //DELETE a Bank by ID
@@ -245,15 +345,28 @@ router.delete('/:id/edit', function (req, res){
     //find bank by ID
     natBankDB.findById(req.id, function (err, bank) {
         if (err) {
-            return console.error(err);
+            logReadError(err)
+            return res.end(err);
         } else {
             //remove it from Mongo
             bank.remove(function (err, bank) {
                 if (err) {
-                    return console.error(err);
+                    bankLogger.log({
+                      level: 'error',
+                      message: 'Bank could not be removed from the databse',
+                      error: err
+                    })
+                    res.status(500)
+                    return res.end(err);
                 } else {
                     //Returning success messages saying it was deleted
-                    console.log('DELETE removing ID: ' + bank._id);
+                    bankLogger.log({
+                      level: 'audit',
+                      kind: 'delete',
+                      message: 'Bank',
+                      bank: bank,
+                      user: req.session.user
+                    })
                     res.format({
                         //HTML returns us back to the main page, or you can create a success page
                         html: function(){

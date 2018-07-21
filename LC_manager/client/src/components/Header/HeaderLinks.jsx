@@ -13,18 +13,28 @@ import {
   Button,
   Typography
 } from "@material-ui/core";
-
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import TextField from '@material-ui/core/TextField'
+import Grid from '@material-ui/core/Grid'
 import { NavLink } from 'react-router-dom'
-import { Person, Notifications, Dashboard, Search } from "@material-ui/icons";
-
+import { Person, Notifications, Dashboard, Search, Done } from "@material-ui/icons";
 import { CustomInput, IconButton as SearchButton } from "components";
 
 import headerLinksStyle from "assets/jss/material-dashboard-react/headerLinksStyle";
+import axios from "axios";
 
 class HeaderLinks extends React.Component {
   state = {
     open: false,
     prof: false,
+    passChangeDialog: false,
+    passChangeSuccess: null,
+    passChangeFailure: null,
+    newPassMatchError: false
   };
   handleClick = () => {
     this.setState({ open: !this.state.open });
@@ -48,10 +58,98 @@ class HeaderLinks extends React.Component {
     this.props.handleLogout();
   }
 
+  handleChangePassClick = () => {
+    this.setState({passChangeDialog: true})
+  }
+
+  handleDialogClose = () => {
+    console.log('closing dialog')
+    this.setState({passChangeDialog: false})
+  }
+
+  handleChangePassSubmit = () =>{
+    var oldPass = document.getElementById('oldPass').value
+    var newPass = document.getElementById('newPass').value
+    var confNewPass = document.getElementById('confNewPass').value
+    if(oldPass && newPass && confNewPass){
+      if(newPass == confNewPass){
+        const url = '/users/changePass'
+        console.log('posting request')
+        axios.post(url,{
+          old: oldPass,
+          new: newPass,
+          confNew: confNewPass,
+          _method: 'PUT'
+        },
+        {
+          credentials: 'include'
+        })
+        .then((res) => {
+          console.log(res)
+          if(res.data.status == 200){
+            this.setState({passChangeSuccess:true})
+          } else {
+            this.setState({passChangeFailure:true})
+          }
+        })
+        .then((error) => {
+          console.log(error)
+        })    
+      } else {
+        console.log('New password does not match')
+        this.setState({newPassMatchError:true})
+      }
+    } 
+    else {
+      this.incompleteForm = true
+    }
+
+  }
+
+  generatePassChangeForm = () => {
+    const form = 
+    <Grid container direction = 'column' align='center'>
+      <Grid item md={10} xs={12} sm={10}>
+        <TextField
+          autoFocus
+          margin="noraml"
+          id="oldPass"
+          label="Old Password"
+          type="password"
+          fullWidth
+        />
+      </Grid>
+      <Grid item md={10} xs={12} sm={10}>
+        <TextField
+          error={this.state.newPassMatchError}
+          autoFocus
+          margin="normal"
+          id="newPass"
+          label="New Password"
+          type="password"
+          fullWidth
+        />
+      </Grid>
+      <Grid item md={10} xs={12} sm={10}>
+        <TextField
+          error={this.state.newPassMatchError}
+          autoFocus
+          margin="noraml"
+          id="confNewPass"
+          label="Confirm New Password"
+          type="password"
+          fullWidth
+        />
+      </Grid>
+    </Grid>
+    return form
+  }
+
   render() {
     const { classes } = this.props;
     const { open, prof } = this.state;
     const roles = ['Admin','COO']
+    this.newPassMatchError = false
     return (
       <div>
       { 
@@ -68,24 +166,6 @@ class HeaderLinks extends React.Component {
         :
         <div/>
       }
-        {/*<CustomInput
-                  formControlProps={{
-                    className: classes.margin + " " + classes.search
-                  }}
-                  inputProps={{
-                    placeholder: "Search",
-                    inputProps: {
-                      "aria-label": "Search"
-                    }
-                  }}
-                />
-                <SearchButton
-                  color="white"
-                  aria-label="edit"
-                  customClass={classes.margin + " " + classes.searchButton}
-                >
-                  <Search className={classes.searchIcon} />
-                </SearchButton>*/}
         <IconButton
           color="inherit"
           aria-label="Dashboard"
@@ -96,78 +176,6 @@ class HeaderLinks extends React.Component {
             <p className={classes.linkText}>Dashboard</p>
           </Hidden>
         </IconButton>
-        {/*<Manager style={{ display: "inline-block" }}>
-          <Target>
-            <IconButton
-              color="inherit"
-              aria-label="Notifications"
-              aria-owns={open ? "menu-list" : null}
-              aria-haspopup="true"
-              onClick={this.handleClick}
-              className={classes.buttonLink}
-            >
-              <Notifications className={classes.links} />
-              <span className={classes.notifications}>5</span>
-              <Hidden mdUp>
-                <p onClick={this.handleClick} className={classes.linkText}>
-                  Notification
-                </p>
-              </Hidden>
-            </IconButton>
-          </Target>
-          <Popper
-            placement="bottom-start"
-            eventsEnabled={open}
-            className={
-              classNames({ [classes.popperClose]: !open }) +
-              " " +
-              classes.pooperResponsive
-            }
-          >
-            <ClickAwayListener onClickAway={this.handleClose}>
-              <Grow
-                in={open}
-                id="menu-list"
-                style={{ transformOrigin: "0 0 0" }}
-              >
-                <Paper className={classes.dropdown}>
-                  <MenuList role="menu">
-                    <MenuItem
-                      onClick={this.handleClose}
-                      className={classes.dropdownItem}
-                    >
-                      Mike John responded to your email
-                    </MenuItem>
-                    <MenuItem
-                      onClick={this.handleClose}
-                      className={classes.dropdownItem}
-                    >
-                      You have 5 new tasks
-                    </MenuItem>
-                    <MenuItem
-                      onClick={this.handleClose}
-                      className={classes.dropdownItem}
-                    >
-                      You're now friend with Andrew
-                    </MenuItem>
-                    <MenuItem
-                      onClick={this.handleClose}
-                      className={classes.dropdownItem}
-                    >
-                      Another Notification
-                    </MenuItem>
-                    <MenuItem
-                      onClick={this.handleClose}
-                      className={classes.dropdownItem}
-                    >
-                      Another One
-                    </MenuItem>
-                  </MenuList>
-                </Paper>
-              </Grow>
-            </ClickAwayListener>
-          </Popper>
-        </Manager>*/}
         <Manager style={{ display: "inline-block" }}>
           <Target>
             <IconButton
@@ -210,6 +218,52 @@ class HeaderLinks extends React.Component {
                     <Typography align='center' variant='subheading'>
                       Logout
                     </Typography>
+                    </MenuItem>
+                    <MenuItem
+                      onClick={this.handleChangePassClick}
+                      className={classes.dropdownItem}
+                    >
+                    <Typography align='center' variant='subheading' style={{colour:'purple'}}>
+                      Change Password
+                    </Typography>
+                    <Dialog
+                      open={this.state.passChangeDialog}
+                      onClose={this.handleDialogClose}
+                      aria-labelledby="form-dialog-title"
+                    >
+                      <DialogTitle id="form-dialog-title">Change Password</DialogTitle>
+                      <DialogContent>
+                      { !this.state.passChangeSuccess && !this.state.passChangeFailure  ?
+                        this.generatePassChangeForm()
+                        :
+                        this.state.passChangeSuccess?
+                        <div>
+                            <Typography align='center'>
+                              Password successfully changed!
+                            </Typography>
+                            <Done align='center' style={{
+                              width: '150px',
+                              height:'150px',
+                              align:'center',
+                              margin: 'auto'
+                            }}/>
+                          </div>
+                        :
+                        <Typography align = 'center'>
+                          Password could not be changed
+                        </Typography>
+                      }
+                      </DialogContent>
+                      <DialogActions>
+                      { !this.state.passChangeSuccess && !this.state.passChangeFailure ? 
+                        <Button onClick={this.handleChangePassSubmit} color="primary">
+                          Submit
+                        </Button>
+                        :
+                        <div/>
+                      }
+                      </DialogActions>
+                    </Dialog>
                     </MenuItem>
                   </MenuList>
                 </Paper>

@@ -21,7 +21,7 @@ class ProjectHome extends React.Component{
     }
 
     callApi = async () => {
-      const response = await fetch('/projects');
+      const response = await fetch('/projects',{credentials:'include'});
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
       

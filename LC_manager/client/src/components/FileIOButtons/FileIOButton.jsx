@@ -47,7 +47,7 @@ class FileIOButton extends React.Component {
 		const response = await fetch(url,{
 			method: 'POST',
 			body: this.data
-		})
+		},{credentials:'include'})
 		const body = await response.json();
 		console.log(body)
 		if(response.status != 200)
@@ -64,7 +64,7 @@ class FileIOButton extends React.Component {
 					+ '/' + this.props.name		
 
 		var a = document.createElement("a");
-		fetch (url).
+		fetch(url,{credentials:'include'}).
 		then(response => {
 			return response.blob();
 		}).then( blob => {

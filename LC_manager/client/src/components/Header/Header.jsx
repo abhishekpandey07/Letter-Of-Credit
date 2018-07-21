@@ -40,7 +40,7 @@ function Header({ ...props }) {
     <AppBar className={classNames(classes.appBar, {
               [classes.appBarShift]: props.open,
               [classes['appBarShift-left']]: props.open,
-            })}>
+            })} position='sticky'>
       <Toolbar disableGutters={!props.open} className={classes.container}>
         <IconButton
           color="inherit"

@@ -43,14 +43,14 @@ class NewLCForm extends React.Component{
   }
 
   callSupplierApi = async () => {
-     const response = await fetch('/suppliers');
+     const response = await fetch('/suppliers',{credentials:'include'});
      const body = await response.json();
      if (response.status !== 200) throw Error(body.message);
      return EJSON.parse(body);
    };
 
    callIssuerApi = async () => {
-     const response = await fetch('/nativeBanks');
+     const response = await fetch('/nativeBanks',{credentials:'include'});
      const body = await response.json();
      if (response.status !== 200) throw Error(body.message);
      return EJSON.parse(body);
@@ -122,7 +122,7 @@ class NewLCForm extends React.Component{
 
   handleSubmit = event => {
     
-    axios.post('/LCs', this.state)
+    axios.post('/LCs', this.state,{credentials : 'include'})
      .then(function(response){
         console.log(response)
         window.location ='/LCs'

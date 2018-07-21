@@ -6,7 +6,7 @@ var favicon = require('serve-favicon');
 var session = require('express-session')
 var MongoStore = require('connect-mongo')(session)
 var morgan = require('morgan');
-var winston = require('./config/winston')
+var logger = require('./logger/logger')
 var bodyParser = require('body-parser');
 var cors = require('cors')
 
@@ -36,8 +36,8 @@ app.set('trust proxy', 1)
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
-app.use(morgan('combined',{stream: winston.stream}));
+app.use(morgan('dev'))
+//app.use(morgan('combined',{stream: logger.defaultLogger.stream}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -51,7 +51,10 @@ app.use(session({
 	}),*/
 	cookie:{
 
-	}
+	},
+	loginAttempts: 0,
+	blocked: false,
+	authenticated: false,
 }))
 /*app.use(cors({
 	credentials: 'include'
