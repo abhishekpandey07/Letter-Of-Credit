@@ -57,7 +57,7 @@ var genAndSendExpDayEmail= function(data){
   var emailText = mailGenerator.generatePlaintext(email);
 
   var options = {}
-  options.to = 'lcupdate@mvomni.com'
+  options.to = 'abhi02.1998@gmail.com'
   options.subject = 'LC Expiration Update'
   options.html = emailBody
   emailer.sendMail(options)        

@@ -252,9 +252,9 @@ const getJobSchedules = function(){
   var jobs = {}
   var rule = new cron.RecurrenceRule();
   // everyday at 9 am. NO->(15th second)
-  rule.hour = 9;
-  rule.minute = 0;
-  rule.second = 0;
+  rule.hour = 0;
+  rule.minute = 48;
+  rule.second = 45;
 
   jobs['paymentUpdate'] = cron.scheduleJob(rule,function(){
     console.log('Sending Payment Update Emails.')

@@ -32,6 +32,15 @@ import moment from 'moment'
 import {Done, Delete, Save} from '@material-ui/icons'
 import {List, ListItem} from '@material-ui/core'
 
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import Slide from '@material-ui/core/Slide';
+
+
+
 const styles = theme => ({
   root: {
     width: '100%'
@@ -94,7 +103,17 @@ const styles = theme => ({
   },
 });
 
+function Transition(props) {
+  return <Slide direction="up" {...props} />;
+}
+
 //const states = {notCompleted: 0 , completed: 1, closed: 2}
+const dialogState = {
+  closed: 0,
+  closeAction: 1,
+  deleteAction: 2,
+  feedback: 3
+}
 const cycleSwitch = {
   newCycle: 0,
   cycleEdit: 1,
@@ -154,11 +173,14 @@ class LCPanel extends React.Component {
       //other states
       closed: this.props.LC.status==='Closed',
       edit: false,
-      refFile: ''
+      //dialog states
+      dialog: dialogState.closed,
     }
+
     this.totalPaymentCharges = 0;
     this.totalExtensionCharges = 0;
     this.newPayment = false;
+    this.dialogMode = 'action'
   }
 
   resetState = () => {
@@ -327,7 +349,7 @@ class LCPanel extends React.Component {
     const paymentData = LC.payment.cycles.reduce((array,item,index) => {
       if(item.due_DT){
         const due = formatDate(new Date(item.due_DT))
-        const ref = item.LB_pay_ref ? item.LB_pay_ref: "SADFSAF"
+        const ref = item.LB_pay_ref ? item.LB_pay_ref: "Not Updated"
 
         const charges = (parseFloat(item.acc.acc) +
                         parseFloat(item.acc.GST) +
@@ -1215,6 +1237,59 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     return form
       
   }
+  // title = string
+  // context = string
+  // action = {
+  // name : 'Close',
+  // handle: this.handleClose
+  //}
+
+  handleDialogClose = () => {
+    this.setState({dialog:dialogState.closed})
+  }
+  generateDialog = (title,context,action) => {
+    var dialog = 
+      <div>
+        <Dialog
+          open={this.state.dialog !== dialogState.closed}
+          TransitionComponent={Transition}
+          keepMounted
+          onClose={this.handleDialogClose}
+        >
+          <DialogTitle id="alert-dialog-slide-title">
+            {title}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-slide-description">
+                {context}
+            </DialogContentText>
+            {
+              this.dialogMode == 'success' ? 
+              <Grid container justify='center' align='center'>
+                <Grid xs={8}>
+                  <Done style={{width:'150px',height:'150px',color:'green'}}/>   
+                </Grid>
+              </Grid>:
+              <div/>
+            }
+          </DialogContent>
+          {
+            this.dialogMode == 'action'?
+            <DialogActions>
+              <Button onClick={this.handleDialogClose} color="secondary">
+                Cancel
+              </Button>
+              <Button onClick={action.handle} color="primary">
+                {action.name}
+              </Button>
+            </DialogActions>
+            :
+            <div/>
+          }
+        </Dialog>
+      </div>
+    return dialog
+  }
 
   //// Handle Cycle Content Switch
 
@@ -1615,6 +1690,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     .then((response) => {
       console.log(response)
       this.setState({closed:true})
+      this.dialogMode = 'success'
     }).catch((error) => {
       console.log(error)
     })
@@ -1649,7 +1725,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.props.onDelete(this.props.id)
-
+      this.dialogMode = 'success'
     }).then((error) => {
       console.log(error)
     })
@@ -1670,8 +1746,19 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     if(this.state.cycleEdit)    
       cycleEditForm = this.generateCycleEditForm()
 
+
+
+    var title  = this.state.dialog === dialogState.closeAction ? 'Close LC' : 'Delete LC'
+    var context = 'Should LC no. ' + LC.LC_no + ' be '
+    context += this.state.dialog === dialogState.closeAction?  'closed?' : 'deleted?'
+    var action = this.state.dialog === dialogState.closeAction ?
+              {name:'Close', handle:this.handleClose} :
+              {name:'Delete', handle:this.handleDelete}
+
+
     return (
     <div>
+      {this.generateDialog(title,context,action)}
       <div className={classes.root}>
         <ExpansionPanel expanded={expanded === 'panel1'} onChange={this.handlePanelChange('panel1')} divider>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
@@ -1751,11 +1838,11 @@ md={12}>
                 </Button>
                 <Button mini variant='contained' className={classes.button}
                     disabled={this.state.closed}
-                    onClick={this.handleDelete} color="secondary">
+                    onClick={() =>{this.setState({dialog:dialogState.deleteAction})}} color="secondary">
                     Delete <Delete style={{marginLeft:'10px'}}/>
                 </Button>
                 <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
-                    onClick={this.handleClose}>
+                    onClick={() =>{this.setState({dialog:dialogState.closeAction})}}>
                     Close
                 </Button>
               </Grid>

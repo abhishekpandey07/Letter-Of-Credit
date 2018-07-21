@@ -1,7 +1,7 @@
 import React from "react";
 import { Grid, Icon, withStyles,  Button, Typography,List,ListItem, Divider } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add'
-
+import SplashScreen from '../../SplashPage.jsx'
 import EJSON from 'mongodb-extended-json'
 //import getComponent from 'hadron-react-bson'
 import { Link,NavLink } from "react-router-dom";
@@ -44,8 +44,9 @@ class LCHome extends React.Component{
       const response = await fetch('/LCs',{credentials:'include'});
       const body = await response.json();
       if (response.status !== 200) throw Error(body.message);
-      
-      return EJSON.parse(body);
+      const ret = new Map(EJSON.parse(body));
+      console.log(ret);
+      return ret;
 
     };
 
@@ -73,11 +74,11 @@ class LCHome extends React.Component{
     }
 
     render() {
-      
+      console.log(this.state.LCs)
       const {classes} = this.props
       const arrangeList = ['issuing bank', 'supplier']
       
-      const searchLists = this.state.LCs.reduce((arr,prop,key)=>{
+      const searchLists = [...this.state.LCs].reduce((arr,[lc_no,prop],key)=>{
         if(!arr.suppliers.some((obj)=>{
           return obj._id == prop.supplier._id
         }))
@@ -182,64 +183,79 @@ class LCHome extends React.Component{
           </Grid>
           <Grid item >
             <Button variant='contained' aria-label='add'
-            size='medium' color='primary' style={{marginTop:'32px'}}>
-            <AddIcon style={{width:'17px',height:'17px',marginRight:'10px'}}/>
-            <Typography align='center'> New LC</Typography>
+            size='medium' color='primary' style={{marginTop:'32px'}}
+            component={Link} to={'/LCs/AddNewLC'} 
+            onClick={this.handleAddOpen}>
+              <AddIcon style={{width:'17px',height:'17px',marginRight:'10px'}}/>
+              <Typography align='center'> New LC</Typography>
           </Button>
           </Grid>
         </Grid>
 
       var panels
       if(this.state.LCs < 1){
-        var panels = (
+        var panels = 
+          <Grid item xs = {12}>
+            <SplashScreen/>
+          </Grid>
+      }else{
+        if(this.state.LCs.length < 1){
+          var panels = (
           <Typography varaint='title'>
           No LCs to Display
           </Typography>
           )
-      }else{
-        var LCs
-        if(this.state.supplier && this.state.arrange=='supplier'){
-          LCs = this.state.LCs.filter((LC) =>{
-            return (LC.supplier._id == this.state.supplier)
-          })
         } else {
-          if(this.state.issuer && this.state.arrange=='issuing bank'){
-            LCs = this.state.LCs.filter((LC) => {
-              return (LC.issuer._id == this.state.issuer)
+          var LCs
+          if(this.state.supplier && this.state.arrange=='supplier'){
+            LCs = [...this.state.LCs].filter(([lc_no,LC]) =>{
+              return (LC.supplier._id == this.state.supplier)
             })
-          } 
+          } else {
+            if(this.state.issuer && this.state.arrange=='issuing bank'){
+              LCs = [...this.state.LCs].filter((lc_no,LC) => {
+                return (LC.issuer._id == this.state.issuer)
+              })
+            } 
 
-          else {
-            LCs = this.state.LCs
+            else {
+              /*LCs = this.state.LCs.reduce((acc,prop,key) => {
+                if(prop.status !== 'Closed')
+                  acc.push(prop)
+                return acc
+              },[])*/
+              LCs = this.state.LCs
+            }
           }
-        }
-        var panels = LCs.reduce((arr,prop,key) => {
-          var panel = null
-          if(this.state.search){
-            if(prop.LC_no.includes(this.state.search) ||
-               prop.supplier.name.includes((this.state.search).toUpperCase()) ||
-               prop.issuer.name.includes((this.state.search).toUpperCase()) ||
-               prop.project.name.includes((this.state.search).toUpperCase()) ||
-               prop.project.location.includes((this.state.search).toUpperCase())
-             ){
-              panel = 
-                      <Grid item xs={12} sm={12} md={12}>
-                        <LCPanel LC={prop} id={key}
-                        onUpdate={this.updateLCPanel}
-                        onDelete={this.deleteLC}/>
+          var panels = [...LCs].reduce((arr,[lc_no,prop],key) => {
+            var panel = null
+            if(this.state.search){
+              if((prop.LC_no.includes(this.state.search) ||
+                   prop.supplier.name.includes((this.state.search).toUpperCase()) ||
+                   prop.issuer.name.includes((this.state.search).toUpperCase()) ||
+                   prop.project.name.includes((this.state.search).toUpperCase()) ||
+                   prop.project.location.includes((this.state.search).toUpperCase())
+                   )
+               ){
+                panel = 
+                        <Grid item xs={12} sm={12} md={12}>
+                          <LCPanel LC={prop} id={key}
+                          onUpdate={this.updateLCPanel}
+                          onDelete={this.deleteLC}/>
+                        </Grid>
+              }
+            } else {
+              panel = <Grid item xs={12} sm={12} md={12}>
+                          <LCPanel LC={prop} id={key}
+                          onUpdate={this.updateLCPanel}
+                          onDelete={this.deleteLC}/>
                       </Grid>
             }
-          } else {
-            panel = <Grid item xs={12} sm={12} md={12}>
-                        <LCPanel LC={prop} id={key}
-                        onUpdate={this.updateLCPanel}
-                        onDelete={this.deleteLC}/>
-                    </Grid>
-          }
-          
-          panel == null ? {} : arr.push(panel)
-          return arr
-        },[]);
+            
+            panel == null ? {} : arr.push(panel)
+            return arr
+          },[]);
+        }
       }
 
       return (
@@ -255,20 +271,13 @@ class LCHome extends React.Component{
                       {searchBar}
                     </Grid>
                     <Grid item xs={12}>
-                      <Grid container>
+                      <Grid container justify='center' align = 'center' direction='column'>
                         {panels}
                       </Grid>
                     </Grid>
                   </Grid>
-              }
-              footer={
-                  
-                      <Button variant="fab" component={Link} to={'/LCs/AddNewLC'} 
-                        color="secondary" aria-label="add" onClick={this.handleAddOpen}>
-                        <AddIcon />
-                      </Button>
-                  
-              }/> 
+                }
+                />
             </ItemGrid>
           </Grid>
         </div>

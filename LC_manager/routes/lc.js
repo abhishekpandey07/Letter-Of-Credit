@@ -75,19 +75,26 @@ router.route('/')
 		throw err;
 
 	    }else{
-		res.format({
-		    /*html: function(){
-			res.render('LCs/index',{
-			    title: 'List of All Letters of Credit',
-			    "LCs" : LCs
-			});
-		    },*/
 
-		    json: function(){
-			res.json(JSON.stringify(LCs));
-		    }
-		});
-	    }
+
+            var LCHashMap =  new Map()
+            LCs.reduce((map,prop,key) => {
+                LCHashMap.set(prop.LC_no,prop)
+            },LCHashMap)
+    		res.format({
+    		    /*html: function(){
+    			res.render('LCs/index',{
+    			    title: 'List of All Letters of Credit',
+    			    "LCs" : LCs
+    			});
+    		    },*/
+
+
+    		    json: function(){
+    			res.json(JSON.stringify([...LCHashMap]));
+    		    }
+    		});
+    	}
 	});
     });
 
