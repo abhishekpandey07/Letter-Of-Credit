@@ -12,18 +12,18 @@ function Footer({ ...props }) {
         <div className={classes.left}>
           <List className={classes.list}>
             <ListItem className={classes.inlineBlock}>
-              <a href="#home" className={classes.block}>
+              <a href="/dashboard#" className={classes.block}>
                 Home
               </a>
             </ListItem>
             <ListItem className={classes.inlineBlock}>
-              <a href="www.mvomni.com" className={classes.block}>
+              <a href="http://www.mvomni.com" target='_blank' className={classes.block}>
                 Company
               </a>
             </ListItem>
             <ListItem className={classes.inlineBlock}>
-              <a href="#portfolio" className={classes.block}>
-                protfolio
+              <a href="https://www.github.com/abhishekpandey07" target='_blank'  className={classes.block}>
+                Portfolio
               </a>
             </ListItem>
             <ListItem className={classes.inlineBlock}>
@@ -36,7 +36,7 @@ function Footer({ ...props }) {
         <p className={classes.right}>
           <span>
             &copy; {1900 + new Date().getYear()}{" "}
-            <a href="www.linkedin.com/in/abhishek-pandey-723037107" className={classes.a}>
+            <a href="https://www.linkedin.com/in/abhishek-pandey-723037107" target="_blank" className={classes.a}>
               Abhishek Pandey
             </a>
           </span>

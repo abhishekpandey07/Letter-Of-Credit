@@ -26,26 +26,26 @@ const headerStyle = theme => ({
     marginLeft: drawerWidth,
   },
   'appBarShift-right': {
-    marginRight: drawerWidth,
+    marginRight: 0,
   },
   appBar: {
-    backgroundColor: "transparent",
-    boxShadow: "none",
+    backgroundColor: '#FFFFFF',
+    ...defaultBoxShadow,
     borderBottom: "0",
     marginBottom: "0",
-    position: "absolute",
+    position: "fixed",
     width: "100%",
     paddingTop: "10px",
     zIndex: "1029",
-    color: "#555555",
+    color: "#000000",
     border: "0",
     borderRadius: "3px",
-    padding: "10px 0",
+    padding: "10px 10",
     transition: theme.transitions.create(['margin', 'width'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    minHeight: "50px",
+    minHeight: "75px",
     display: "block"
   },
   container: {
@@ -53,7 +53,7 @@ const headerStyle = theme => ({
     minHeight: "50px",
   },
   flex: {
-    flex: 1,
+    flexGrow: 1,
     marginLeft: drawerWidth
   },
   title: {

@@ -22,7 +22,7 @@ const sidebarStyle = theme => ({
     top: "0",
     bottom: "0",
     left: "0",
-    zIndex: "1",
+    zIndex: "1300",
     // overflow: 'auto',
     ...boxShadow,
     width: drawerWidth,
@@ -63,7 +63,7 @@ const sidebarStyle = theme => ({
       height: "1px",
       right: "15px",
       width: "calc(100% - 30px)",
-      backgroundColor: "rgba(180, 180, 180, 0.3)"
+      backgroundColor: "rgba(0, 0, 0, 0.8)"
     }
   },
   logoLink: {
@@ -78,7 +78,7 @@ const sidebarStyle = theme => ({
     textDecoration: "none",
     backgroundColor: "transparent",
     "&,&:hover": {
-      color: "#FFFFFF"
+      color: "#000000"
     }
   },
   logoImage: {
@@ -112,8 +112,8 @@ const sidebarStyle = theme => ({
       height: "100%",
       content: '""',
       display: "block",
-      background: "#000",
-      opacity: ".8"
+      background: 'white',
+      opacity: "0.9"
     }
   },
   list: {
@@ -147,14 +147,14 @@ const sidebarStyle = theme => ({
     marginRight: "15px",
     textAlign: "center",
     verticalAlign: "middle",
-    color: "rgba(255, 255, 255, 0.8)"
+    color: "rgba(0, 0, 0, 0.8)"
   },
   itemText: {
     ...defaultFont,
     margin: "0",
     lineHeight: "30px",
     fontSize: "14px",
-    color: "#FFFFFF"
+    color: "#000"
   },
   whiteFont: {
     color: "#FFFFFF"
@@ -214,7 +214,12 @@ const sidebarStyle = theme => ({
     width: "260px",
     zIndex: "4",
     overflowScrolling: 'touch'
+  },
+  ol: {
+    listStyleType: 'circle',
+    backgroundColor: 'white'
   }
+
 });
 
 export default sidebarStyle;

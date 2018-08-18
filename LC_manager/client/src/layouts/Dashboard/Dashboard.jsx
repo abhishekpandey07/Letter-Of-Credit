@@ -7,6 +7,7 @@ import "perfect-scrollbar/css/perfect-scrollbar.css";
 import { withStyles } from "material-ui";
 
 import { Header, Footer, Sidebar } from "components";
+import NewHeader from 'components/Header/NewHeader'
 
 import dashboardRoutes from "routes/dashboard.jsx";
 import loginRoutes from 'routes/login.js'
@@ -15,6 +16,7 @@ import LCRoutes from "routes/lcs.jsx"
 import appStyle from "assets/jss/material-dashboard-react/appStyle.jsx";
 import image from "assets/img/sidebar-2.jpg";
 import logo from "assets/img/reactlogo.png";
+//import logo from "assets/../../public/logo.png"
 import axios from 'axios'
 import classNames from 'classnames'
 //This is the class
@@ -79,6 +81,17 @@ class DashLayout extends React.Component {
           );
     return (
       <div className={classes.wrapper}>
+        {/*
+          <Header permHandle={this.handlePermDrawerToggle}
+              open={this.state.permOpen}
+              handleLogout={this.handleLogout}
+              {...this.props}/>
+        */}
+        <NewHeader permHandle={this.handlePermDrawerToggle}
+          open={this.state.permOpen}
+          handleLogout={this.handleLogout}
+          data={this.props.data}
+          {...this.props} />
         <Sidebar
           routes={dashboardRoutes}
           logoText={"MVOMNI"}
@@ -86,7 +99,7 @@ class DashLayout extends React.Component {
           image={image}
           handleDrawerToggle={this.handleDrawerToggle}
           open={this.state.mobileOpen}
-          color="blue"
+          color="purple"
           data={this.props.data}
           permOpen={this.state.permOpen}
           permHandle={this.handlePermDrawerToggle}
@@ -99,16 +112,10 @@ class DashLayout extends React.Component {
             })} ref='mainPanel'
           >
           <div className={classes.mainPanel}>
-            
-            {/* On the /maps route we want the map to be on full screen - this is not possible if the content and conatiner classes are present because they have some paddings which would make the map smaller */}
-            {this.getRoute() ? (
               <div className={classes.content}>
                 <div className={classes.container}>{switchRoutes}</div>
               </div>
-            ) : (
-              <div className={classes.map}>{switchRoutes}</div>
-            )}
-            {this.getRoute() ? <Footer /> : null}
+            <Footer />
           </div>
         </div>
       </div>

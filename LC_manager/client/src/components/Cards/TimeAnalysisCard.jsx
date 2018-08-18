@@ -5,11 +5,12 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CardActions,
   Typography,
   Tabs,
   Tab
 } from "material-ui";
-import { BugReport, Code, Cloud, Calendar } from "@material-ui/icons";
+import { BugReport, Code, Cloud, DateRange } from "@material-ui/icons";
 
 import { Tasks } from "components";
 import PageTable from 'components/Table/PaginationTable'
@@ -17,7 +18,8 @@ import PageTable from 'components/Table/PaginationTable'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
 
-
+import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
+import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import tasksCardStyle from "assets/jss/material-dashboard-react/tasksCardStyle";
 import Button from '@material-ui/core/Button'
 import FileDownload from '@material-ui/icons/FileDownload'
@@ -25,7 +27,9 @@ import Tooltip from '@material-ui/core/Tooltip'
 import IconButton from '@material-ui/core/IconButton'
 import ReactExport from 'react-data-export'
 import {formatDate, formatAmount} from 'utils/common'
-
+import Grid from '@material-ui/core/Grid'
+import SliderTabs from './SliderTabs'
+import moment from 'moment'
 
 const ExcelFile = ReactExport.ExcelFile
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet
@@ -35,21 +39,19 @@ const downloadIcon =
                   id="tooltip-top"
                   title='Download As ExcelFile'
                   placement="top"
-
                 >
-                  <IconButton
-                    aria-label='download'
-                    style={{ width: "40px", height: "40px"}}
-                  >
+                  <Button variant='contained' size='small'>
                     <FileDownload
                       style={{
+                        marginLeft: '0px',
                         width: "25px",
                         height: "25px",
                         backgroundColor: "transparent",
-                        boxShadow: "none"
+                        boxShadow: "none",
+                        marginRight:'10px'
                       }}
-                    />
-                  </IconButton>
+                    /> Download
+                  </Button>
               </Tooltip>
 
 const month = [ 'Jan', 'Feb', 'Mar',
@@ -57,31 +59,53 @@ const month = [ 'Jan', 'Feb', 'Mar',
                 'Jul', 'Aug', 'Sep',
                 'Oct', 'Nov', 'Dec'
               ]
+const fullMonth = [ 'January', 'February', 'March',
+                    'April', 'May', 'June',
+                    'July', 'August','September',
+                    'October', 'November', 'December']
 
 
+// Time analysis card for dashboard
 class TimeAnalysisCard extends React.Component {
   constructor(props){
     super(props)
     this.today = new Date(Date.now())
+    const startYear = 2018
+    const currYear = this.today.getFullYear()
     this.state = {
-      value: this.today.getMonth(),
-      dateWise:false
+      monthValue: this.today.getMonth(),
+      dateWise:false,
+      startMonth: this.today.getMonth(),
+      startYear: currYear % startYear,
+      yearValue: currYear % startYear,
     }
-    
-    console.log(this.props.data)
+    const diff =  currYear - startYear
+    this.year = [...Array(diff+1).keys()].map((prop,key) => {return prop+startYear}) 
+    this.newPaymentDate = null
   };
 
   handleChange = name => (event,value) => {
     this.setState({ [name] : value});
     console.log(this.state)
-  };  
+  };
 
   getDownloadButton(data){
     const headers = ['Issuer','Supplier', 'Project', 'LCNo', 'DueDate' ,'DueAmount','Payment'];
     var monthData = null
     var dateData = null
     var workBook = null
-    if(data!= null){
+    const style = {
+      style: {
+        border: {
+          top: {style: 'medium', color: 'black'},
+          right: {style: 'medium', color: 'black'},
+          left: {style: 'medium', color: 'black'},
+          bottom: {style: 'medium', color: 'black'},
+        }
+      }
+    }
+
+    if(data != null){
       monthData = data.monthData.reduce((acc,prop,key) => {
         acc.push({
           Issuer: prop[0],
@@ -97,14 +121,13 @@ class TimeAnalysisCard extends React.Component {
       monthData.push({
         DueDate: 'Total',
         Dueamount: this.totalDue
-
       })
 
-      const name = 'LC_payments_' + month[this.state.value]
+      const name = 'LC_payments_' + month[this.state.monthValue]
 
       workBook =
             <ExcelFile element={downloadIcon} filename={name}>
-                <ExcelSheet data={monthData} name={month[this.state.value]}>
+                <ExcelSheet data={monthData} name={month[this.state.monthValue]}>
                     <ExcelColumn label="Issuer" value="Issuer"/>
                     <ExcelColumn label="Supplier" value="Supplier"/>
                     <ExcelColumn label="Project" value="Project"/>
@@ -113,7 +136,7 @@ class TimeAnalysisCard extends React.Component {
                     <ExcelColumn label="Due Amount" value="Dueamount"/>
                     <ExcelColumn label="Payment Type" value="Payment"/>
                 </ExcelSheet>
-                <ExcelSheet data={data.dateWiseData} name={'date_wise_' + month[this.state.value]}>
+                <ExcelSheet data={data.dateWiseData} name={'date_wise_' + month[this.state.monthValue]}>
                     <ExcelColumn label="Due Date" value="date"/>
                     <ExcelColumn label="Due Amount" value="amount"/>
                 </ExcelSheet>
@@ -127,19 +150,30 @@ class TimeAnalysisCard extends React.Component {
     var monthContent = null
     var monthTableData = null
     this.today = new Date(Date.now())
-    console.log('in month data')
     if(this.props.data!=null){
-      console.log('creating month content')
       this.totalDue = 0
       this.totalCount = 0
-
+      this.devolved = 0
+      this.totalPayed = 0      
+      this.nextPaymentAmount = 0
+      var min = 365
       monthTableData = this.props.data.reduce((data,prop,key) => {
-        if((prop._id.month===(this.state.value + 1))){
+        if((prop._id.month === (this.state.monthValue + 1)) &&
+           (prop._id.year === this.year[this.state.yearValue])){
           const tableData = prop.LC.map((lc,index) => {
             // use this to show paid done Icon
             const paid = lc.payment.payed ? lc.payment.pay.mode : 'NOT PAYED'
-            
-            const date = formatDate(new Date(lc.payment.due_DT))
+            this.devolved += lc.payment.pay.mode === 'Devolved' ? parseFloat(lc.payment.due_amt) : 0
+            this.totalPayed += lc.payment.payed ? parseFloat(lc.payment.due_amt) : 0
+
+            var date = new Date(lc.payment.due_DT)
+            var diffDays = moment.duration(date - this.today).days()
+            console.log(date,diffDays)
+            if( date.getMonth() === this.today.getMonth() && diffDays >=0 && diffDays < min ){
+              min = diffDays
+              this.nextPaymentDate = new Date(date)
+            }
+            date = formatDate(date)
 
             const row = [String(prop._id.issuer),lc.supplier[0],lc.project[0],String(lc.LC_no),date,formatAmount(lc.payment.due_amt),paid]
             data.monthData.push(row) 
@@ -157,7 +191,13 @@ class TimeAnalysisCard extends React.Component {
         }
         return data
       },{monthData:[],dateWiseData:[]})
+      this.totalRemaining = this.totalDue - this.totalPayed
 
+      var index = monthTableData.dateWiseData.findIndex((obj)=>{
+              return (obj.date == formatDate(this.nextPaymentDate)) ? true : false
+            })
+
+      index == -1 ? null: this.nextPaymentAmount = monthTableData.dateWiseData[index].amount;
       
       const dateWiseData = monthTableData.dateWiseData.reduce((list,data,key)=>{
         list.push([data.date,formatAmount(data.amount)])
@@ -167,40 +207,79 @@ class TimeAnalysisCard extends React.Component {
       const downloadButton = this.getDownloadButton(monthTableData)
 
       monthContent = (
-        <div>
-          <Typography variant='body2' align='left' padding='10' style={{flexBasis: 0.8, flexShrink:0}}>
-            Total Amount Due : Rs.{formatAmount(this.totalDue)}
-          </Typography>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={this.state.dateWise}
-                onChange={this.handleChange('dateWise')}
-                value="checkedB"
-                color="primary"
+        <Grid container>
+          <Grid container justify='space-between' direction='row' align='baseline'>
+            <Grid item style={{margin:'auto'}}>
+              <Typography variant='body2' style={{color:'purple'}}>
+                Total Amount Due
+              </Typography>
+              <Typography variant='body2' align='right'>
+                Rs. {formatAmount(this.totalDue)}
+              </Typography>
+            </Grid>
+            <Grid item style={{margin:'auto'}}>
+              <Typography variant='body2' style={{color:'purple'}}>
+                Total Amount Payed
+              </Typography>
+              <Typography variant='body2' align='right'>
+                Rs. {formatAmount(this.totalPayed)}
+              </Typography>
+            </Grid>
+            <Grid item style={{margin:'auto'}}>
+              <Typography variant='body2' style={{color:'purple'}}>
+                Total Amount Remaining
+              </Typography>
+              <Typography variant='body2' align='right'>
+                Rs. {formatAmount(this.totalRemaining)}
+              </Typography>
+            </Grid>
+            <Grid item style={{margin:'auto'}}>
+              <Typography variant='body2' style={{color:'purple'}}>
+                Devolved Amount
+              </Typography>
+              <Typography variant='body2' align='right'>
+                Rs. {formatAmount(this.devolved)}
+              </Typography>
+            </Grid>
+            <Grid item style={{margin:'auto'}}>
+              <Typography variant='body2' style={{color:'purple'}}>
+                Next Payment Date
+              </Typography>
+              <Typography variant='body2' align='right'>
+                {formatDate(this.nextPaymentDate)}
+              </Typography>
+            </Grid>
+            <Grid item style={{margin:'auto'}}>
+              <Typography variant='body2' style={{color:'purple'}}>
+                Next Payment Amount
+              </Typography>
+              <Typography variant='body2' align='right'>
+                Rs. {formatAmount(this.nextPaymentAmount)}          
+              </Typography>
+            </Grid>
+            <Grid item style={{margin:'auto'}}>
+             {downloadButton}
+            </Grid>
+          </Grid>
+          <Grid item xs = {12}>
+            {
+              this.state.dateWise?
+              <PageTable
+                isNumericColumn={[false,true]}
+                tableHeaderColor="primary"
+                tableHead = {['Due Date',' Due Amount']}
+                tableData = {dateWiseData}
+              />
+              :
+              <PageTable
+                isNumericColumn={[false,false,false,false,true,true]}
+                tableHeaderColor="primary"
+                tableHead = {['Issuer','Supplier', 'Project','LC No.', 'Due Date' ,'Due Amount',"Payment Type"]}
+                tableData = {monthTableData.monthData}
               />
             }
-            label="Day Wise Payments"
-            style={{flexBasis:0.8, flexShrink:0}}
-          />
-          {this.state.dateWise?
-            <PageTable
-              isNumericColumn={[false,true]}
-              tableHeaderColor="primary"
-              tableHead = {['Due Date',' Due Amount']}
-              tableData = {dateWiseData}
-              download = {downloadButton}
-            />
-            :
-            <PageTable
-              isNumericColumn={[false,false,false,false,true,true]}
-              tableHeaderColor="primary"
-              tableHead = {['Issuer','Supplier', 'Project','LC No.', 'Due Date' ,'Due Amount',"Payment Type"]}
-              tableData = {monthTableData.monthData}
-              download = {downloadButton}
-            />
-          }
-        </div>
+          </Grid>
+        </Grid>
         )
     }
 
@@ -219,37 +298,51 @@ class TimeAnalysisCard extends React.Component {
             title: classes.cardTitle,
             content: classes.cardHeaderContent
           }}
-          title={<Typography variant='title' style={{color:'white'}}>Month:</Typography>}
-          action={
-            <Tabs
-              classes={{
-                flexContainer: classes.tabsContainer,
-                indicator: classes.displayNone
-              }}
-              value={this.state.value}
-              onChange={this.handleChange('value')}
-              textColor="inherit"
-            >
-            { month.map((prop,key) => {
-                if(key >= this.today.getMonth() && key <= this.today.getMonth() +3)
-                  return <Tab
-                      classes={{
-                        wrapper: classes.tabWrapper,
-                        labelIcon: classes.labelIcon,
-                        label: classes.label,
-                        textColorInheritSelected: classes.textColorInheritSelected
-                      }}
-                      icon={<BugReport className={classes.tabIcon} />}
-                      label={prop}
-                      value={key}
-                    />
-                return 
-              })
-            }
+          title={<Typography variant='headline' style={{color:'white'}}>Payments</Typography>}
+          subheader={ 
+            <Typography style={{color:'lightgray',fontSize: '18px'}}>
+              {fullMonth[this.state.monthValue]+", "+ this.year[this.state.yearValue]}
+            </Typography>
+                    }
 
-            </Tabs>
-          }
+          
         />
+        <CardActions>
+          <Grid container justify='space-between' alignItems='center' direction='row'>
+            <Grid item style={{marginLeft: '20px'}}>
+              <SliderTabs
+                title='Month'
+                currIdx={this.state.monthValue}
+                tabChangeHandle={this.handleChange('monthValue')}
+                data={month}
+                range={4}
+                icon={DateRange}
+              />
+            </Grid>
+            <Grid item style={{margin:'auto'}}>
+              <SliderTabs
+                title='Year'
+                currIdx={this.state.yearValue}
+                tabChangeHandle={this.handleChange('yearValue')}
+                data={this.year}
+                icon={DateRange}
+              />
+            </Grid>
+            <Grid item style={{margin:'auto'}}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={this.state.dateWise}
+                    onChange={this.handleChange('dateWise')}
+                    value="checkedB"
+                    color='secondary'
+                  />
+                }
+                label="Day Wise Payments"
+              />
+            </Grid>
+          </Grid>
+        </CardActions>
         <CardContent>
           {/*<div>
           <Typography variant='body2' align='left' padding='10'>
@@ -274,4 +367,5 @@ TimeAnalysisCard.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(tasksCardStyle)(TimeAnalysisCard);
+export default withStyles(tasksCardStyle, {withTheme: true})(TimeAnalysisCard);
+

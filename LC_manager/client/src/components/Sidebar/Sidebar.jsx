@@ -14,7 +14,7 @@ import {
 } from "@material-ui/core";
 
 import { HeaderLinks } from "components";
-
+import Grid from '@material-ui/core/Grid'
 import sidebarStyle from "assets/jss/material-dashboard-react/sidebarStyle.jsx";
 import Header from 'components/Header/Header.jsx'
 class Sidebar extends React.Component {
@@ -80,58 +80,69 @@ class Sidebar extends React.Component {
      );
     console.log(routes)
      return (
-       <div>
-        <Header permHandle={this.props.permHandle}
-          open={this.props.permOpen} routes={routes}
-          handleLogout={this.props.handleLogout}
-          {...this.props}/>
-         <Hidden mdUp>
-           <Drawer
-             variant="temporary"
-             anchor="right"
-             open={this.props.open}
-             classes={{
-               paper: classes.drawerPaper
-             }}
-             onClose={this.props.handleDrawerToggle}
-             ModalProps={{
-               keepMounted: true // Better open performance on mobile.
-             }}
-           >
-             {brand}
-             <div className={classes.sidebarWrapper}>
-               <HeaderLinks />
-               {links}
-             </div>
-             {image !== undefined ? (
-               <div
-                 className={classes.background}
-                 style={{ backgroundImage: "url(" + image + ")" }}
-               />
-             ) : null}
-           </Drawer>
-         </Hidden>
-         <Hidden smDown>
-           <Drawer
-             anchor="left"
-             variant="persistent"
-             open={this.props.permOpen}
-             classes={{
-               paper: classes.drawerPaper
-             }}
-             onClose={this.props.permHandle}
-           >
-             <Button onClick={this.props.permHandle}>{brand}</Button>
-             <div className={classes.sidebarWrapper}>{links}</div>
-             {image !== undefined ? (
-               <div
-                 className={classes.background}
-                 style={{ backgroundImage: "url(" + image + ")" }}
-               />
-             ) : null}
-           </Drawer>
-         </Hidden>
-       </div>
+          <div>
+             <Hidden mdUp>
+               <Drawer
+                 variant="temporary"
+                 anchor="right"
+                 open={this.props.open}
+                 classes={{
+                   paper: classes.drawerPaper
+                 }}
+                 onClose={this.props.handleDrawerToggle}
+                 ModalProps={{
+                   keepMounted: true // Better open performance on mobile.
+                 }}
+               >
+                 {brand}
+                 <div className={classes.sidebarWrapper}>
+                   <HeaderLinks />
+                   {links}
+                 </div>
+                 {image !== undefined ? (
+                   <div
+                     className={classes.background}
+                     style={{ backgroundImage: "url(" + image + ")" }}
+                   />
+                 ) : null}
+                  <ol className={classes.ol}>
+                    {
+                      [0,1,2].map((prop,key) => {
+                        return <li onClick = { () => this.setState({sidbarImg:key})}>*</li>
+                      })
+                    }
+                  </ol>
+               </Drawer>
+             </Hidden>
+             <Hidden smDown>
+               <Drawer
+                 anchor="left"
+                 variant="persistent"
+                 open={this.props.permOpen}
+                 classes={{
+                   paper: classes.drawerPaper
+                 }}
+                 onClose={this.props.permHandle}
+               >
+                 <Button onClick={this.props.permHandle}>{brand}</Button>
+                 <div className={classes.sidebarWrapper}>{links}</div>
+                 {image !== undefined ? (
+                   <div
+                     className={classes.background}
+                     style={{ backgroundImage: "url(" + image + ")" }}
+                   />
+                 ) : null}
+                 <ol className={classes.ol}>
+                    {
+                      [0,1,2].map((prop,key) => {
+                        return <li onClick = { () => this.setState({sidbarImg:key})}>*</li>
+                      })
+                    }
+                  </ol>
+               </Drawer>
+             </Hidden>
+           
+           </div>
      );}
 };
 

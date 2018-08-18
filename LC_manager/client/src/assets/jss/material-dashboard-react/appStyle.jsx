@@ -59,7 +59,7 @@ const appStyle = theme => ({
   },
   appFrame: {
     zIndex: 1,
-    overflow: 'hidden',
+    overflow: 'none',
     position: 'relative',
     display: 'flex',
     width: '100%',

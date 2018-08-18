@@ -46,9 +46,10 @@ class TablePaginationActions extends React.Component {
     );
   };
 
+
   render() {
     const { classes, count, page, rowsPerPage, theme } = this.props;
-
+    console.log(this.props)
     return (
       <div className={classes.root}>
         <IconButton
@@ -91,6 +92,7 @@ TablePaginationActions.propTypes = {
   page: PropTypes.number.isRequired,
   rowsPerPage: PropTypes.number.isRequired,
   theme: PropTypes.object.isRequired,
+  download: PropTypes.func
 };
 
 const TablePaginationActionsWrapped = withStyles(actionsStyles, { withTheme: true })(
@@ -195,12 +197,6 @@ class CustomPaginationActionsTable extends React.Component {
                   ActionsComponent={TablePaginationActionsWrapped}
                   rowsPerPageOptions={[5,10]}
                 />
-                {this.props.download?
-                  
-                  <TableCell style={{display: "flex", border: "none",padding: "20px 0px"}}>
-                    {this.props.download}
-                  </TableCell>
-                  : <div/>}
               </TableRow>
             </TableFooter>
           </Table>
@@ -210,7 +206,6 @@ class CustomPaginationActionsTable extends React.Component {
 }
 
 CustomPaginationActionsTable.propTypes = {
-  classes: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   tableHeaderColor: PropTypes.oneOf([
     "warning",

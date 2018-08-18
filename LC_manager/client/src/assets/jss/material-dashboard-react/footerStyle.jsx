@@ -37,7 +37,7 @@ const footerStyle = {
   a: {
     color: primaryColor,
     textDecoration: "none",
-    backgroundColor: "transparent"
+    backgroundColor: "transparent",
   },
   list: {
     marginBottom: "0",

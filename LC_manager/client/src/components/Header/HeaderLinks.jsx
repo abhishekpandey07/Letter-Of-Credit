@@ -152,25 +152,13 @@ class HeaderLinks extends React.Component {
     this.newPassMatchError = false
     return (
       <div>
-      { 
-        roles.includes(this.props.role)?
-        <NavLink
-          to='/Register'
-          activeClassName="active"
-
-        >
-          <Button varaint='contained' style={{margin:"0px 15px"}}>
-            Register New User
-          </Button>
-        </NavLink>
-        :
-        <div/>
-      }
         <IconButton
           color="inherit"
           aria-label="Dashboard"
           className={classes.buttonLink}
+          link="/dashboard"
         >
+
           <Dashboard className={classes.links} />
           <Hidden mdUp>
             <p className={classes.linkText}>Dashboard</p>

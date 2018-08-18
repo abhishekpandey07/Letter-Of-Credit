@@ -6,27 +6,10 @@ import {
   card,
   cardHeader,
   defaultFont,
-  primaryBoxShadow,
+  primaryBoxShadow
 } from "assets/jss/material-dashboard-react.jsx";
 
-const tasksCardStyle = theme => ({
-  card,
-  cardHeader: {
-    flex: "none",
-    ...cardHeader,
-    ...defaultFont,
-    background: "linear-gradient(60deg, #ab47bc, #8e24aa)",
-    ...primaryBoxShadow
-  },
-  cardTitle: {
-    ...defaultFont,
-    float: "left",
-    fontWeight: "500",
-    padding: "10px 10px 10px 0",
-    lineHeight: "24px",
-    fontSize: "14px",
-    color: "#FFFFFF"
-  },
+const sliderTabsStyle = theme => ({
   tabWrapper: {
     width: "auto",
     display: "inline-flex",
@@ -44,7 +27,7 @@ const tasksCardStyle = theme => ({
     }
   },
   displayNone: {
-    display: "none"
+    display: "none",
   },
   labelIcon: {
     height: "44px",
@@ -61,9 +44,9 @@ const tasksCardStyle = theme => ({
     }
   },
   tabs: {
-    width: "110px",
+    width: "100px",
     minWidth: "70px",
-    paddingLeft: "12px"
+    paddingLeft: "10px"
   },
   cardHeaderContent: {
     flex: "none"
@@ -76,9 +59,9 @@ const tasksCardStyle = theme => ({
     marginLeft: "-10px"
   },
   textColorInheritSelected: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(255, 255, 255, 1)",
     transition: "background-color .4s"
   }
 });
 
-export default tasksCardStyle;
+export default sliderTabsStyle;

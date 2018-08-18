@@ -174,7 +174,7 @@ class LoginPage extends React.Component {
                       LC Manager Login
                     </Typography>
                   <Grid item xs={12} sm={12} md={12}>
-                    <FormControl margin='normal'  >
+                    <FormControl margin='normal' style={{width:'100%'}} >
                       <TextField
                         required
                         id='username'
@@ -184,7 +184,7 @@ class LoginPage extends React.Component {
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={12} md={12}>
-                    <FormControl  margin='normal'>
+                    <FormControl  margin='normal' style={{width:'100%'}}>
                       <TextField
                         error={this.state.error}
                         required

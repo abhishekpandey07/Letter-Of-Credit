@@ -15,9 +15,11 @@ import {roundAmount} from 'utils/common'
 import {
   //ProfileCard,
   RegularCard,
-  Button,
-  ItemGrid
+  Button
 } from "components";
+
+import IconButton from '@material-ui/core/IconButton'
+import AddIcon from '@material-ui/icons/Add'
 
 class NewLCForm extends React.Component{
   constructor(props){
@@ -132,6 +134,16 @@ class NewLCForm extends React.Component{
      });
   }
 
+  addProject = (event,target) => {
+    try {
+      this.projects.push(this.state.project)
+    } catch(error) {
+      this.projects = []
+      this.projects.push(this.state.project)
+    } 
+
+  } 
+
   render () {
     const {classes} = this.props
     var suppliersList = this.state.suppliersList.map(prop => {
@@ -171,15 +183,15 @@ class NewLCForm extends React.Component{
       <div>
       <form >
         <Grid container>
-          <ItemGrid xs={12} sm={12} md={12}>
+          <Grid xs={12} sm={12} md={12}>
             <RegularCard
               cardTitle="Register New LC"
               cardSubtitle="Enter LC Details"
               content={
                 <div>
                 <Typography variant='subheading' className={classes.formHeading}>Issuer and Supplier Details</Typography> 
-                  <Grid container>
-                    <ItemGrid xs={12} sm={12} md={2}>
+                  <Grid container direction='row' alignItems='center' spacing={8}>
+                    <Grid xs={12} sm={12} md={2}>
                        <FormControl fullWidth={true} margin='normal'>
                         <InputLabel htmlFor="issuer"> Issuer Bank</InputLabel>
                         <Select
@@ -194,8 +206,8 @@ class NewLCForm extends React.Component{
                           {issuersList}
                         </Select>
                       </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={12} sm={12} md={3}>
+                    </Grid>
+                    <Grid xs={12} sm={12} md={3}>
                       <div>
                        <FormControl fullWidth={true} margin='normal'>
                         <InputLabel htmlFor="Supplier">Supplier</InputLabel>
@@ -212,8 +224,8 @@ class NewLCForm extends React.Component{
                         </Select>
                       </FormControl>
                       </div>
-                    </ItemGrid>
-                    <ItemGrid xs={12} sm={12} md={2}>
+                    </Grid>
+                    <Grid xs={12} sm={12} md={2}>
                        <FormControl fullWidth={true} margin='normal'>
                         <InputLabel htmlFor="supBank"> Supplier's Bank</InputLabel>
                         <Select
@@ -230,15 +242,15 @@ class NewLCForm extends React.Component{
                           }
                         </Select>
                       </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={12} sm={12} md={4}>
+                    </Grid>
+                    <Grid xs={12} sm={12} md={4}>
                        <FormControl fullWidth={true} margin='normal'>
                         <InputLabel htmlFor="project">Project</InputLabel>
                         <Select
                           required
                           native
                           value={this.state.project.name}
-                          onChange={this.handleChange('project')}
+                          
                           inputProps={{
                             name: 'project',
                             id: 'project'
@@ -249,14 +261,19 @@ class NewLCForm extends React.Component{
                           }
                         </Select>
                       </FormControl>
-                    </ItemGrid>
+                    </Grid>
+                    <Grid item >
+                      <IconButton onClick={this.addProject}>
+                        <AddIcon/>
+                      </IconButton>
+                      </Grid>
                     </Grid>
                     <Divider style={{margin:'20px'}}/>
                     <Typography variant='subheading' className={classes.formHeading}>
                       Letter of Credit Details
                     </Typography>
                     <Grid container padding={true}>
-                    <ItemGrid xs={6} sm={3} md={3}>
+                    <Grid xs={6} sm={3} md={3}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
                             required
@@ -265,8 +282,8 @@ class NewLCForm extends React.Component{
                             onChange={this.handleChange('LC_no')}
                           />
                       </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={2} md={2}>
+                    </Grid>
+                    <Grid xs={6} sm={2} md={2}>
                       <FormControl fullWidth margin='normal'>
                         <InputLabel htmlFor="adornment-amount">Amount</InputLabel>
                         <Input
@@ -277,8 +294,8 @@ class NewLCForm extends React.Component{
                           startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                         />
                       </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={2} md={2}>
+                    </Grid>
+                    <Grid xs={6} sm={2} md={2}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
                           required
@@ -294,8 +311,8 @@ class NewLCForm extends React.Component{
                       />
                       <FormHelperText> Please put LC opening Date.</FormHelperText>
                      </FormControl> 
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={2} md={2}>
+                    </Grid>
+                    <Grid xs={6} sm={2} md={2}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
                           required
@@ -312,10 +329,10 @@ class NewLCForm extends React.Component{
 
                       <FormHelperText> Please put LC expiry Date.</FormHelperText>
                      </FormControl> 
-                    </ItemGrid>
+                    </Grid>
                     </Grid>
                     <Grid container>
-                    <ItemGrid xs={6} sm={3} md={3}>
+                    <Grid xs={6} sm={3} md={3}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
                             required
@@ -324,8 +341,8 @@ class NewLCForm extends React.Component{
                             onChange={this.handleChange('FDR_no')}
                           />
                       </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={2} md={2}>
+                    </Grid>
+                    <Grid xs={6} sm={2} md={2}>
                       <FormControl fullWidth margin='normal'>
                           <InputLabel htmlFor="adornment-amount">Margin Amount ({Math.round(this.state.amount*0.15)})</InputLabel>
                           <Input
@@ -336,8 +353,8 @@ class NewLCForm extends React.Component{
                             startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                           />
                         </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={6} sm={2} md={2}>
+                    </Grid>
+                    <Grid xs={6} sm={2} md={2}>
                       <FormControl fullWidth={true} margin='normal'>
                         <TextField
                           required
@@ -355,14 +372,14 @@ class NewLCForm extends React.Component{
 
                       <FormHelperText> Please put FDR Date.</FormHelperText>
                      </FormControl> 
-                    </ItemGrid>
+                    </Grid>
                   </Grid>
                   <Divider style={{margin:'20px'}}/>
                     <Typography variant='subheading' className={classes.formHeading}>
                       Additional Charges
                     </Typography>
                   <Grid container padding={true}>
-                    <ItemGrid xs={12} sm={2} md={2}>
+                    <Grid xs={12} sm={2} md={2}>
                       <FormControl fullWidth  margin='normal'>
                           <InputLabel htmlFor="open">Opening Charges</InputLabel>
                           <Input
@@ -374,8 +391,8 @@ class NewLCForm extends React.Component{
                             startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                           />
                         </FormControl>
-                    </ItemGrid>
-                    <ItemGrid xs={12} sm={2} md={2}>
+                    </Grid>
+                    <Grid xs={12} sm={2} md={2}>
                       <FormControl fullWidth  margin='normal'>
                           <InputLabel htmlFor="post">Posting Charges</InputLabel>
                           <Input
@@ -387,8 +404,8 @@ class NewLCForm extends React.Component{
                             startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                           />
                         </FormControl>
-                      </ItemGrid>
-                      <ItemGrid xs={12} sm={2} md={2}>
+                      </Grid>
+                      <Grid xs={12} sm={2} md={2}>
                       <FormControl fullWidth  margin='normal'>
                           <InputLabel htmlFor="post">GST Charges</InputLabel>
                           <Input
@@ -400,11 +417,11 @@ class NewLCForm extends React.Component{
                             startAdornment={<InputAdornment position="start">Rs.</InputAdornment>}
                           />
                           </FormControl>
-                      </ItemGrid>
-                      <ItemGrid xs={12} sm={2} md={2}>
+                      </Grid>
+                      <Grid xs={12} sm={2} md={2}>
                         <Typography variant='subheading'>Total : {roundAmount(parseFloat(this.state.open) +
                                                     parseFloat(this.state.post) + parseFloat(this.state.GST))}</Typography>
-                      </ItemGrid>
+                      </Grid>
                   </Grid>
                 </div>  
                 }
@@ -413,7 +430,7 @@ class NewLCForm extends React.Component{
                       <Button id='submit' color="primary" type="submit" onClick={this.handleSubmit}>Submit</Button>
                   </div>
                   }/>            
-          </ItemGrid>
+          </Grid>
         </Grid>
       </form>
       </div>

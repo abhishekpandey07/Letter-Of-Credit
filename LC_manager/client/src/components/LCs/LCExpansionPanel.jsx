@@ -12,6 +12,7 @@ import Edit from '@material-ui/icons/Edit';
 import InfoOutline from '@material-ui/icons/InfoOutline'
 import {InsertDriveFile,Close} from '@material-ui/icons'
 import FileUpload from '@material-ui/icons/FileUpload'
+import FileDownload from '@material-ui/icons/FileDownload'
 import IconButton from '@material-ui/core/IconButton'
 import TableCell from '@material-ui/core/Table'
 import Tooltip from '@material-ui/core/Tooltip'
@@ -38,6 +39,10 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
+import SummaryDownloadButton from './SummaryDownloadButton'
+ import ReactPDF, {Document,Page, Text, View, StyleSheet} from '@react-pdf/renderer';
+ import jsPDF from 'jspdf';
+ import ReactToPrint from 'react-to-print'
 
 
 
@@ -112,7 +117,8 @@ const dialogState = {
   closed: 0,
   closeAction: 1,
   deleteAction: 2,
-  feedback: 3
+  feedback: 3,
+  downloadPDF: 4,
 }
 const cycleSwitch = {
   newCycle: 0,
@@ -175,6 +181,7 @@ class LCPanel extends React.Component {
       edit: false,
       //dialog states
       dialog: dialogState.closed,
+      pdf: false,
     }
 
     this.totalPaymentCharges = 0;
@@ -215,7 +222,8 @@ class LCPanel extends React.Component {
       //other states
       closed: this.props.LC.status==='Closed',
       edit: false,
-      refFile: ''
+      refFile: '',
+      dialog: dialogState.closed
     })
   }
 
@@ -346,6 +354,7 @@ class LCPanel extends React.Component {
     ]
     
     this.totalPaymentCharges = 0
+    this.newPayment = false
     const paymentData = LC.payment.cycles.reduce((array,item,index) => {
       if(item.due_DT){
         const due = formatDate(new Date(item.due_DT))
@@ -359,7 +368,7 @@ class LCPanel extends React.Component {
 
         this.totalPaymentCharges += charges;
         const newPayment = (item.pay.mode=='Not Updated' && item.payed==true)
-        this.newPayment = this.newPayment || (newPayment)
+        this.newPayment = this.newPayment || newPayment
         const render = [true, newPayment,
                         (item.pay.mode!=='Not Updated' && item.payed===true),
                         this.state.edit, this.state.edit]
@@ -376,6 +385,10 @@ class LCPanel extends React.Component {
   }
 
   // generate Extension Table Data
+
+  getLCinfo = () => {
+    return this.props.LC
+  }
 
   generateExtensionData = () =>{
     const {LC} = this.props;
@@ -1099,13 +1112,13 @@ class LCPanel extends React.Component {
       return form 
   }
 
-  generateSummary = () => {
+  generateSummary = (props) => {
     const {classes, LC} = this.props
     const amount = parseFloat(LC.amount)
     const due_amt = parseFloat(LC.payment.total_due)
     const clearedAmount = parseFloat(LC.m_cl_amt)
     const marginAmount = parseFloat(LC.m_amt)
-    const UnUtilized = amount-due_amt
+    this.UnUtilized = amount-due_amt
     const totalCharges = roundAmount(this.totalPaymentCharges + this.totalExtensionCharges)
     const form = 
       <div>
@@ -1113,130 +1126,214 @@ class LCPanel extends React.Component {
         <Divider inset style={{margin:'5px'}}/>
 	<Grid item xs={12}>
 	<Grid container justify='center'>
-          <Grid item xs={6}>
+          <Grid item xs={3} sm={4} md={4} >
+            <TableCell>
+              <Typography variant='body1' align='center' style={{color:'purple'}}>
+                Issuer
+              </Typography>
+            </TableCell>
+            <TableCell>
+              <Typography variant='body2' align='center'>
+                {LC.issuer.name}
+              </Typography>
+            </TableCell>
+            <TableCell>
+              <Typography variant='body1' align='center' style={{color:'purple'}}>
+                LC Number
+              </Typography>
+            </TableCell>
+            <TableCell>
+              <Typography variant='body2' align='center'>
+                {LC.LC_no}
+              </Typography>
+            </TableCell>
+          </Grid>
+          <Grid item xs={3} sm={4} md={4}>
+            <TableCell>
+              <Typography variant='body1' align='center' style={{color:'purple'}}>
+                Supplier Name
+              </Typography>
+            </TableCell>
+            <TableCell>
+              <Typography variant='body2' align='center'>
+                {LC.supplier.name}
+              </Typography>
+            </TableCell>
             <TableCell>
               <Typography variant='body1' align='center' style={{color:'purple'}}>
                 Projects 
               </Typography>
             </TableCell>
-	    {
-		[LC.project].map((prop,key) => {
-		   var name = prop.name.split(/[\s,-]+/).slice(1).join(' ')
-		   console.log(name);
-		   var element = 
-			<TableCell>
-                	    <Typography variant='body2' align='center'>
-				{name + ' - ' + prop.location}
-			    </Typography>
-	                </TableCell>					
-		    return element
+            {
+              [LC.project].map((prop,key) => {
+                 var name = prop.name.split(/[\s,-]+/).slice(1).join(' ')
+                 console.log(name);
+                 var element = 
+                    <TableCell>
+                      <Typography variant='body2' align='center'>
+                        {name + ' - ' + prop.location}
+                       </Typography>
+                    </TableCell>          
+                  return element
                 })
-	    }
-          </Grid>
-	</Grid>
-	<Grid item xs={12}>
-	    <Divider style={{margin:'10px'}}/>
-	</Grid>
-	</Grid>
-	<Grid item xs={12}>
-	<Grid container>
-	  <Grid item xs={4}/>
-	  <Grid item xs={4}>
-	    <Typography variant='body1' align='center' style={{color:'purple'}}>
-                Charges and Margins
-            </Typography>
-	    <Divider style={{margin:'10px'}}/>
-          </Grid>
-	  <Grid item xs={4}/>
-          <Grid item xs={2}>
+            }
+          </Grid> 
+          <Grid item xs={3} sm={4} md={4}>
             <TableCell>
-              <Typography variant='body2' align='left' >
-                Payment Charges: 
+              <Typography variant='body1' align='center' style={{color:'purple'}}>
+                Amount
               </Typography>
             </TableCell>
             <TableCell>
-              <Typography variant='body2' align='left' >
-                Extension Charges: 
-              </Typography>
-            </TableCell><TableCell>
-              <Typography variant='body2' align='left' >
-                Total Charges: 
-              </Typography>
-            </TableCell>
-          </Grid>
-          <Grid item xs={2}>
-            <TableCell numeric>
-              {formatAmount(this.totalPaymentCharges)}
-            </TableCell>
-            <TableCell numeric>
-              {formatAmount(roundAmount(this.totalExtensionCharges))}
-            </TableCell>
-            <TableCell numeric>
-              {formatAmount(roundAmount(this.totalExtensionCharges + this.totalPaymentCharges))}
-            </TableCell>
-          </Grid>
-          <Grid item xs={2}>
-            <TableCell>
-              <Typography variant='body2' align='left' >
-                UnUtilized Amount : 
+              <Typography variant='body2' align='center'>
+                Rs. {formatAmount(LC.amount)}
               </Typography>
             </TableCell>
             <TableCell>
-              <Typography variant='body2' align='left' >
-                Loss : 
+              <Typography variant='body1' align='center' style={{color:'purple'}}>
+                Margin Amount
               </Typography>
             </TableCell>
-            {/*<TableCell>
-              <Typography variant='body2' align='left' >
-                Total Charges : 
+            <TableCell>
+              <Typography variant='body2' align='center'>
+                Rs.{formatAmount(marginAmount)}
               </Typography>
-            </TableCell>*/}
+            </TableCell>
           </Grid>
-          <Grid item xs={2}>
-            <TableCell numeric>
-              {formatAmount(UnUtilized)}
-            </TableCell>
-            <TableCell numeric>
-              {formatAmount(roundAmount((UnUtilized/amount)*totalCharges))}
-            </TableCell>
-            {/*<TableCell numeric>
-              {formatAmount(totalCharges)}
-            </TableCell>*/}
+      	</Grid>
+      	<Grid item xs={12}>
+      	    <Divider style={{margin:'10px'}}/>
+    	</Grid>
+    	</Grid>
+	   <Grid item xs={12}>
+    	<Grid container>
+    	  <Grid item xs={4}/>
+    	  <Grid item xs={4}>
+    	    <Typography variant='body1' align='center' style={{color:'purple'}}>
+              Charges and Margins
+          </Typography>
+         <Divider style={{margin:'10px'}}/>
         </Grid>
+       <Grid item xs={4}/>
         <Grid item xs={2}>
           <TableCell>
             <Typography variant='body2' align='left' >
-              Clearance Date : 
+              Payment Charges: 
             </Typography>
           </TableCell>
           <TableCell>
             <Typography variant='body2' align='left' >
-              Cleared Amount: 
+              Extension Charges: 
             </Typography>
+          </TableCell><TableCell>
             <Typography variant='body2' align='left' >
-              Interest : 
+              Total Charges: 
             </Typography>
           </TableCell>
         </Grid>
         <Grid item xs={2}>
           <TableCell numeric>
-            {LC.m_cl_DT ? formatDate(new Date(LC.m_cl_DT)) : 'Not Updated'}
+            {formatAmount(this.totalPaymentCharges)}
           </TableCell>
           <TableCell numeric>
-            {clearedAmount > 0 ? formatAmount(clearedAmount) : 'Not Updated'}
+            {formatAmount(roundAmount(this.totalExtensionCharges))}
           </TableCell>
           <TableCell numeric>
-            {clearedAmount > 0 ? 
-formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
+            {formatAmount(roundAmount(this.totalExtensionCharges + this.totalPaymentCharges))}
           </TableCell>
         </Grid>
+        <Grid item xs={2}>
+          <TableCell>
+            <Typography variant='body2' align='left' >
+              UnUtilized Amount : 
+            </Typography>
+          </TableCell>
+          <TableCell>
+            <Typography variant='body2' align='left' >
+              Loss : 
+            </Typography>
+          </TableCell>
+          {/*<TableCell>
+            <Typography variant='body2' align='left' >
+              Total Charges : 
+            </Typography>
+          </TableCell>*/}
+        </Grid>
+        <Grid item xs={2}>
+          <TableCell numeric>
+            {formatAmount(this.UnUtilized)}
+          </TableCell>
+          <TableCell numeric>
+            {formatAmount(roundAmount((this.UnUtilized/amount)*totalCharges))}
+          </TableCell>
+          {/*<TableCell numeric>
+            {formatAmount(totalCharges)}
+          </TableCell>*/}
       </Grid>
+      <Grid item xs={2}>
+        <TableCell>
+          <Typography variant='body2' align='left' >
+            Clearance Date : 
+          </Typography>
+        </TableCell>
+        <TableCell>
+          <Typography variant='body2' align='left' >
+            Cleared Amount: 
+          </Typography>
+          <Typography variant='body2' align='left' >
+            Interest : 
+          </Typography>
+        </TableCell>
       </Grid>
-    </div>
-
+      <Grid item xs={2}>
+        <TableCell numeric>
+          {LC.m_cl_DT ? formatDate(new Date(LC.m_cl_DT)) : 'Not Updated'}
+        </TableCell>
+        <TableCell numeric>
+          {clearedAmount > 0 ? formatAmount(clearedAmount) : 'Not Updated'}
+        </TableCell>
+        <TableCell numeric>
+          {
+            clearedAmount > 0 ? 
+            formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'
+          }
+        </TableCell>
+      </Grid>
+    </Grid>
+    </Grid>
+  </div>
+    
     return form
-      
   }
+
+  generatePDFView = (props) => {
+    const {LC} = props
+    const element = 
+         <Document>
+          <Page size="A4">
+            <View>
+              <Typography> {LC.LC_NO} </Typography>
+              {this.generateSummary()}
+            </View>
+          </Page>
+        </Document>
+    return element
+  }
+
+  downloadPDF = () => {
+    var pdf = new jsPDF('p', 'pt', 'letter');
+    const element = this.generatePDFView()
+    pdf.fromHTML(element,(dispose) => {
+      pdf.save(`$HOME/output.pdf`)
+    })
+    //this.setState({pdf: true})
+
+  }
+
+
+
+
+
   // title = string
   // context = string
   // action = {
@@ -1245,8 +1342,9 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
   //}
 
   handleDialogClose = () => {
-    this.setState({dialog:dialogState.closed})
+    this.setState((prevState) => ({dialog:dialogState.closed}))
   }
+
   generateDialog = (title,context,action) => {
     var dialog = 
       <div>
@@ -1256,25 +1354,31 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
           keepMounted
           onClose={this.handleDialogClose}
         >
-          <DialogTitle id="alert-dialog-slide-title">
+          <DialogTitle style={{color:'purple'}}>
             {title}
           </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-slide-description">
-                {context}
-            </DialogContentText>
-            {
-              this.dialogMode == 'success' ? 
-              <Grid container justify='center' align='center'>
-                <Grid xs={8}>
-                  <Done style={{width:'150px',height:'150px',color:'green'}}/>   
+          <DialogContent style={{minWidth:'500px'}}>
+          {
+            this.dialogMode !== 'success' ? 
+              <DialogContentText>
+                  {context}
+              </DialogContentText>
+              : 
+              <Grid container justify='center' align='center' direction='column'>
+                <Grid>
+                  <Typography align='center'
+                    variant='subheading' >
+                    `LC ${this.props.LC.LC_no} was successfully closed!`
+                  </Typography>
                 </Grid>
-              </Grid>:
-              <div/>
-            }
+                <Grid>
+                  <Done style={{width:'150px',height:'150px',color:'green',margin:'auto'}}/>   
+                </Grid>
+              </Grid>
+          }
           </DialogContent>
           {
-            this.dialogMode == 'action'?
+            this.dialogMode === 'action'?
             <DialogActions>
               <Button onClick={this.handleDialogClose} color="secondary">
                 Cancel
@@ -1290,9 +1394,9 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
       </div>
     return dialog
   }
-
+//
   //// Handle Cycle Content Switch
-
+//
   cycleContentSwitch = () => {
     const newCycleForm = this.generateCycleCreationForm();
     const paymentCheckForm = this.generateCyclePaymentSubmitForm();
@@ -1481,7 +1585,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1509,7 +1613,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1524,7 +1628,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     },{credentials: 'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1547,7 +1651,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1609,7 +1713,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1634,7 +1738,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1650,7 +1754,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     },{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1675,22 +1779,25 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
     .then((response) =>{
       console.log(response)
       this.resetState()
-      this.props.onUpdate(this.props.id,EJSON.parse(response.data))
+      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
 
 
   }
-
+  //
   handleClose = (event) => {
-    const url = 'LCs/'+this.props.LC._id+
-                    '/close'
+    const {LC, onUpdate} = this.props
+    const url = `LCs/${LC._id}/close`
+
     axios.post(url,{_method: 'PUT'},{credentials:'include'})
     .then((response) => {
-      console.log(response)
-      this.setState({closed:true})
       this.dialogMode = 'success'
+      this.setState((prevState) => ({closed:true}))
+      setTimeout(() =>this.handleDialogClose,1000)
+      setTimeout(() => {onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))},1500)
+      
     }).catch((error) => {
       console.log(error)
     })
@@ -1707,33 +1814,35 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
                 '/addMarginData'
     axios.post(url,payload,{credentials: 'include'})
     .then((response) => {
-      this.props.onDelete(this.props.id)
+      console.log('marginData Update')
     }).then((error) => {
       console.log(error)
     })
   }
 
-
   // Deletion Handles
   handleDelete = (event) => {
+    const {LC, onDelete} = this.props
     var payload = {
       _method : 'DELETE'
     }
 
-    const url = 'LCs/'+this.props.LC._id+
+    const url = 'LCs/'+LC._id+
                     '/edit'
     axios.post(url,payload,{credentials:'include'})
-    .then((response) =>{
-      this.props.onDelete(this.props.id)
+    .then((response) =>{      
       this.dialogMode = 'success'
-    }).then((error) => {
+      setTimeout(this.resetState,1000)
+      setTimeout(() => {onDelete(LC.LC_no)},1800)
+    
+    }).catch((error) => {
       console.log(error)
     })
   }
 
 // document submission handle
   onDocumentSubmit = (LC) =>  {
-    this.props.onUpdate(this.props.id,EJSON.parse(LC))
+    this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(LC))
   }
 
   render() {
@@ -1755,7 +1864,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
               {name:'Close', handle:this.handleClose} :
               {name:'Delete', handle:this.handleDelete}
 
-
+    console.log(LC.LC_no,this.newPayment)
     return (
     <div>
       {this.generateDialog(title,context,action)}
@@ -1767,8 +1876,9 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
             <Typography className={classes.heading}>{LC.LC_no}</Typography>
             <Typography className={classes.heading}>Rs. {String(LC.amount)}</Typography>
             <Typography className={classes.heading}>{LC.status}</Typography>
+            
             {this.newPayment ? 
-             <InfoOutline className={classes.tableActionButtonIcon}/> : 
+             <InfoOutline className={classes.tableActionButtonIcon}/>: 
              LC.status==='Closed' ? 
              <Done className={classes.tableActionButtonIcon}/>
              :
@@ -1789,6 +1899,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
                     </Typography>
                     <Divider inset style={{margin:'10px'}}/>
                     <Table
+                      id="paymentTable"
                       isNumericColumn={[false,true,true,true,true]}
                       tableHead = {['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
                       tableData = {paymentData}
@@ -1806,6 +1917,7 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
                   </Typography>
                   <Divider inset style={{margin:'10px'}}/>
                   <Table
+                    id="extensionTable"
                     icon={true}
                     isNumericColumn={['false,false,false,false,false']}
                     tableHead = {['Type','Opening Date', 'Expirty Date',
@@ -1819,31 +1931,39 @@ formatAmount(roundAmount(clearedAmount-marginAmount)) : '0'}
                 <Divider />
               </Grid>
         
-              <Grid item xs={12} sm={12} 
-md={12}>
+              <Grid item xs={12} sm={12} md={12}>
               {
                 this.state.edit === true ?
                 this.generateLCEditForm() : 
-                this.generateSummary()
+                <this.generateSummary ref={el => (this.componentRef = el)}/>
               }
               </Grid>
-              
               <Grid item className={classes.grid} xs={12}>
                 <Divider inset style={{margin:'0px',marginTop:'20px'}} />
               </Grid>
               <Grid item className={classes.grid} xs={12} sm={6} md={6}>
+                <SummaryDownloadButton
+                  payHead={['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
+                  extHead={['Type','Opening Date', 'Expirty Date','Bank Charges']}
+                  payData={paymentData}
+                  extData={extensionData}
+                  LC={LC}
+                  totalExtensionCharges={this.totalExtensionCharges}
+                  totalPaymentCharges={this.totalPaymentCharges}
+                  UnUtilized={this.UnUtilized}
+                  />
                 <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
                   onClick={this.handleEditClick} >
-                  Edit <Edit style={{marginLeft:'10px'}} />
+                  Edit LC <Edit style={{marginLeft:'10px'}} />
                 </Button>
                 <Button mini variant='contained' className={classes.button}
                     disabled={this.state.closed}
                     onClick={() =>{this.setState({dialog:dialogState.deleteAction})}} color="secondary">
-                    Delete <Delete style={{marginLeft:'10px'}}/>
+                    Delete LC <Delete style={{marginLeft:'10px'}}/>
                 </Button>
-                <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
+                <Button mini disabled={this.state.closed} variant='contained' color="primary"
                     onClick={() =>{this.setState({dialog:dialogState.closeAction})}}>
-                    Close
+                    Close LC
                 </Button>
               </Grid>
             </Grid>
@@ -1858,5 +1978,24 @@ md={12}>
 LCPanel.propTypes = {
   classes: PropTypes.object.isRequired,
 };
+
+class Panel extends React.Component{
+  constructor(props){
+    super(props);
+  }
+
+  render = ()=>{
+    const {classes} = this.props
+    return (
+      <div>
+        <ReactToPrint
+          trigger={() => <a href="#">Print this out!</a>}
+          content={() => this.componentRef}
+        />
+        <LCPanel {...this.props}  ref={el => (this.componentRef = el)} />
+      </div>
+    );
+  }
+}
 
 export default withStyles(styles)(LCPanel);

@@ -1128,7 +1128,11 @@ router.put('/:id/close', function(req, res) {
         return res.end('Not authorized')
     }
     var LC = res.locals.LC;
-    LC.status === 'Closed'? res.format({json:function(){res.json(JSON.stringify(LC))}}): null
+
+    if(LC.status === 'Closed'){
+        return res.format({json:function(){res.json(JSON.stringify(LC))}})
+    }
+    
     LC.status = 'Closed';
     LC.closeDT = new Date(Date.now())
 
@@ -1204,7 +1208,7 @@ router.delete('/:id/edit', function (req, res){
 				     if (error) {
 					 return res.send(error);
 				     } else {
-					 console.log('LC removed successfully.');
+					 console.log('LC removed from bank successfully.');
 				     }
 				 });
 
