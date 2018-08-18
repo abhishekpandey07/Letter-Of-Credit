@@ -40,7 +40,6 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
 import SummaryDownloadButton from './SummaryDownloadButton'
- import ReactPDF, {Document,Page, Text, View, StyleSheet} from '@react-pdf/renderer';
  import jsPDF from 'jspdf';
  import ReactToPrint from 'react-to-print'
 
@@ -1306,7 +1305,7 @@ class LCPanel extends React.Component {
     return form
   }
 
-  generatePDFView = (props) => {
+  /*generatePDFView = (props) => {
     const {LC} = props
     const element = 
          <Document>
@@ -1328,7 +1327,7 @@ class LCPanel extends React.Component {
     })
     //this.setState({pdf: true})
 
-  }
+  }*/
 
 
 

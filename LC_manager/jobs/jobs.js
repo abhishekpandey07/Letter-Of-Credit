@@ -61,7 +61,6 @@ function onPaymentUpdate(callback) {
       console.log(error)
     else {
       results.results.map((prop,key)=>{
-        console.log(prop)
         LCDB.findById(prop._id._id)
         .populate('supplier',['name'])
         .populate('issuer',['name'])
@@ -77,7 +76,6 @@ function onPaymentUpdate(callback) {
                 var bill_com = Math.round(due_amt*0.003)
                 var GST = Math.round(bill_com*0.18)
                 var postage= 89
-                console.log(LC.payment.cycles[prop])
                 LC.payment.cycles[prop].pay.bill_com = bill_com
                 LC.payment.cycles[prop].pay.GST = GST
                 LC.payment.cycles[prop].pay.post = postage
@@ -249,13 +247,12 @@ const LCExpiryAction = function(callback) {
 // using map and reduce now
 
 const getJobSchedules = function(){
-  /*
   var jobs = {}
   var rule = new cron.RecurrenceRule();
   // everyday at 9 am. NO->(15th second)
-  rule.hour = 0;
-  rule.minute = 48;
-  rule.second = 45;
+  rule.hour = 8;
+  rule.minute = 59;
+  rule.second = 0;
 
   jobs['paymentUpdate'] = cron.scheduleJob(rule,function(){
     console.log('Sending Payment Update Emails.')
@@ -317,7 +314,6 @@ const getJobSchedules = function(){
   })
 
   return jobs
-  */
 }
 
 
