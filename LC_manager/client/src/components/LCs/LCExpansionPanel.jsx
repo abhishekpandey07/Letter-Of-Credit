@@ -1568,6 +1568,7 @@ class LCPanel extends React.Component {
   }
 
   handleCycleSubmit = (event) => {
+    const {onUpdate, LC} = this.props
     const LB_pay_ref = document.getElementById('LB_pay_ref').value
     const cycleTID = document.getElementById('cycleTID').value
     const payload = {
@@ -1584,7 +1585,7 @@ class LCPanel extends React.Component {
     axios.post(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
+      onUpdate(LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })

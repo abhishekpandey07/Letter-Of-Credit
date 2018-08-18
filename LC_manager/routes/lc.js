@@ -168,11 +168,12 @@ router.route('/').post(function(req,res){
             message: String(error),
             user: req.session.user,
         })
-	    res.end('An error occured. Could not create the new LC.')
+	    return res.end('An error occured. Could not create the new LC.')
 	}else{
 
 	    // LC created
 	    // need to deduct LC_used from nativeBank
+        console.log('LC was successfully created : ',LC);
 	    natBankDB.findById(issuer, function(error, bank){
     		if(error){
     		    lcLogger.log({
@@ -593,7 +594,7 @@ router.put('/:id/addOrEditExtension', function(req, res) {
     }
 
     var LC = res.locals.LC;
-    console.log(req.body)
+    
     const index = (req.body.index === undefined)? null : parseFloat(req.body.index)
     console.log(index)
     if(index != null){
@@ -891,7 +892,7 @@ router.put('/:id/addPayment', function(req, res) {
     var payment = parseFloat(req.body.payment);
     var pay_ref = req.body.pay_ref;
     var payArray = LC.payment.cycles; // is this pass by reference?
-    console.log(req.body)
+    
     var index = parseFloat(req.body.index)
     
     var lastInstallment = payArray[index];
