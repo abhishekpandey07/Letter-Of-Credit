@@ -5,33 +5,33 @@ import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider'
+import Divider from '@material-ui/core/Divider';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import AddIcon from '@material-ui/icons/Add';
 import Edit from '@material-ui/icons/Edit';
-import InfoOutline from '@material-ui/icons/InfoOutline'
-import {InsertDriveFile,Close} from '@material-ui/icons'
-import FileUpload from '@material-ui/icons/FileUpload'
-import FileDownload from '@material-ui/icons/FileDownload'
-import IconButton from '@material-ui/core/IconButton'
-import TableCell from '@material-ui/core/Table'
-import Tooltip from '@material-ui/core/Tooltip'
-import {Table} from "components"
-import classNames from 'classnames'
+import InfoOutline from '@material-ui/icons/InfoOutline';
+import {InsertDriveFile,Close} from '@material-ui/icons';
+import FileUpload from '@material-ui/icons/FileUpload';
+import FileDownload from '@material-ui/icons/FileDownload';
+import IconButton from '@material-ui/core/IconButton';
+import TableCell from '@material-ui/core/Table';
+import Tooltip from '@material-ui/core/Tooltip';
+import {Table} from "components";
+import classNames from 'classnames';
 import
 { Grid, Button,
-  TextField, Input, InputLabel, FormControl} from '@material-ui/core'
-import Select from '@material-ui/core/Select'
-import ItemGrid from 'components'
-import red from '@material-ui/core/colors/red'
-import axios from 'axios'
+  TextField, Input, InputLabel, FormControl} from '@material-ui/core';
+import Select from '@material-ui/core/Select';
+import ItemGrid from 'components';
+import red from '@material-ui/core/colors/red';
+import axios from 'axios';
 import InputAdornment from '@material-ui/core/InputAdornment';
-import FileIOButton from 'components/FileIOButtons/FileIOButton'
-import EJSON from 'mongodb-extended-json'
-import {roundAmount, formatDate, formatAmount} from 'utils/common'
-import moment from 'moment'
-import {Done, Delete, Save} from '@material-ui/icons'
-import {List, ListItem} from '@material-ui/core'
+import FileIOButton from 'components/FileIOButtons/FileIOButton';
+import EJSON from 'mongodb-extended-json';
+import {roundAmount, formatDate, formatAmount} from 'utils/common';
+import moment from 'moment';
+import {Done, Delete, Save} from '@material-ui/icons';
+import {List, ListItem} from '@material-ui/core';
 
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -39,9 +39,9 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
-import SummaryDownloadButton from './SummaryDownloadButton'
+import SummaryDownloadButton from './SummaryDownloadButton';
  import jsPDF from 'jspdf';
- import ReactToPrint from 'react-to-print'
+import ReactToPrint from 'react-to-print';
 
 
 
@@ -52,20 +52,20 @@ const styles = theme => ({
   heading: {
     fontSize: theme.typography.pxToRem(10),
     flexBasis: '19.00%',
-    flexShrink: 0,
+    flexShrink: 0
   },
   secondaryHeading: {
     fontSize: theme.typography.pxToRem(10),
-    color: theme.palette.text.secondary,
+      color: theme.palette.text.secondary
   },
   content: {
     fontSize: theme.typography.pxToRem(8),
     flexBasis: '33.33%',
-    flexShrink: 0,
+    flexShrink: 0
   },
 
   button:{
-    margin: theme.spacing.unit,
+    margin: theme.spacing.unit
   },
 
   textField: {
@@ -73,7 +73,7 @@ const styles = theme => ({
     marginRight: theme.spacing.unit,
     //width:100,
     flexBasis: '33.33%',
-    flexShrink:0,
+    flexShrink:0
   },
   margin: {
     margin: theme.spacing.unit,
@@ -84,10 +84,10 @@ const styles = theme => ({
 
   },
   withoutLabel: {
-    marginTop: theme.spacing.unit * 3,
+    marginTop: theme.spacing.unit * 3
   },
   textField1: {
-    flexBasis: 200,
+    flexBasis: 200
   },
   grid:{
     padding: "0 15px !important"
@@ -117,7 +117,7 @@ const dialogState = {
   closeAction: 1,
   deleteAction: 2,
   feedback: 3,
-  downloadPDF: 4,
+  downloadPDF: 4
 }
 const cycleSwitch = {
   newCycle: 0,
@@ -125,17 +125,17 @@ const cycleSwitch = {
   cyclePayCheck: 2,
   edit: 3,
   none: 4,
-  cycleFiles: 5,
+  cycleFiles: 5
 }
 const extensionSwitch = {
   newExtension: 0,
   editExtension: 1,
   none: 2,
-  extensionFiles: 3,
+  extensionFiles: 3
 }
 class LCPanel extends React.Component {
   constructor(props){
-    super(props)
+      super(props);
     this.state ={
       // cycle states
       cycleIndex: null,
@@ -180,13 +180,13 @@ class LCPanel extends React.Component {
       edit: false,
       //dialog states
       dialog: dialogState.closed,
-      pdf: false,
-    }
+      pdf: false
+    };
 
     this.totalPaymentCharges = 0;
     this.totalExtensionCharges = 0;
     this.newPayment = false;
-    this.dialogMode = 'action'
+    this.dialogMode = 'action';
   }
 
   resetState = () => {
@@ -223,25 +223,25 @@ class LCPanel extends React.Component {
       edit: false,
       refFile: '',
       dialog: dialogState.closed
-    })
+    });
   }
 
   handlePanelChange = panel => (event, expanded) => {
     this.setState({
-      expanded: expanded ? panel : false,
+      expanded: expanded ? panel : false
     });
   };
 
   handleValueChange = name => event => {
     switch(name){
       case 'due_amt':{
-        var acc = Math.round(event.target.value*0.0035)
-        var cycleGST = Math.round(acc*.18)
-        this.setState({
-          [name]: event.target.value,
-          cycleGST: cycleGST,
-          acc: acc, 
-        })
+          var acc = Math.round(event.target.value*0.0035);
+          var cycleGST = Math.round(acc*.18);
+          this.setState({
+              [name]: event.target.value,
+              cycleGST: cycleGST,
+              acc: acc
+          });
         break;
       }
       case 'amend':{
@@ -1979,23 +1979,23 @@ LCPanel.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-class Panel extends React.Component{
-  constructor(props){
-    super(props);
-  }
+// class Panel extends React.Component{
+//   constructor(props){
+//     super(props);
+//   }
 
-  render = ()=>{
-    const {classes} = this.props
-    return (
-      <div>
-        <ReactToPrint
-          trigger={() => <a href="#">Print this out!</a>}
-          content={() => this.componentRef}
-        />
-        <LCPanel {...this.props}  ref={el => (this.componentRef = el)} />
-      </div>
-    );
-  }
-}
+//   render = ()=>{
+//     const {classes} = this.props
+//     return (
+//       <div>
+//         <ReactToPrint
+//           trigger={() => <a href="#">Print this out!</a>}
+//           content={() => this.componentRef}
+//         />
+//         <LCPanel {...this.props}  ref={el => (this.componentRef = el)} />
+//       </div>
+//     );
+//   }
+// }
 
 export default withStyles(styles)(LCPanel);

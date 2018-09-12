@@ -246,7 +246,7 @@ class TimeAnalysisCard extends React.Component {
                 Next Payment Date
               </Typography>
               <Typography variant='body2' align='right'>
-                {formatDate(this.nextPaymentDate)}
+                {this.nextPaymentDat ? formatDate(this.nextPaymentDate) : '-'}
               </Typography>
             </Grid>
             <Grid item style={{margin:'auto'}}>
