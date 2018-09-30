@@ -1,7 +1,11 @@
 const formatDate = (date) => {
-  var elem = String(date).split(' ')
-  // day month date year
-  return (elem[2] + ' ' + elem[1] + "'" + elem[3].slice(2))
+	if(date){
+		var elem = String(date).split(' ')
+  		// day month date year
+  		return (elem[2] + ' ' + elem[1] + "'" + elem[3].slice(2))
+	}
+	return ""
+  
 }
 // later
 const formatAmount = (amount) => {

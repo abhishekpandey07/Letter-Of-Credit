@@ -66,7 +66,7 @@ class NewBankForm extends React.Component{
 
   handleSubmit = event => {
 
-    axios.post('/nativeBanks', this.state,{credentials:'true'})
+    axios.post('/api/banks', this.state,{credentials:'true'})
      .then(function(response){
        console.log(response);
        //Perform action based on response

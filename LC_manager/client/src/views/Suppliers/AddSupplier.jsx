@@ -33,7 +33,7 @@ class NewSupplierForm extends React.Component{
   }
   
   callProjectsApi = async () => {
-     const response = await fetch('/projects',{credentials:'include'});
+     const response = await fetch('/api/projects',{credentials:'include'});
      const body = await response.json();
      if (response.status !== 200) throw Error(body.message);
      return EJSON.parse(body);
@@ -55,7 +55,7 @@ class NewSupplierForm extends React.Component{
 
   handleSubmit = event => {
 
-    axios.post('/suppliers', this.state,{credentials:'include'})
+    axios.post('/api/suppliers', this.state,{credentials:'include'})
      .then(function(response){
        console.log(response);
        //Perform action based on response

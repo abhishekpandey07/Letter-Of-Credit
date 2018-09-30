@@ -73,9 +73,9 @@ class HeaderLinks extends React.Component {
     var confNewPass = document.getElementById('confNewPass').value
     if(oldPass && newPass && confNewPass){
       if(newPass == confNewPass){
-        const url = '/users/changePass'
+        const url = '/api/users/changePass'
         console.log('posting request')
-        axios.post(url,{
+        axios.put(url,{
           old: oldPass,
           new: newPass,
           confNew: confNewPass,

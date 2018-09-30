@@ -1,0 +1,35 @@
+[
+    {
+        "role": "read",
+        "permissions": [{
+            "resource": "/api/users",
+            "methods": "*",
+            "access": "deny"
+        }, {
+            "resource": "*",
+            "methods": ["GET"],
+            "access": "allow"
+        }]
+    },
+    {
+        "role":"readWrite",
+        "permissions":[{
+            "resource": "/api/users",
+            "methods": "*",
+            "access":"deny"
+        }, {
+            "resource":"*",
+            "methods": "*",
+            "access": "allow"
+        }]
+    },
+    {
+        "role":"admin",
+        "permissions":[{
+            "resource": "*",
+            "methods": "*",
+            "access":"allow"
+        }]
+    }
+
+]

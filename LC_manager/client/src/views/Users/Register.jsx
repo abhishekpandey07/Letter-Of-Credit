@@ -47,7 +47,7 @@ class RegisterPage extends React.Component {
       return
     }
 
-    const url = '/users/register'
+    const url = '/api/users/register'
     
     axios.post(url,this.state,{credentials:'include'})
     .then(res => {

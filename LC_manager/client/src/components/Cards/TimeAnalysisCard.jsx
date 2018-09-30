@@ -156,6 +156,7 @@ class TimeAnalysisCard extends React.Component {
       this.devolved = 0
       this.totalPayed = 0      
       this.nextPaymentAmount = 0
+      this.nextPaymentDate = null
       var min = 365
       monthTableData = this.props.data.reduce((data,prop,key) => {
         if((prop._id.month === (this.state.monthValue + 1)) &&
@@ -168,8 +169,8 @@ class TimeAnalysisCard extends React.Component {
 
             var date = new Date(lc.payment.due_DT)
             var diffDays = moment.duration(date - this.today).days()
-            console.log(date,diffDays)
-            if( date.getMonth() === this.today.getMonth() && diffDays >=0 && diffDays < min ){
+            if( date.getMonth() === (this.state.monthValue) && diffDays >=0 && diffDays < min ){
+              console.log('checking payment')
               min = diffDays
               this.nextPaymentDate = new Date(date)
             }
@@ -205,7 +206,7 @@ class TimeAnalysisCard extends React.Component {
       },[])
       console.log(monthTableData.dateWiseData)
       const downloadButton = this.getDownloadButton(monthTableData)
-
+      console.log(this.nextPaymentDate)
       monthContent = (
         <Grid container>
           <Grid container justify='space-between' direction='row' align='baseline'>
@@ -246,7 +247,7 @@ class TimeAnalysisCard extends React.Component {
                 Next Payment Date
               </Typography>
               <Typography variant='body2' align='right'>
-                {this.nextPaymentDat ? formatDate(this.nextPaymentDate) : '-'}
+                {this.nextPaymentDate ? formatDate(this.nextPaymentDate) : '-'}
               </Typography>
             </Grid>
             <Grid item style={{margin:'auto'}}>

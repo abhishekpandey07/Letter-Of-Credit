@@ -2,6 +2,7 @@ import React from "react";
 import { Grid, Icon, withStyles,  Button, Typography,List,ListItem, Divider } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add'
 import SplashScreen from '../../SplashPage.jsx'
+import InfoOutline from '@material-ui/icons/InfoOutline';
 import EJSON from 'mongodb-extended-json'
 //import getComponent from 'hadron-react-bson'
 import {Done, Delete, Save} from '@material-ui/icons'
@@ -21,7 +22,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
-import axios from 'axios'
+import {request} from 'utils/requests';
 
 const styles = theme => ({
   paper: {
@@ -33,6 +34,19 @@ const styles = theme => ({
   },
   grid:{
     padding: "0 15px !important"
+  },
+  error:{
+    margin: '15px 15px',
+    padding: '15px 15px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  errorIcon: {
+    width: '40px',
+    height: '40px',
+    color: '#F30',
+    padding: '10px'
   }
 });
 
@@ -48,35 +62,44 @@ const dialogState = {
   downloadPDF: 4,
 }
 
+/**
+ * Comoponent to render the Home Page of Letter of Credits
+ * Features
+ */
+
 class LCHome extends React.Component{
     constructor(props){
       super(props)
       this.state = {
-        LCs: [],
+        LCs: null,
         arrange: null,
         supplier: '',
         issuer: '',
         search: '',
         display:'Active',
-        dialog: dialogState.closed
+        dialog: dialogState.closed,
+        offset: 0,
+        limit: 30,
+        error: null,
       }
       this.dialogMode = 'action'
     }
 
     callAllApi = async () => {
-      const response = await fetch('/LCs',{credentials:'include'});
-      const body = await response.json();
-      if (response.status !== 200) throw Error(body.message);
-      const ret = new Map(EJSON.parse(body));
-      console.log(ret);
-      return ret;
-
+      const query = {
+        offset: this.state.offset,
+        limit: this.state.limit,
+        status: 'Active',
+      }
+        const response = await request('/api/lcs',null,query,'GET');
+        const body = await JSON.parse(response.data)
+        return body;      
     };
-    //
+
     componentDidMount() {
       this.callAllApi()
-      .then(res => this.setState({ LCs: res }))
-      .catch(err => console.log(err));
+      .then(res => this.setState({ LCs: res.data }))
+      .catch(err => this.setState({error: err.toString()}));
     }
 
     dialogSuccess = () => {
@@ -85,8 +108,13 @@ class LCHome extends React.Component{
     //
     updateLCPanel = (key,LC) => {
       var LCs = this.state.LCs
-      LCs.set(key,LC);
-      this.setState({LCs: LCs})
+      const idx = LCs.findIndex((prop) => {
+        return prop.LC_no ==  key;
+      });
+      LCs[idx] = LC;
+      this.setState((prevState) => ( {LCs: LCs}));
+      window.location = '/lcs';
+
     }
     
     handleDelete = (LC_no,id) => (event,target) => {
@@ -167,27 +195,36 @@ class LCHome extends React.Component{
   }
 
     render() {
-      console.log(this.state.LCs)
       const {classes} = this.props
+      const error = (
+          <div className={classes.error}>
+            <InfoOutline className={classes.errorIcon}/>
+            <Typography variant='title'>
+              An error Occured!
+            </Typography>
+          </div>
+        );
+      
       const arrangeList = ['issuing bank', 'supplier']
       const displayList = ['All','Active','Closed']
-      
-      const searchLists = [...this.state.LCs].reduce((arr,[lc_no,prop],key)=>{
-        if(!arr.suppliers.some((obj)=>{
-          return obj._id == prop.supplier._id
-        }))
-          {
-            arr.suppliers.push(prop.supplier)
+      var searchLists = []
+      if(this.state.LCs){
+        searchLists = this.state.LCs.reduce((arr,prop,key)=>{
+          if(!arr.suppliers.some((obj)=>{
+            return obj._id === prop.supplier._id
+          }))
+            {
+              arr.suppliers.push(prop.supplier)
+            }
+
+          if(!arr.banks.some((obj)=>{
+            return obj._id == prop.issuer._id
+          })){
+            arr.banks.push(prop.issuer)
           }
-
-        if(!arr.banks.some((obj)=>{
-          return obj._id == prop.issuer._id
-        })){
-          arr.banks.push(prop.issuer)
-        }
-
-        return arr
-      },{banks:[],suppliers:[]})
+          return arr
+        },{banks:[],suppliers:[]})
+      }
 
       var searchBar =
         <Grid container justify='flex-end' alignItems='center'>
@@ -305,17 +342,17 @@ class LCHome extends React.Component{
         </Grid>
 
       var panels
-      if(this.state.LCs < 1){
+      if(!this.state.LCs){
         var panels = 
           <Grid item xs = {12} sm={12} md={12} style={{height:'500px'}}>
             <Grid container direction='column' justify='center' alignItems='center' style={{height:'100%'}}>
               <Grid item>
-                <SplashScreen/>
+                <SplashScreen size={100} margin='50px'/>
               </Grid>
             </Grid>
           </Grid>
       }else{
-        if(this.state.LCs.length < 1){
+        if(this.state.LCs.length === 0){
           var panels = (
           <Typography varaint='title'>
           No LCs to Display
@@ -324,46 +361,44 @@ class LCHome extends React.Component{
         } else {
           var LCs
           if(this.state.display === 'Active'){
-            LCs = [...this.state.LCs].filter(([lc_no,LC]) => { return !(LC.status === 'Closed')})
-            console.log('length of LCs = ' + String(LCs.length))
+            LCs = this.state.LCs.filter((LC) => { return !(LC.status === 'Closed')})
           } else if(this.state.display == 'Closed'){
-            LCs = [...this.state.LCs].filter(([lc_no,LC]) => {return (LC.status === 'Closed')})
+            LCs = this.state.LCs.filter((LC) => {return (LC.status === 'Closed')})
           } else{
-            LCs = [...this.state.LCs]
+            LCs = this.state.LCs
           }
           
           if(this.state.supplier && this.state.arrange=='supplier'){
-            LCs = LCs.filter(([lc_no,LC]) =>{
+            LCs = LCs.filter((LC) =>{
               return (LC.supplier._id == this.state.supplier)
             })
           } else if(this.state.issuer && this.state.arrange=='issuing bank'){
-              LCs = LCs.filter(([lc_no,LC]) => {
+              LCs = LCs.filter((LC) => {
                 return (LC.issuer._id == this.state.issuer)
               })
           }
-          
-          var panels = [...LCs].reduce((arr,[lc_no,prop],key) => {
+          console.log('The LCs population panels: ',LCs)
+          var panels = LCs.reduce((arr,prop,key) => {
             var panel = null
             if(this.state.search){
               if((prop.LC_no.includes(this.state.search) ||
                    prop.supplier.name.includes((this.state.search).toUpperCase()) ||
-                   prop.issuer.name.includes((this.state.search).toUpperCase()) ||
-                   prop.project.name.includes((this.state.search).toUpperCase()) ||
-                   prop.project.location.includes((this.state.search).toUpperCase())
+                   prop.issuer.name.includes((this.state.search).toUpperCase())
                    )
                ){
                 panel = 
                         <Grid item xs={12} sm={12} md={12}>
                           <LCPanel LC={prop}
+                          links={prop.links}
                           onUpdate={this.updateLCPanel}
                           onDelete={this.deleteLC}
                           />
-
                         </Grid>
               }
             } else {
               panel = <Grid item xs={12} sm={12} md={12}>
                           <LCPanel LC={prop}
+                          links={prop.links}
                           onUpdate={this.updateLCPanel}
                           onDelete={this.deleteLC}
                           />
@@ -375,22 +410,23 @@ class LCHome extends React.Component{
           },[]);
         }
       }
-
+      console.log('Length of panels is ' + String(panels.length));
       return (
         <div className="grid">
-          {/*this.dialog*/}
           <Grid container>
             <ItemGrid xs={12} sm={12} md={12}>
               <RegularCard
                 cardTitle="Letters of Credit"
                 cardSubtitle="Click on a panel to know more about or to update a Letter of Credit."
                 content={
+                  this.state.error ?
+                  error :
                   <Grid container style={{flexGrow:1}}>
                     <Grid item xs={12} sm={12} md={12}>
                       {searchBar}
                     </Grid>
                     <Grid item xs={12}>
-                      <Grid container justify='center' align = 'center' direction='column'>
+                      <Grid container justify='center' alignItems= 'stretch' direction='column'>
                         {panels}
                       </Grid>
                     </Grid>

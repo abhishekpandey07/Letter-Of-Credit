@@ -4,8 +4,9 @@ const express = require('express'),
       bodyParser = require('body-parser'),
       methodOverride = require('method-override');
       projectMethods = require('./helpers/projects')
-      logger = require('../logger/logger')
+      logger = require('../../logger/logger')
       validator = require('./validators/validators')
+      acl = require('../../authorization/acl')
 
 projectDB = mongoose.model('projects')
 supplierDB = mongoose.model('Supplier')
@@ -13,19 +14,6 @@ supplierDB = mongoose.model('Supplier')
 
 // loggers
 const supLogger = logger.createLogger('sup.log')
-readRoles = ['admin','readWrite','read']
-writeRoles = ['admin','readWrite']
-
-const validateRead = function(req,res){
-    return validator.validateAccess(req,res,readRoles,supLogger)
-}
-const validateWrite = function(req,res){
-    return validator.validateAccess(req,res,writeRoles,supLogger)
-}
-
-const readErrorLog = function(req,res,error){
-    validator.readErrorLog(req,res,error,'supplier',supLogger)
-}
 
 // adds req.body property to manipulate post requests
 router.use(bodyParser.urlencoded({ extended: true }))
@@ -41,6 +29,9 @@ router.use(methodOverride(function(req, res){
 }))
 
 
+router.use(acl.authorize())
+
+
 // building the Rest Operations at the base of supplier directory
 // this will be accessible from https:127.0.0.1:300/suppliers/ if the default router for /
 // is not changed
@@ -50,28 +41,26 @@ router.route('/')
     .get(function(req,res){
     //if(validateRead(req,res))
 
-	supplierDB.find({}).
-    populate('projects','name').
-    populate('banks.LCs',['status','amount','LC_no']).
-    exec(function(err,suppliers){
-	    if(err){
-            return readErrorLog(error)
-	    } else{
-            console.log(JSON.stringify(suppliers))
-		res.format({
-		    /*html: function(){
-			res.render('suppliers/index',{
-			    title: 'List of All suppliers',
-			    "suppliers" : suppliers
-			});
-		    },*/
+        supplierDB.find({}).
+        populate('projects','name').
+        populate('banks.LCs',['status','amount','LC_no']).
+        exec(function(err,suppliers){
+            if(err){
+                return readErrorLog(error)
+            } 
+            res.format({
+                /*html: function(){
+                res.render('suppliers/index',{
+                    title: 'List of All suppliers',
+                    "suppliers" : suppliers
+                });
+                },*/
 
-		    json: function(){
-			res.json(JSON.stringify(suppliers));
-		    }
-		});
-	    }
-	});
+                json: function(){
+                res.json(JSON.stringify(suppliers));
+                }
+            });
+        });
     });
 
 // post request to create a supplier entry
@@ -125,7 +114,6 @@ router.route('/').post(function(req,res){
                         return res.end(error);
                     }
                     else {
-                    console.log('supplier successfully added to : '+ project.name);
                     }
                 });
                 }
@@ -205,7 +193,6 @@ router.route('/:id')
 router.get('/:id/edit', function(req, res) {
     validateRead(req,res)
     //search for the bank within Mongo
-    console.log('GET processing ID: ' + supplier._id);
     //format the date properly for the value to show correctly in our edit form
     res.format({
         //HTML response will render the 'edit.jade' template
@@ -340,7 +327,6 @@ router.delete('/:id/edit', function (req, res){
             
         } else {
             //Returning success messages saying it was deleted
-            console.log('DELETE removing ID: ' + supplier._id);
             res.format({
                 //HTML returns us back to the main page, or you can create a success page
                 html: function(){

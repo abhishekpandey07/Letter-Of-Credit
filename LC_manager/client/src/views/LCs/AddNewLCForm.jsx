@@ -42,22 +42,30 @@ class NewLCForm extends React.Component{
       GST: 0,
       suppliersList: [],
       issuerList: [],
+      projectsList: [],
     }
   }
 
   callSupplierApi = async () => {
-     const response = await fetch('/suppliers',{credentials:'include'});
+     const response = await fetch('/api/suppliers',{credentials:'include'});
      const body = await response.json();
      if (response.status !== 200) throw Error(body.message);
      return EJSON.parse(body);
    };
 
    callIssuerApi = async () => {
-     const response = await fetch('/nativeBanks',{credentials:'include'});
+     const response = await fetch('/api/banks',{credentials:'include'});
      const body = await response.json();
      if (response.status !== 200) throw Error(body.message);
      return EJSON.parse(body);
    };
+
+   callProjectsApi = async () => {
+     const response = await fetch('/api/projects',{credentials: 'include'});
+     const body = await response.json();
+     if (response.status !== 200) throw Error(body.message);
+     return EJSON.parse(body);
+   }
 
   handleChange = name => event => {
     switch(name){
@@ -121,14 +129,18 @@ class NewLCForm extends React.Component{
     this.callIssuerApi()
     .then(res => this.setState({issuerList: res}))
     .catch(err => console.log(err));
+
+    this.callProjectsApi()
+    .then((res) => this.setState({projectsList:res}))
+    .catch((error) => console.log(error));
   }
 
   handleSubmit = event => {
     
-    axios.post('/LCs', this.state,{credentials : 'include'})
+    axios.post('/api/lcs', this.state,{credentials : 'include'})
      .then(function(response){
         console.log(response)
-        window.location ='/LCs'
+        window.location ='/lcs'
       })
      .catch(function(error){
        console.log(error)
@@ -160,7 +172,11 @@ class NewLCForm extends React.Component{
       return arr
     },[<option value=''/>])
 
-    var projectsList = []
+    var projectsList = this.state.projectsList.reduce((arr,prop,index) => {
+      arr.push(<option value={prop._id} >{prop.name}</option>)
+      return arr
+    },[<option value=''/>]);
+
     var supBankList = []
     if(this.state.supplier){
       console.log(this.state.supplier)
@@ -168,11 +184,6 @@ class NewLCForm extends React.Component{
         console.log(obj._id)
         return obj._id === String(this.state.supplier);
       })
-
-      projectsList = supplier.projects.reduce((arr,prop,index) => {
-        arr.push(<option value={prop._id} >{prop.name}</option>)
-        return arr
-      },[<option value=''/>])
 
       supBankList = supplier.banks.reduce((arr,prop,index) => {
         arr.push(<option value={prop._id} >{prop.name}</option>)
@@ -257,9 +268,7 @@ class NewLCForm extends React.Component{
                             id: 'project'
                           }}
                         >
-                          {this.state.supplier?(projectsList):
-                            <option value=""/>
-                          }
+                          {projectsList}
                         </Select>
                       </FormControl>
                     </ItemGrid>

@@ -10,14 +10,7 @@ import XlsxPopulate from 'xlsx-populate'
 */
 
 function SummaryDownloadButton(props){
-	// function downloadWorkBook(props) {
-	// 	var workBook = XLSX.utils.book_new();
-	// 	var paymentSheet = XLSX.utils.table_to_sheet(document.getElementById(props.payElem));
-	// 	var extensionSheet = XLSX.utils.table_to_sheet(document.getElementById(props.extElem));
-	// 	XLSX.utils.book_append_sheet(workBook,paymentSheet,'paymentSheet');
-	// 	XLSX.utils.book_append_sheet(workBook,extensionSheet,'extensionSheet');
-	// 	XLSX.writeFile(workBook,String(props.LC_no)+'.xlsx');
-	// }
+
 	var disable = false
 	if( !props.extData ||
 		!props.payData ||
@@ -55,14 +48,17 @@ function SummaryDownloadButton(props){
 			return row
 		})
 		const paymentData = props.payData.slice(0,props.payData.length-1).map((prop,key) => {
+			// removing the Icons
 			var row =  prop.filter((p,k) => {
 				return k != prop.length-1
 			})
+
+			//
 			row = row.map((prop,key) => {
 				if( prop.includes(',') ) {
 					const val = prop.split(',').join('')
 					if(!isNaN(val)) {
-						return parseInt(val)
+						return parseFloat(val)
 					}
 				}	
 
@@ -71,19 +67,32 @@ function SummaryDownloadButton(props){
 			})
 			var cycles = LC.payment.cycles[key];
 			var addData = []
+			
 			addData.push(parseFloat(cycles.acc.acc))
 			addData.push(parseFloat(cycles.acc.GST))
+
 			if(cycles.payed){
 				addData.push(parseFloat(cycles.pay.bill_com))
 				addData.push(parseFloat(cycles.pay.GST))
 				addData.push(parseFloat(cycles.pay.post))
-				payChargeHeads = addData.map((val,key) => {
-					return val + payChargeHeads[key]
-				})
-				row.splice(-1,0,...addData);
+				
 			} else {
-				row.splice(-1,0,...addData.concat(['N/A','N/A','N/A']));
+				addData.push('N/A')
+				addData.push('N/A')
+				addData.push('N/A')
 			}
+
+			row.splice(-1,0,...addData);
+			// code below didn't work since did not cover everything. or did it ?
+			payChargeHeads = addData.map((val,key) => {
+				if(!isNaN(val)) {
+					return val + payChargeHeads[key]
+				}
+				else{
+					return payChargeHeads[key]
+				}
+			})
+
 			row.splice(0,0,key+1)
 			
 			return row
@@ -103,7 +112,7 @@ function SummaryDownloadButton(props){
 			var cells = sheet.cell("B2").value(headersLine)
 
 			//generating payment details
-			paymentData.push(['','Total',parseFloat(LC.payment.total_due),'Total'].concat(payChargeHeads).concat(totalCharges))
+			paymentData.push(['','Total',parseFloat(LC.payment.total_due),'Total'].concat(payChargeHeads).concat(props.totalPaymentCharges))
 			var payAddHeaders = ['Acceptance','','Payment','','']
 			props.payHead.splice(-1,0,...payAddHeaders)
 			props.payHead.splice(0,0,'Sno');

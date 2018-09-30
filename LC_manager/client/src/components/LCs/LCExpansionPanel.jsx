@@ -7,23 +7,17 @@ import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import AddIcon from '@material-ui/icons/Add';
 import Edit from '@material-ui/icons/Edit';
 import InfoOutline from '@material-ui/icons/InfoOutline';
 import {InsertDriveFile,Close} from '@material-ui/icons';
-import FileUpload from '@material-ui/icons/FileUpload';
-import FileDownload from '@material-ui/icons/FileDownload';
 import IconButton from '@material-ui/core/IconButton';
 import TableCell from '@material-ui/core/Table';
 import Tooltip from '@material-ui/core/Tooltip';
 import {Table} from "components";
-import classNames from 'classnames';
 import
 { Grid, Button,
   TextField, Input, InputLabel, FormControl} from '@material-ui/core';
 import Select from '@material-ui/core/Select';
-import ItemGrid from 'components';
-import red from '@material-ui/core/colors/red';
 import axios from 'axios';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import FileIOButton from 'components/FileIOButtons/FileIOButton';
@@ -31,8 +25,6 @@ import EJSON from 'mongodb-extended-json';
 import {roundAmount, formatDate, formatAmount} from 'utils/common';
 import moment from 'moment';
 import {Done, Delete, Save} from '@material-ui/icons';
-import {List, ListItem} from '@material-ui/core';
-
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -40,14 +32,14 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
 import SummaryDownloadButton from './SummaryDownloadButton';
- import jsPDF from 'jspdf';
-import ReactToPrint from 'react-to-print';
-
-
+import {request} from 'utils/requests';
+import SplashScreen from '../../SplashPage.jsx'
 
 const styles = theme => ({
   root: {
-    width: '100%'
+    display: 'flex',
+    flexBasis: 1,
+    minWidth: '100%'
   },
   heading: {
     fontSize: theme.typography.pxToRem(10),
@@ -138,6 +130,8 @@ class LCPanel extends React.Component {
       super(props);
     this.state ={
       // cycle states
+      LC: null,
+      error: null,
       cycleIndex: null,
       cycleContent: cycleSwitch.none,
       cycleFile: null,
@@ -219,17 +213,29 @@ class LCPanel extends React.Component {
       post:200,
       GST:0,
       //other states
-      closed: this.props.LC.status==='Closed',
+      closed: this.state.LC.status==='Closed',
       edit: false,
       refFile: '',
       dialog: dialogState.closed
     });
   }
 
+  callApi = async () => {
+    const api_info = this.props.links.lc;
+    try{
+      const response = await request(api_info.link,null,null,api_info.method);
+      const body = await EJSON.parse(response.data);
+      this.setState({LC:body})
+    } catch(error){
+      this.setState({error:error})
+    }
+  }
+
   handlePanelChange = panel => (event, expanded) => {
     this.setState({
       expanded: expanded ? panel : false
     });
+    expanded ? this.callApi() : null;
   };
 
   handleValueChange = name => event => {
@@ -317,7 +323,7 @@ class LCPanel extends React.Component {
   }
   
   generatePaymentData = () => {
-    const {LC} = this.props
+    const {LC} = this.state
     
     const paymentIconTools = [
       {
@@ -386,11 +392,11 @@ class LCPanel extends React.Component {
   // generate Extension Table Data
 
   getLCinfo = () => {
-    return this.props.LC
+    return this.state.LC
   }
 
   generateExtensionData = () =>{
-    const {LC} = this.props;
+    const {LC} = this.state;
     const extensionIconTools = [
       {
         icon: InsertDriveFile,
@@ -682,7 +688,8 @@ class LCPanel extends React.Component {
 
 // LC edit form
   generateLCEditForm = () => {
-    const {classes, LC} = this.props
+    const {classes} = this.props;
+    const {LC} = this.state;
     const form = 
       <div>
       <Divider style={{margin:'10px'}}/>
@@ -761,7 +768,8 @@ class LCPanel extends React.Component {
       }
     ]
 
-    const {classes, LC} = this.props;
+    const {classes} = this.props;
+    const {LC} = this.state;
     const docDet = this.state.cycleFile ? cycleFiles[this.state.cycleFile] : null
     const document = docDet ? LC.payment.cycles[this.state.cycleIndex].documents[docDet.abbrev]: null
     var val = this.state.cycleFile ? cycleFiles[this.state.cycleFile].name : ''
@@ -845,7 +853,8 @@ class LCPanel extends React.Component {
       }
     ]
 
-    const {classes, LC} = this.props;
+    const {classes} = this.props;
+    const {LC} = this.state;
     const docDet = this.state.extensionFile ? extensionFiles[this.state.extensionFile] : null
     const document = docDet ? LC.dates[this.state.extensionIndex][docDet.abbrev]: null
 
@@ -1048,8 +1057,8 @@ class LCPanel extends React.Component {
   /// margin clearance form
   generateMarginClearanceForm = () => {
     const {classes} = this.props
-    console.log(this.props.LC.m_cl_DT)
-    const form = !this.props.LC.m_cl_DT ?
+    console.log(this.state.LC.m_cl_DT)
+    const form = !this.state.LC.m_cl_DT ?
       <Grid item className={classes.grid} xs={12} sm={12}>
           <Divider style={{padding:'5px',marginTop: '20px'}}/>
           <Grid item className={classes.grid} xs={12} sm={12}>
@@ -1101,18 +1110,18 @@ class LCPanel extends React.Component {
       <div>
         {/*<Typography variant='body1'
                   style={{padding:'10px', margin:'10px'}}>
-                  Margin Clearance Date : {formatDate(new Date(this.props.LC.m_cl_DT))}
+                  Margin Clearance Date : {formatDate(new Date(this.state.LC.m_cl_DT))}
                 </Typography>
                 <Typography variant='body1'
                   style={{padding:'10px', margin:'10px'}}>
-                  Margin Cleared Amount : {formatAmount(this.props.LC.m_cl_amt)}
+                  Margin Cleared Amount : {formatAmount(this.state.LC.m_cl_amt)}
                 </Typography>*/}
       </div>
       return form 
   }
 
-  generateSummary = (props) => {
-    const {classes, LC} = this.props
+  generateSummary = () => {
+    const {LC} = this.state
     const amount = parseFloat(LC.amount)
     const due_amt = parseFloat(LC.payment.total_due)
     const clearedAmount = parseFloat(LC.m_cl_amt)
@@ -1367,7 +1376,7 @@ class LCPanel extends React.Component {
                 <Grid>
                   <Typography align='center'
                     variant='subheading' >
-                    `LC ${this.props.LC.LC_no} was successfully closed!`
+                    `LC ${this.state.LC.LC_no} was successfully closed!`
                   </Typography>
                 </Grid>
                 <Grid>
@@ -1401,7 +1410,7 @@ class LCPanel extends React.Component {
     const paymentCheckForm = this.generateCyclePaymentSubmitForm();
     const cycleEditForm = this.generateCycleEditForm();
     //const LCEditForm = this.generateLCEditForm();
-    const disableNewCycle = (this.props.LC.status === 'Expired') || this.state.closed
+    const disableNewCycle = (this.state.LC.status === 'Expired') || this.state.closed
     const {classes} = this.props;
     switch(this.state.cycleContent){
       case cycleSwitch.newCycle:{
@@ -1454,7 +1463,7 @@ class LCPanel extends React.Component {
   extensionContentSwitch = () => {
     const extensionForm = this.generateExtensionForm();
     const {classes} = this.props;
-    const disableNewExtension = (this.props.LC.status === 'Expired') || this.state.closed
+    const disableNewExtension = (this.state.LC.status === 'Expired') || this.state.closed
     switch(this.state.extensionContent){
       case extensionSwitch.newExtension:{
         return (
@@ -1519,7 +1528,7 @@ class LCPanel extends React.Component {
   }
 
   handleCycleEditClick = (cycleIndex) => (event) => {
-    const cycle = this.props.LC.payment.cycles[cycleIndex]
+    const cycle = this.state.LC.payment.cycles[cycleIndex]
     this.setState({cycleContent: (cycleIndex===this.state.cycleIndex?
                     this.state.cycleContent === cycleSwitch.cycleEdit?
                     cycleSwitch.none: cycleSwitch.cycleEdit: cycleSwitch.cycleEdit),
@@ -1540,7 +1549,7 @@ class LCPanel extends React.Component {
   }
 
   handleCyclePaymentClick = (cycleIndex) => (event) => {
-    const cycle = this.props.LC.payment.cycles[cycleIndex]
+    const cycle = this.state.LC.payment.cycles[cycleIndex]
     this.setState({cycleContent: (cycleIndex===this.state.cycleIndex?
                     this.state.cycleContent === cycleSwitch.cyclePayCheck?
                     cycleSwitch.none: cycleSwitch.cyclePayCheck: cycleSwitch.cyclePayCheck),
@@ -1568,7 +1577,8 @@ class LCPanel extends React.Component {
   }
 
   handleCycleSubmit = (event) => {
-    const {onUpdate, LC} = this.props
+    const {onUpdate} = this.props;
+    const {LC} = this.state;
     const LB_pay_ref = document.getElementById('LB_pay_ref').value
     const cycleTID = document.getElementById('cycleTID').value
     const payload = {
@@ -1580,9 +1590,9 @@ class LCPanel extends React.Component {
       TID: cycleTID,
       _method: 'PUT'
     }
-    const url = 'LCs/'+this.props.LC._id+
-                    '/addNewCycle'
-    axios.post(url,payload,{credentials:'include'})
+    const url = '/api/lcs/'+this.state.LC._id+
+                    '/add-new-cycle'
+    axios.patch(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
       onUpdate(LC.LC_no,EJSON.parse(response.data))
@@ -1608,27 +1618,28 @@ class LCPanel extends React.Component {
       index: this.state.cycleIndex,
       payed_DT: this.state.payed_DT
     }
-    const url = 'LCs/'+this.props.LC._id+
-                    '/editCycle'
-    axios.post(url,payload,{credentials:'include'})
+    const url = '/api/lcs/'+this.state.LC._id+
+                    '/edit-cycle'
+    axios.patch(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
+      console.log(response)
+      this.props.onUpdate(this.state.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
   }
 
   handleCycleDelete = (index) => (event) => {
-    const url = '/LCs/' + this.props.LC._id +
-                    '/deleteCycle'
-    axios.post(url,{
+    const url = '/api/lcs/' + this.state.LC._id +
+                    '/delete-cycle'
+    axios.patch(url,{
       _method: 'DELETE',
       index: index
     },{credentials: 'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
+      this.props.onUpdate(this.state.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1646,12 +1657,12 @@ class LCPanel extends React.Component {
       payMode: this.state.payMode,
       payed_DT: this.state.payed_DT
     }
-    const url = 'LCs/'+this.props.LC._id+
-                    '/checkCyclePayment'
-    axios.post(url,payload,{credentials:'include'})
+    const url = '/api/lcs/'+this.state.LC._id+
+                    '/check-cycle-ayment'
+    axios.patch(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
+      this.props.onUpdate(this.state.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1667,7 +1678,7 @@ class LCPanel extends React.Component {
   }
 
   handleExtensionEditClick = (extensionIndex) => (event) => {
-    const extension = this.props.LC.dates[extensionIndex]
+    const extension = this.state.LC.dates[extensionIndex]
 
     this.setState({extensionContent: (extensionIndex===this.state.extensionIndex?
           this.state.extensionContent === extensionSwitch.editExtension?
@@ -1676,9 +1687,9 @@ class LCPanel extends React.Component {
           openDT: String(extension.openDT).slice(0,10),
           expDT: String(extension.expDT).slice(0,10),
           amend: extension.amend,
-          open: extension.open === 0 ? roundAmount(this.props.LC.amount*0.0045) : extension.open ,
+          open: extension.open === 0 ? roundAmount(this.state.LC.amount*0.0045) : extension.open ,
           post: extension.post === 0 ? 200: extension.post,
-          GST: extension.GST === 0 ? roundAmount(this.props.LC.amount*0.0045*0.18): extension.GST,
+          GST: extension.GST === 0 ? roundAmount(this.state.LC.amount*0.0045*0.18): extension.GST,
           TID: extension.TID
          })
   }
@@ -1708,12 +1719,12 @@ class LCPanel extends React.Component {
       GST: this.state.GST
     }
 
-    const url = 'LCs/'+this.props.LC._id+
-                    '/addOrEditExtension'
-    axios.post(url,payload,{credentials:'include'})
+    const url = '/api/lcs/'+this.state.LC._id+
+                    '/add-or-edit-extension'
+    axios.patch(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
+      this.props.onUpdate(this.state.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1733,12 +1744,12 @@ class LCPanel extends React.Component {
       index: this.state.extensionIndex
     }
 
-    const url = 'LCs/'+this.props.LC._id+
-                    '/addOrEditExtension'
-    axios.post(url,payload,{credentials:'include'})
+    const url = '/api/lcs/'+this.state.LC._id+
+                    '/add-or-edit-extension'
+    axios.patch(url,payload,{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
+      this.props.onUpdate(this.state.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1746,15 +1757,15 @@ class LCPanel extends React.Component {
   }
 
   handleExtensionDelete = (index) => (event) => {
-    const url = '/LCs/' + this.props.LC._id +
-                    '/deleteExtension'
-    axios.post(url,{
+    const url = '/api/lcs/' + this.state.LC._id +
+                    '/delete-extension'
+    axios.patch(url,{
       _method: 'DELETE',
       index: index
     },{credentials:'include'})
     .then((response) =>{
       this.resetState()
-      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
+      this.props.onUpdate(this.state.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1766,7 +1777,7 @@ class LCPanel extends React.Component {
   }
 
   handleEditSubmit = (event) => {
-    const url = 'LCs/'+this.props.LC._id+
+    const url = '/api/lcs/'+this.state.LC._id+
                     '/edit'
     const payload = {
       FDR_no: document.getElementById('FDR_no').value,
@@ -1775,11 +1786,11 @@ class LCPanel extends React.Component {
       _method: 'PUT'
     }
 
-    axios.post(url,payload,{credentials:'include'})
+    axios.patch(url,payload,{credentials:'include'})
     .then((response) =>{
       console.log(response)
       this.resetState()
-      this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))
+      this.props.onUpdate(this.state.LC.LC_no,EJSON.parse(response.data))
     }).then((error) => {
       console.log(error)
     })
@@ -1788,15 +1799,16 @@ class LCPanel extends React.Component {
   }
   //
   handleClose = (event) => {
-    const {LC, onUpdate} = this.props
-    const url = `LCs/${LC._id}/close`
+    const {onUpdate} = this.props
+    const {LC} = this.state;
+    const url = `/api/lcs/${LC._id}/close`
 
-    axios.post(url,{_method: 'PUT'},{credentials:'include'})
+    axios.patch(url,{_method: 'PUT'},{credentials:'include'})
     .then((response) => {
       this.dialogMode = 'success'
       this.setState((prevState) => ({closed:true}))
       setTimeout(() =>this.handleDialogClose,1000)
-      setTimeout(() => {onUpdate(this.props.LC.LC_no,EJSON.parse(response.data))},1500)
+      setTimeout(() => {onUpdate(this.state.LC.LC_no,EJSON.parse(response.data))},1500)
       
     }).catch((error) => {
       console.log(error)
@@ -1810,9 +1822,9 @@ class LCPanel extends React.Component {
       m_cl_DT : this.state.m_cl_DT,
       m_cl_amt: this.state.m_cl_amt
     }
-    const url = 'LCs/'+this.props.LC._id+
-                '/addMarginData'
-    axios.post(url,payload,{credentials: 'include'})
+    const url = '/api/lcs/'+this.state.LC._id+
+                '/add-margin-data'
+    axios.patch(url,payload,{credentials: 'include'})
     .then((response) => {
       console.log('marginData Update')
     }).then((error) => {
@@ -1822,14 +1834,15 @@ class LCPanel extends React.Component {
 
   // Deletion Handles
   handleDelete = (event) => {
-    const {LC, onDelete} = this.props
+    const {onDelete} = this.props
+    const {LC} = this.state;  
     var payload = {
       _method : 'DELETE'
     }
 
-    const url = 'LCs/'+LC._id+
+    const url = '/api/lcs/'+LC._id+
                     '/edit'
-    axios.post(url,payload,{credentials:'include'})
+    axios.patch(url,payload,{credentials:'include'})
     .then((response) =>{      
       this.dialogMode = 'success'
       setTimeout(this.resetState,1000)
@@ -1842,18 +1855,23 @@ class LCPanel extends React.Component {
 
 // document submission handle
   onDocumentSubmit = (LC) =>  {
-    this.props.onUpdate(this.props.LC.LC_no,EJSON.parse(LC))
+    this.props.onUpdate(this.state.LC.LC_no,EJSON.parse(LC))
   }
 
   render() {
-    const { classes ,LC} = this.props;
+    const { classes} = this.props;
+    const LC = this.state.LC ? this.state.LC: this.props.LC;
     const { expanded } = this.state;
-        
-    const paymentData = this.generatePaymentData()
-    const extensionData = this.generateExtensionData()
+
+    var paymentData = []
+    var extensionData = []
     var cycleEditForm = null;
-    if(this.state.cycleEdit)    
-      cycleEditForm = this.generateCycleEditForm()
+    if(this.state.expanded && this.state.LC){  
+      paymentData = this.generatePaymentData()
+      extensionData = this.generateExtensionData()
+      if(this.state.cycleEdit)    
+        cycleEditForm = this.generateCycleEditForm()
+    }
 
 
 
@@ -1864,17 +1882,17 @@ class LCPanel extends React.Component {
               {name:'Close', handle:this.handleClose} :
               {name:'Delete', handle:this.handleDelete}
 
-    console.log(LC.LC_no,this.newPayment)
+    const amount = this.state.LC ? parseFloat(this.state.LC.amount): this.props.LC.amount.$numberDecimal
     return (
     <div>
       {this.generateDialog(title,context,action)}
-      <div className={classes.root}>
-        <ExpansionPanel expanded={expanded === 'panel1'} onChange={this.handlePanelChange('panel1')} divider>
+      <div >
+        <ExpansionPanel  expanded={expanded === 'panel1'} onChange={this.handlePanelChange('panel1')} divider>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography className={classes.heading}>{LC.issuer.name}</Typography>
             <Typography className={classes.heading}>{LC.supplier.name}</Typography>
             <Typography className={classes.heading}>{LC.LC_no}</Typography>
-            <Typography className={classes.heading}>Rs. {String(LC.amount)}</Typography>
+            <Typography className={classes.heading}>Rs. {String(amount)}</Typography>
             <Typography className={classes.heading}>{LC.status}</Typography>
             
             {this.newPayment ? 
@@ -1885,89 +1903,92 @@ class LCPanel extends React.Component {
              <div/>
            }
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails>
-            <Grid container spacing={24} justify='flex-end' style={{flexGrow:1}}>
-              <Grid item className={classes.grid} xs={12}>
-                <Divider style={{margin:'5px',padding:'1px'}}/>
-              </Grid>
-              <Grid item className={classes.grid} xs={12} sm={6}>
-                <Grid container >
+            <ExpansionPanelDetails>
+            {this.state.LC ? 
+              <Grid container spacing={24} justify='flex-end' style={{flexGrow:1}}>
+                <Grid item className={classes.grid} xs={12}>
+                  <Divider style={{margin:'5px',padding:'1px'}}/>
+                </Grid>
+                <Grid item className={classes.grid} xs={12} sm={6}>
+                  <Grid container >
+                    <Grid item className={classes.grid} xs={12}>
+                      <Divider inset style={{margin:'10px'}}/>
+                      <Typography variant='body1' align='center' style={{color:'purple'}}>
+                        Payment Cycles
+                      </Typography>
+                      <Divider inset style={{margin:'10px'}}/>
+                      <Table
+                        id="paymentTable"
+                        isNumericColumn={[false,true,true,true,true]}
+                        tableHead = {['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
+                        tableData = {paymentData}
+                        icon={true}
+                      />
+                    </Grid>
+                    {this.cycleContentSwitch()}                
+                  </Grid>
+                </Grid>
+                <Grid item className={classes.grid} xs={12} sm={6}>
                   <Grid item className={classes.grid} xs={12}>
                     <Divider inset style={{margin:'10px'}}/>
                     <Typography variant='body1' align='center' style={{color:'purple'}}>
-                      Payment Cycles
+                      Extension Cycles
                     </Typography>
                     <Divider inset style={{margin:'10px'}}/>
                     <Table
-                      id="paymentTable"
-                      isNumericColumn={[false,true,true,true,true]}
-                      tableHead = {['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
-                      tableData = {paymentData}
+                      id="extensionTable"
                       icon={true}
-                    />
+                      isNumericColumn={['false,false,false,false,false']}
+                      tableHead = {['Type','Opening Date', 'Expirty Date',
+                                    'Bank Charges']}
+                      tableData = {extensionData}
+                    />                  
                   </Grid>
-                  {this.cycleContentSwitch()}                
+                  {this.extensionContentSwitch()}
                 </Grid>
-              </Grid>
-              <Grid item className={classes.grid} xs={12} sm={6}>
+                <Grid item xs={12}>
+                  <Divider />
+                </Grid>
+          
+                <Grid item xs={12} sm={12} md={12}>
+                {
+                  this.state.edit === true ?
+                  this.generateLCEditForm() : 
+                  <this.generateSummary ref={el => (this.componentRef = el)}/>
+                }
+                </Grid>
                 <Grid item className={classes.grid} xs={12}>
-                  <Divider inset style={{margin:'10px'}}/>
-                  <Typography variant='body1' align='center' style={{color:'purple'}}>
-                    Extension Cycles
-                  </Typography>
-                  <Divider inset style={{margin:'10px'}}/>
-                  <Table
-                    id="extensionTable"
-                    icon={true}
-                    isNumericColumn={['false,false,false,false,false']}
-                    tableHead = {['Type','Opening Date', 'Expirty Date',
-                                  'Bank Charges']}
-                    tableData = {extensionData}
-                  />                  
+                  <Divider inset style={{margin:'0px',marginTop:'20px'}} />
                 </Grid>
-                {this.extensionContentSwitch()}
-              </Grid>
-              <Grid item xs={12}>
-                <Divider />
-              </Grid>
-        
-              <Grid item xs={12} sm={12} md={12}>
-              {
-                this.state.edit === true ?
-                this.generateLCEditForm() : 
-                <this.generateSummary ref={el => (this.componentRef = el)}/>
-              }
-              </Grid>
-              <Grid item className={classes.grid} xs={12}>
-                <Divider inset style={{margin:'0px',marginTop:'20px'}} />
-              </Grid>
-              <Grid item className={classes.grid} xs={12} sm={6} md={6}>
-                <SummaryDownloadButton
-                  payHead={['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
-                  extHead={['Type','Opening Date', 'Expirty Date','Bank Charges']}
-                  payData={paymentData}
-                  extData={extensionData}
-                  LC={LC}
-                  totalExtensionCharges={this.totalExtensionCharges}
-                  totalPaymentCharges={this.totalPaymentCharges}
-                  UnUtilized={this.UnUtilized}
-                  />
-                <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
-                  onClick={this.handleEditClick} >
-                  Edit LC <Edit style={{marginLeft:'10px'}} />
-                </Button>
-                <Button mini variant='contained' className={classes.button}
-                    disabled={this.state.closed}
-                    onClick={() =>{this.setState({dialog:dialogState.deleteAction})}} color="secondary">
-                    Delete LC <Delete style={{marginLeft:'10px'}}/>
-                </Button>
-                <Button mini disabled={this.state.closed} variant='contained' color="primary"
-                    onClick={() =>{this.setState({dialog:dialogState.closeAction})}}>
-                    Close LC
-                </Button>
-              </Grid>
-            </Grid>
-          </ExpansionPanelDetails>
+                <Grid item className={classes.grid} xs={12} sm={6} md={6}>
+                  <SummaryDownloadButton
+                    payHead={['Due Date', 'Due Amount', 'Bank LB Ref.','Bank Charges']}
+                    extHead={['Type','Opening Date', 'Expirty Date','Bank Charges']}
+                    payData={paymentData}
+                    extData={extensionData}
+                    LC={LC}
+                    totalExtensionCharges={this.totalExtensionCharges}
+                    totalPaymentCharges={this.totalPaymentCharges}
+                    UnUtilized={this.UnUtilized}
+                    />
+                  <Button mini disabled={this.state.closed} variant='contained' className={classes.button}
+                    onClick={this.handleEditClick} >
+                    Edit LC <Edit style={{marginLeft:'10px'}} />
+                  </Button>
+                  <Button mini variant='contained' className={classes.button}
+                      disabled={this.state.closed}
+                      onClick={() =>{this.setState({dialog:dialogState.deleteAction})}} color="secondary">
+                      Delete LC <Delete style={{marginLeft:'10px'}}/>
+                  </Button>
+                  <Button mini disabled={this.state.closed} variant='contained' color="primary"
+                      onClick={() =>{this.setState({dialog:dialogState.closeAction})}}>
+                      Close LC
+                  </Button>
+                </Grid>
+              </Grid>:
+              <SplashScreen size={50} margin='15px'/>
+            }
+            </ExpansionPanelDetails>
         </ExpansionPanel>
       </div>
     </div>
@@ -1979,23 +2000,5 @@ LCPanel.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-// class Panel extends React.Component{
-//   constructor(props){
-//     super(props);
-//   }
-
-//   render = ()=>{
-//     const {classes} = this.props
-//     return (
-//       <div>
-//         <ReactToPrint
-//           trigger={() => <a href="#">Print this out!</a>}
-//           content={() => this.componentRef}
-//         />
-//         <LCPanel {...this.props}  ref={el => (this.componentRef = el)} />
-//       </div>
-//     );
-//   }
-// }
 
 export default withStyles(styles)(LCPanel);

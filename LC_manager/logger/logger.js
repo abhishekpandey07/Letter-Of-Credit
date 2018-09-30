@@ -36,14 +36,14 @@ var options = {
   file: {
     level: 'info',
     filename: `${appRoot}/logs/app.log`,
-    handleExceptions: true,
+    handleExceptions: false,
     json: true,
     timeStamp: true,
     colorize: false,
   },
   console: {
     level: 'debug',
-    handleExceptions: true,
+    handleExceptions: false,
     json: false,
     colorize: true,
     timeStamp: true,

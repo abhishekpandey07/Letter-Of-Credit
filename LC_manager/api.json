@@ -1,0 +1,80 @@
+{
+	"host":"http://127.0.0.1:3000",
+	"lc": {
+		"root":"/lcs",
+		"model": {
+			"name": "LC",
+			"refs":[{
+				"name": "supplier",
+				"root": "/suppliers" 
+			}, {
+				"name": "issuer",
+				"root": "/banks"
+			}, {
+				"name": "project",
+				"root": "/projects"
+			}]
+		},
+		"api":[{
+				"ref": "LC",
+				"path": "/",
+				"methods": ["GET", "POST"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id",
+				"methods": ["GET", "POST", "DELETE"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id/add-charges",
+				"methods": ["PUT"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id/add-margin-data",
+				"methods": ["PUT"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id/add-or-edit-extension",
+				"methods": ["PUT"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id/add-new-cycle",
+				"methods": ["PUT"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id/edit-cycle",
+				"methods": ["PUT"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id/check-cycle-payment",
+				"methods": ["PUT"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id/add-payment",
+				"methods": ["PUT"],
+				"types": ["application/json"]
+			}, {
+				"ref": "LC",
+				"path": "/:id/delete-cycle",
+				"methods": ["DELETE"],
+				"types": []
+			}, {
+				"ref": "LC",
+				"path": "/:id/delete-extension",
+				"methods": ["DELETE"],
+				"types": []
+			}]
+	},
+	"nativeBanks": "/nativebanks",
+	"supplier": "/suppliers",
+	"project": "/projects",
+	"document": "/documents",
+	"info": "/info"
+}

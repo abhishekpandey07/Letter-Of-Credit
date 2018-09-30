@@ -124,3 +124,5 @@ DATA_Files/
 emailer.js
 
 jobs.js
+config/
+    

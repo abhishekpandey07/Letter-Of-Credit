@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-bankDB = mongoose.model('nativeBanks')
+bankDB = mongoose.model('banks')
 // add a new LC to a bank
 
 function addBankLC(bank,LC,callback){

@@ -16,7 +16,10 @@ import Slide from '@material-ui/core/Slide';
 import Tooltip from '@material-ui/core/Tooltip'
 import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
+import Info from '@material-ui/icons/Info';
+
 import axios from 'axios'
+import { createCipher } from "crypto";
 const styles = theme => ({
   button: {
     root: {
@@ -47,24 +50,24 @@ class Users extends React.Component{
       this.state = {
         users: [],
         idx: null,
-        deleteDialog: false
+        deleteDialog: false,
+        error: null
       }
     }
 
     callApi = async () => {
-
-      const response = await fetch('/users',{credentials:'include'});
-      const body = await response.json();
-      if (response.status !== 200) throw Error(body.message);
-      return EJSON.parse(body);
-
+        const response = await fetch('/api/users',{credentials:'include'});
+        if(response.status !== 200) throw new Error(response.statusText);
+        const body = await response.json();
+        return EJSON.parse(body);
     };
 
     componentDidMount() {
-      console.log('async was called')
       this.callApi()
       .then(res => this.setState({ users: res }))
-      .catch(err => console.log(err));
+      .catch(err => {
+        this.setState({error: err.toString()})
+      });
     }    
 
     handleClose = () => {
@@ -226,16 +229,19 @@ class Users extends React.Component{
       }
       ]
 
-      let userData = this.state.users.reduce((users,user,key)=>{
-        const created = String(new Date(user.created)).split(' ').splice(1,4).join(' ');
-        const lastLogin = user.lastLogin ? String(new Date(user.lastLogin)).split(' ').splice(1,4).join(' '): '-'
+      var userData = null
+      if(this.state.users){
+        userData = this.state.users.reduce((users,user,key)=>{
+          const created = String(new Date(user.created)).split(' ').splice(1,4).join(' ');
+          const lastLogin = user.lastLogin ? String(new Date(user.lastLogin)).split(' ').splice(1,4).join(' '): '-'
 
-        var toolIcons = this.generateToolTipIcons(userToolIcons,key,[true])
-        users.push([user.name, user.email, user.username,
-                      user.role, created,lastLogin,toolIcons])
-        return users
+          var toolIcons = this.generateToolTipIcons(userToolIcons,key,[true])
+          users.push([user.name, user.email, user.username,
+                        user.role, created,lastLogin,toolIcons])
+          return users
 
-      },[])
+        },[])
+      }
 
       
       const {classes} = this.props
@@ -253,6 +259,14 @@ class Users extends React.Component{
                 cardTitle="Users"
                 cardSubtitle="List of all Users"
                 content={
+                  this.state.error ?
+                    <div style={{display:'flex',justifyContent:'center'}}>
+                      <Info style={{color: '#F33',align:'center',widht: '25px',height:'25px','marginRight':'10px'}}/>
+                      <Typography variant='title' align='center'>
+                        {this.state.error}
+                      </Typography>
+                    </div>
+                  :
                   <Table
                     tableHeaderColor="primary"
                     isNumericColumn={[false,false,false,false,false,false,false]}
@@ -261,6 +275,7 @@ class Users extends React.Component{
                   />
                 }
                 footer={
+                  !this.state.error?
                   <div>
                     <NavLink
                       to={'/users/register'}
@@ -270,7 +285,8 @@ class Users extends React.Component{
                         <AddIcon />
                       </Button>
                     </ NavLink>
-                   </div>
+                   </div>:
+                   <div/>
               }/> 
               
             </ItemGrid>

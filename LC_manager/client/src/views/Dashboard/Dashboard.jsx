@@ -101,7 +101,7 @@ class Dashboard extends React.Component {
   }
 
   callBankApi = async () => {
-    const url = '/nativeBanks'
+    const url = '/banks'
     var response = await fetch(url,{credentials:'include'})
     const body = await response.json()
     if(response.status !== 200){

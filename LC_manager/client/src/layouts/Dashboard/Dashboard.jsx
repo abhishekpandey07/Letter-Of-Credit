@@ -43,7 +43,7 @@ class DashLayout extends React.Component {
   }
 
   handleLogout = () => {
-    axios.post('/users/logout',{credentials:'include'})
+    axios.post('/api/users/logout',{credentials:'include'})
     .then( res => {
       if(res.data.logout)
         console.log('Logged out successfully')

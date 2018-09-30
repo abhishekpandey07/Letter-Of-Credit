@@ -20,7 +20,7 @@ class App extends React.Component {
   }
   
   checkAuthentication = async () => {
-      const url = '/users/sessionAuthentication'
+      const url = '/session-authenticate'
       var res = await axios.get(url,{credentials: 'include'})
       const data = await EJSON.parse(res.data);
       console.log(data)
@@ -78,7 +78,7 @@ class App extends React.Component {
        </Router>)   
     }
 
-    return <SplashComponent/>
+    return <SplashComponent size={100} margin='50px'/>
   }
 }
 

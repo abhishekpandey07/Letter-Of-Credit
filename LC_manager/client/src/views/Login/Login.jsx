@@ -65,7 +65,7 @@ class LoginPage extends React.Component {
   }
 
   checkAuthentication = async () => {
-    const url = '/users/sessionAuthentication'
+    const url = '/session-authenticate'
     var res = await axios.get(url,{credentials: 'include'})
     const data = await EJSON.parse(res.data);
     if(data.authenticated === true){
@@ -77,7 +77,7 @@ class LoginPage extends React.Component {
   } 
 
   componentWillMount = async () => {
-    const url = '/users/sessionAuthentication'
+    const url = 'session-authenticate'
     axios.get(url,{credentials: 'include'})
     .then(res => {
       const data = EJSON.parse(res.data);
@@ -115,7 +115,7 @@ class LoginPage extends React.Component {
   }
 
   handleSubmit = event => {
-    const url = '/users/login'
+    const url = '/api/users/login'
 
     const username = document.getElementById('username').value
     const password = document.getElementById('pass').value
