@@ -6,13 +6,13 @@ import axios from 'axios';
  * @param {Object} query : request Query Params. only used if method == GET
  * @param {String} method : One of 'GET','POST','PUT','PATCH','DELETE'
  */
-async function request(path,payload,query,method){
+async function request(config){
   const options = {
     credentials: 'include',
-    method: method.toLocaleLowerCase(),
-    data: payload,
-    url: path,
-    params: query
+    method: config.method.toLocaleLowerCase(),
+    data: config.payload,
+    url: config.link,
+    params: config.query
   }
   return axios.request(options)
 }

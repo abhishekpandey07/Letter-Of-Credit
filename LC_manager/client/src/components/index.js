@@ -8,8 +8,6 @@ import RegularCard from "./Cards/RegularCard.jsx";
 import StatsCard from "./Cards/StatsCard.jsx";
 import TasksCard from "./Cards/TasksCard.jsx";
 import TimeAnalysisCard from './Cards/TimeAnalysisCard'
-
-import BanksTable from './BanksTable/BanksTable'
 // ##############################
 // // // CustomButtons
 // #############################
@@ -85,10 +83,10 @@ import A from "./Typography/A.jsx";
 // ##############################
 // // // LCPanels
 // #############################
-import LCPanel from './LCs/LCExpansionPanel'
+import {LCExpansionPanel} from './LCs';
 
 export {
-  LCPanel,
+  LCExpansionPanel,
   PageTable,
   // Cards
   ChartCard,

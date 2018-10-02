@@ -33,7 +33,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
 import SummaryDownloadButton from './SummaryDownloadButton';
 import {request} from 'utils/requests';
-import SplashScreen from '../../SplashPage.jsx'
+import SplashScreen from 'SplashPage'
 
 const styles = theme => ({
   root: {
@@ -223,7 +223,7 @@ class LCPanel extends React.Component {
   callApi = async () => {
     const api_info = this.props.links.lc;
     try{
-      const response = await request(api_info.link,null,null,api_info.method);
+      const response = await request(api_info);
       const body = await EJSON.parse(response.data);
       this.setState({LC:body})
     } catch(error){
@@ -1986,7 +1986,11 @@ class LCPanel extends React.Component {
                   </Button>
                 </Grid>
               </Grid>:
-              <SplashScreen size={50} margin='15px'/>
+              <Grid container alignItems='center' justify='center'>
+                <Grid item xs>
+                  <SplashScreen size={50} margin='15px'/>
+                </Grid>
+              </Grid>
             }
             </ExpansionPanelDetails>
         </ExpansionPanel>

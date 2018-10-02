@@ -65,7 +65,7 @@ class Dashboard extends React.Component {
   };
 
   callCycleApi = async () => {
-    const url = '/info/cycle'
+    const url = '/api/info/cycle'
     var response = await fetch(url,{credentials:'include'})
     const body = await response.json()
     if(response.status !== 200){
@@ -77,7 +77,7 @@ class Dashboard extends React.Component {
   }
 
   callMonthApi = async () => {
-    const url = '/info/month'
+    const url = '/api/info/month'
     var response = await fetch(url,{credentials:'include'})
     const body = await response.json()
     if(response.status !== 200){
@@ -89,7 +89,7 @@ class Dashboard extends React.Component {
   }
 
   callWeekApi = async() => {
-    const url ='/info/thisWeek'
+    const url ='/api/info/thisWeek'
     var response = await fetch(url,{credentials:'include'})
     const body = await response.json()
     if(response.status !== 200){
@@ -101,7 +101,7 @@ class Dashboard extends React.Component {
   }
 
   callBankApi = async () => {
-    const url = '/banks'
+    const url = '/api/banks'
     var response = await fetch(url,{credentials:'include'})
     const body = await response.json()
     if(response.status !== 200){
@@ -113,7 +113,7 @@ class Dashboard extends React.Component {
   }
 
   callExpiryApi = async () => {
-    const url = '/info/LC/expiring'
+    const url = '/api/info/LC/expiring'
     var response = await fetch(url,{credentials:'include'})
     const body = await response.json()
     if(response.status !== 200){
@@ -125,7 +125,7 @@ class Dashboard extends React.Component {
   }
 
   call30daysApi = async () => {
-    const url = '/info/30days'
+    const url = '/api/info/30days'
     var response = await fetch(url,{credentials:'include'})
     const body = await response.json()
     if(response.status !== 200){

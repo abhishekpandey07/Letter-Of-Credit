@@ -4,16 +4,12 @@ import AddIcon from '@material-ui/icons/Add'
 import SplashScreen from '../../SplashPage.jsx'
 import InfoOutline from '@material-ui/icons/InfoOutline';
 import EJSON from 'mongodb-extended-json'
-//import getComponent from 'hadron-react-bson'
 import {Done, Delete, Save} from '@material-ui/icons'
 import { Link,NavLink } from "react-router-dom";
-import { RegularCard, Table, ItemGrid, LCPanel } from "components";
-import LCRoutes from 'routes/lcs.jsx'
+import { RegularCard, ItemGrid, LCExpansionPanel} from "components";
 import TextField from '@material-ui/core/TextField'
-import {IconButton as SearchButton} from 'components'
 import Search from '@material-ui/icons/Search'
 import FormControl from '@material-ui/core/FormControl'
-import Input from '@material-ui/core/Input'
 import Select from '@material-ui/core/Select'
 import InputLabel from '@material-ui/core/InputLabel'
 import Dialog from '@material-ui/core/Dialog';
@@ -86,14 +82,21 @@ class LCHome extends React.Component{
     }
 
     callAllApi = async () => {
-      const query = {
-        offset: this.state.offset,
-        limit: this.state.limit,
-        status: 'Active',
+      
+      const config = {
+        link: '/api/lcs',
+        query: {
+          offset: this.state.offset,
+          limit: this.state.limit,
+          where: {
+            status:'Active'
+          },
+        },
+        method: 'get'
       }
-        const response = await request('/api/lcs',null,query,'GET');
-        const body = await JSON.parse(response.data)
-        return body;      
+      const response = await request(config);
+      const body = await JSON.parse(response.data)
+      return body;      
     };
 
     componentDidMount() {
@@ -106,7 +109,7 @@ class LCHome extends React.Component{
       this.dialogMode = 'success'
     }
     //
-    updateLCPanel = (key,LC) => {
+    updateLCExpansionPanel = (key,LC) => {
       var LCs = this.state.LCs
       const idx = LCs.findIndex((prop) => {
         return prop.LC_no ==  key;
@@ -388,18 +391,18 @@ class LCHome extends React.Component{
                ){
                 panel = 
                         <Grid item xs={12} sm={12} md={12}>
-                          <LCPanel LC={prop}
+                          <LCExpansionPanel LC={prop}
                           links={prop.links}
-                          onUpdate={this.updateLCPanel}
+                          onUpdate={this.updateLCExpansionPanel}
                           onDelete={this.deleteLC}
                           />
                         </Grid>
               }
             } else {
               panel = <Grid item xs={12} sm={12} md={12}>
-                          <LCPanel LC={prop}
+                          <LCExpansionPanel LC={prop}
                           links={prop.links}
-                          onUpdate={this.updateLCPanel}
+                          onUpdate={this.updateLCExpansionPanel}
                           onDelete={this.deleteLC}
                           />
                       </Grid>
