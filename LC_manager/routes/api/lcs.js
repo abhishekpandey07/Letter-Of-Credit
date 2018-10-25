@@ -272,8 +272,8 @@ router.param('id', function (req, res, next, id) {
 
   // find the LC by ID
   LCDB.findById(id)
-    .populate('supplier','name')
-    .populate('issuer','name')
+    .populate('supplier','name banks')
+    .populate('issuer','name LC_used')
     .populate('project', 'name')
     .exec(function (error, LC) {
       if (error) {
@@ -768,7 +768,6 @@ router.patch('/:id/close', function (req, res) {
       console.error(error)
       return res.send(error)
     }
-
 
 
   })

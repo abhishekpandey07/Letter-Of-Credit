@@ -56,24 +56,28 @@ function addLC(supplier, supBank, LC, callback){
 // remove an LC from a supplier
 
 function removeLC(supplier,LC,callback){
+    try{
+      var banks = supplier.banks;
+      const index = banks.findIndex((bank) => {return String(bank._id) === String(LC.supBank)})
+      var bank = banks[index]
 
-    var banks = supplier.banks;
-    const index = banks.findIndex((bank) => {return String(bank._id) === String(LC.supBank)})
-    var bank = banks[index]
+      bank.LCs = removeByAttr(bank.LCs,'_id',LC._id);
 
-    bank.LCs = removeByAttr(bank.LCs,'_id',LC._id);
+      banks[index] = bank;
+      supplier.banks=banks
+      console.log('LC removed from supplier: '+ supplier._id);
+      supplier.save(function(error,supplier){
 
-    banks[index] = bank;
-    supplier.banks=banks
-    console.log('LC removed from supplier: '+ supplier._id);
-    supplier.save(function(error,supplier){
-	if(error){
-	    console.error(error);
-	    return callback(error,supplier)
-	} else {
-	    return callback(null,supplier);
-	}
-    });
+    if(error){
+        console.error(error);
+        return callback(error,supplier)
+    } else {
+        return callback(null,supplier);
+    }
+      });
+    } catch(error){
+      console.log(error)
+    }
 
 }
 
